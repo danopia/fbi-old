@@ -1,0 +1,7 @@
+FBI Version Control Informant
+==============================================
+
+This code depends on an IRCd running at localhost:6667. It uses Scott's
+on_irc library for clients.
+
+--danopia
