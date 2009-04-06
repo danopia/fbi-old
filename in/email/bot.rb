@@ -1,5 +1,5 @@
 
-if STDIN.tty?  # we are in a pipeline
+if STDIN.tty?  # we need a pipeline
 	puts "You need to feed me mail!"
 	exit
 end
@@ -11,17 +11,17 @@ puts "Loading the IRC Parser..."
 require 'parser'
 puts "Loading RubyGems..."
 require 'rubygems'
-puts "Loading Activerecord..."
-require 'activerecord'
-puts "Loading models and connecting to database..."
-require 'models'
+#puts "Loading Activerecord..."
+#require 'activerecord'
+#puts "Loading models and connecting to database..."
+#require 'models'
 puts "Loading HPricot, OpenURI and ERB..."
 require 'hpricot'
 require 'open-uri'
 require 'erb'
 
 $b = binding()
-nick = 'FBI{email'
+nick = 'from_email'
 
 irc = IRC.new( :server => 'localhost',
                  :port => 6667,
@@ -87,9 +87,20 @@ end
 
 Thread.new{ irc.connect }
 
+inmessage = false
+
 while((line = STDIN.gets))
 	p line
-  if line =~ /^Subject: (.*)$/
-		irc.msg('#email', line)
+	if inmessage
+		if line =~ /^==END MESSAGE$/
+			inmessage = false
+		elsif line[0] == ''
+			irc.msg('#email', line)
+		else
+			irc.msg('#email', line)
+			#irc.msg('#email', 'charlie fails')
+		end
+	elsif line =~ /^==BEGIN MESSAGE$/
+		inmessage = true
 	end
 end
