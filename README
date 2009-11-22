@@ -3,10 +3,9 @@ FBI Version Control Informant
 
 This code depends on an IRCd running at localhost:6667. It uses Scott's on_irc library for clients.
 
-out/ - The different methods/bots that take info out of the system. These bots commonly have a nick that starts with FBI-}. Think of a -->. The most important bot here will eventually be the IRC one.
+out/ - The different methods/bots that take info out of the system. These bots commonly have a nick that starts with "out_". The most important bot here will eventually be the IRC one.
 
-in/ - The different methods/bots that bring info in to the system. These bots commonly have a nick that starts with FBI{-. Think of a <--.
-Important note here: The email one wants you to pipe in an email stream. On linux, this would involve something like `tail -n 0 -f /var/mail/fbi | ruby bot.rb`.
+in/ - The different methods/bots that bring info in to the system. These bots commonly have a nick that starts with "in_". Important note here: The email one wants you to pipe in an email stream. On unix-y systems, this would involve something like `tail -n 0 -f /var/mail/fbi | ruby bot.rb`.
 
 on_irc/ - on_irc library.
 
