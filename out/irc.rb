@@ -76,13 +76,13 @@ add_network :freenode, 'irc.freenode.net', {
 	'#duxos' => ['dux'],
 	'#botters' => ['dux', 'fbi'],
 	'#duckinator' => ['dux'],
-	'#commits' => :all,
+	'#commits' => :none,
 	'##tsion' => :none,
 	'##mcgw' => :none,
 }
 
 add_network :eighthbit, 'irc.eighthbit.net', {
-	'#bots' => ['archlinux-bot', 'CppBot', 'schemey', 'fbi'],
+	'#bots' => ['archlinux-bot', 'CppBot', 'schemey', 'fbi', 'sonicbot', 'sonicIRC'],
 	'#commits' => :all,
 	'#dux' => ['dux'],
 	'#duckinator' => ['dux'],

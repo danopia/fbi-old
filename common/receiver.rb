@@ -6,7 +6,7 @@ require File.join(File.dirname(__FILE__), '..', 'on_irc', 'parser')
 #require 'models'
 
 class Receiver
-	attr_reader :nick
+	attr_reader :nick, :irc
 	
 	def initialize(target)
 		@parser = Parser.new

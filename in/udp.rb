@@ -52,7 +52,7 @@ loop do
       url = open('http://is.gd/api.php?longurl=' + commit['url']).read
       
       #\002(.*):\017 \00303(.*)\017 \00307(.*)\017 \00312(.*)\017 \00308(.*)\017 \00310(.*)\017 \00313(.*)\017 
-      msg = "#{json['repository']['name']}: \00303#{commit['author']['name']} \00307#{json['ref'].split('/').last}\017 \002#{commit['id'][0,8]}\017: #{commit['message']} \00302<\002\002#{url}>"
+      msg = "#{json['repository']['name']}: \00303#{commit['author']['name']} \00307#{json['ref'].split('/').last}\017 \002#{commit['id'][0,8]}\017: #{commit['message'].gsub("\n", ' ')} \00302<\002\002#{url}>"
       #msg = "#{json['repository']['name']}: #{commit['author']['name']} #{json['ref'].split('/').last} #{commit['id'][0,8]} : #{commit['message']} <\002\002#{commit['url']}>"
     
       irc.msg '#pentagon', msg
