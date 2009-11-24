@@ -55,15 +55,30 @@ manager.on :command do |e|
 			manager.networks[args[0].to_i].route_to args[1], args[2..-1].join(' ')
 			
 		when 'list'
-			channel = Channel.find_by_name e.target
+			server = Server.find e.network.id
+			channel = server.channels.find_by_name e.target
 			projects = channel.projects.map {|project| project.name }.join(', ')
 			e.respond "Projects currently announcing to #{channel.name}: #{projects}."
+			
+		when 'catchall'
+			next unless e.admin?
+			server = Server.find e.network.id
+			channel = server.channels.find_by_name e.target
+			channel.catchall = !channel.catchall
+			channel.save
+			
+			if channel.catchall
+				e.respond "#{channel.name} has been set to a catchall."
+			else
+				e.respond "#{channel.name} is no longer a catchall."
+			end
 			
 		when 'add'
 			if args[0] == 'project'
 				project = Project.find_by_name args[1]
 				project = Project.create :name => args[1] unless project
-				channel = Channel.find_by_name e.target
+				server = Server.find e.network.id
+				channel = server.channels.find_by_name e.target
 				channel.project_subs.create :project => project
 				e.respond "Added #{project.name} to this channel."
 				

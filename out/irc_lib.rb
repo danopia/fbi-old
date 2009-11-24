@@ -19,7 +19,7 @@ class Manager
 		
 		@networks = {}
 		@handlers = {}
-		@admins = ['danopia::EighthBit::staff']
+		@admins = ['danopia::EighthBit::staff', 'fullcirclemagazine/developer/danopia']
 		
 		# Only two come stock:
 		# :ping (to pong)
@@ -204,7 +204,7 @@ class Network
 	
 	def join channel, key=nil
 		conn = @connections.find do |conn|
-			conn.channels.size < 3
+			conn.channels.size < 20
 		end
 		
 		unless conn
