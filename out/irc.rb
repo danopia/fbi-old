@@ -1,92 +1,127 @@
-$LOAD_PATH << './../common'
-require 'receiver'
-#require 'rubygems'
-#require 'activerecord'
-#require 'models'
+require './../common/receiver'
 
-@ircs = {}
-@channels = {}
-@parser = Parser.new
-@receiver = Receiver.new 'irc'
+require 'irc_lib'
+require 'irc_models'
 
-@receiver.on_message do |project, message|
-	@ircs.each do |name, irc|
-		@channels[name].each do |channel, projects|
-			if projects == :all || (projects.is_a?(Array) && projects.include?(project))
-				irc.msg channel, "\002#{project}:\017 #{message}"
-  			sleep 1
-  		end
-		end
+manager = FBI_IRC::Manager.new 'FBI-', 'fbi', 'FBI Version Control Informant'
+$manager = manager
+
+#manager.on :invite do |e|
+#	e.conn.join e.target if e.channel?
+#end
+
+#new_irc.on_001 do
+#	new_irc.msg 'NickServ', 'identify fbi *****'
+#	new_irc.join server.channels.map{|chan| chan.name}.join(',')
+#end
+
+manager.on :ctcp do |e|
+	case e.params.first
+    when 'VERSION'
+      e.respond 'FBI to_irc module v0.1'
+     
+    when 'PING'
+      e.respond e.params.last
+     
+		when 'ACTION'
+			message = e.params.last.join ' '
+			
+			e.action "shoots #{e.origin[:nick]}" if message.index("evades the FBI") == 0
+			e.action "tastes crunchy" if message.index("eats FBI") == 0
+			e.action "dies" if message.index("kills #{e.conn.nick}") == 0
+			e.action "hugs #{e.origin[:nick]}" if message.index("hugs #{e.conn.nick}") == 0
+			e.message "ow" if message.index("kicks #{e.conn.nick}") == 0
+			
+			if message.index("rubs #{e.conn.nick}'s tummy") == 0
+				if rand(2) == 1
+					e.action "bites #{e.origin[:nick]}'s hand"
+				else
+					e.message "*purr*"
+				end
+			end
+
 	end
 end
 
-def add_network(key, server, channels = {}, port=6667)
-	new_irc = IRC.new(
-		:server => server,
-		:port => port,
-		:nick => 'FBI-1',
-		:ident => 'fbi',
-		:realname => 'FBI bot - powered by on_irc Ruby IRC library',
-		:options => { :use_ssl => false }
-	)
-	@ircs[key] = new_irc
-	@channels[key] = channels
+manager.on :command do |e|
+	command = e.params[0]
+	args = (e.params[1] || '').split
 	
-	new_irc.on_all_events do |e|
-		#p e
-	end
-	new_irc.on_invite do |e|
-		value.join e.channel
-	end
-	new_irc.on_001 do
-		new_irc.msg 'NickServ', 'identify fbi hil0l'
-		new_irc.join @channels[key].keys.join(',')
-	end
-
-	new_irc.on_privmsg do |e|
-		@parser.command(e, 'calc') do |c, params|
-			url = "http://www.google.com/search?q=#{ERB::Util.u(c.message)}"
-			doc = Hpricot open(url)
-			calculation = (doc/'#res/p/table/tr/td[3]/h2/font/strong').inner_html
-			if calculation.empty?
-				new_irc.msg(e.recipient, 'Invalid Calculation.')
-			else
-				new_irc.msg(e.recipient, calculation.gsub(/&#215;/,'*').gsub(/<sup>/,'^').gsub(/<\/sup>/,'').gsub(/ \* 10\^/,'e').gsub(/<font size="-2"> <\/font>/,','))
-			end
-		end
+	case command.downcase
+		when 'test'
+			e.respond 'It worked!'
 		
-		new_irc.msg e.recipient, "\001ACTION shoots #{e.sender.nick}\001" if e.message =~ /^\001ACTION evades the FBI(.*?)\001$/
-		new_irc.msg e.recipient, "\001ACTION tastes crunchy\001" if e.message =~ /^\001ACTION eats FBI(.*?)\001$/
-		new_irc.msg e.recipient, "\001ACTION dies\001" if e.message =~ /^\001ACTION kills FBI(.*?)\001$/
-		new_irc.msg e.recipient, "\001ACTION hugs #{e.sender.nick}\001" if e.message =~ /^\001ACTION hugs FBI(.*?)\001$/
-		new_irc.msg e.recipient, "ow" if e.message =~ /^\001ACTION kicks FBI(.*?)\001$/
-		if e.message =~ /^\001ACTION rubs FBI-[0-9]+'s tummy(.*?)\001$/
-			if rand(2) == 1
-				new_irc.msg e.recipient, "\001ACTION bites #{e.sender.nick}'s hand\001"
-			else
-				new_irc.msg e.recipient, "*purr*"
+		when 'route'
+			manager.networks[args[0].to_i].route_to args[1], args[2..-1].join(' ')
+			
+		when 'list'
+			channel = Channel.find_by_name e.target
+			projects = channel.projects.map {|project| project.name }.join(', ')
+			e.respond "Projects currently announcing to #{channel.name}: #{projects}."
+			
+		when 'add'
+			if args[0] == 'project'
+				project = Project.find_by_name args[1]
+				project = Project.create :name => args[1] unless project
+				channel = Channel.find_by_name e.target
+				channel.project_subs.create :project => project
+				e.respond "Added #{project.name} to this channel."
+				
+			elsif args[0] == 'channel'
+				channel = Channel.create :server_id => e.network.id, :name => args[1]
+				e.network.join channel.name
+				e.respond "Joined #{channel.name}."
+				
+			elsif args[0] == 'server'
+				server = Server.create :hostname => args[1]
+				channel = server.channels.create :name => args[2]
+				manager.spawn_from_record server
+				e.respond "Connecting to #{server.hostname}, and I'll join #{channel.name} once I'm there."
 			end
-		end
 	end
-	
-	Thread.new{ new_irc.connect }
 end
 
-add_network :freenode, 'irc.freenode.net', {
-	'#duxos' => ['dux'],
-	'#botters' => ['dux', 'fbi'],
-	'#duckinator' => ['dux'],
-	'#commits' => :none,
-	'##tsion' => :none,
-	'##mcgw' => :none,
-}
+if Server.all.size == 0
+	channel = Channel.new :name => '#bots'
+	channel.server = Server.create :hostname => '76.73.53.189'
+	channel.save
+	
+	project = Project.create :name => 'fbi'
+	
+	channel.project_subs.create :project => project
+	
+	Channel.create :name => '#commits', :server => channel.server, :catchall => true
+end
 
-add_network :eighthbit, 'irc.eighthbit.net', {
-	'#bots' => ['archlinux-bot', 'CppBot', 'schemey', 'fbi', 'sonicbot', 'sonicIRC'],
-	'#commits' => :all,
-	'#dux' => ['dux'],
-	'#duckinator' => ['dux'],
-	'#programming' => ['schemey', 'dux', 'fbi']
-}
+Server.all.each do |server|
+	manager.spawn_from_record server
+end
 
-@receiver.run
+Thread.new { manager.run }
+
+def route project, message
+	channels = Channel.find_all_by_catchall true
+	
+	project = Project.find_by_name project
+	channels |= project.channels if project
+	
+	channels.each do |channel|
+		$manager.route_to channel.server_id, channel.name, message
+		sleep 0.5
+	end
+end
+
+require 'open-uri'
+
+FBIClient.on_packet do |line|
+	data = JSON.parse line
+	url = open('http://is.gd/api.php?longurl=' + data['url']).read
+	
+	message = "\002#{data['project']}:\017 \00303#{data['author']['name']} \00307#{data['branch']}\017 \002#{data['commit'][0,8]}\017: #{data['message'].gsub("\n", ' ')} \00302<\002\002#{url}>"
+	
+	route data['project'], message
+end
+
+EventMachine::run do
+  FBIClient.connect
+end

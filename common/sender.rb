@@ -3,32 +3,31 @@ require 'eventmachine'
 require 'socket'
 
 class FBIClient < EM::Protocols::LineAndTextProtocol
-	def self.on_packet &blck
-		@@handler = blck
+	def self.send data
+		@@instance.send_data "#{data}\n"
 	end
 	
-	def self.connect
+	def self.connect component=nil
+		@@component = component
 		EventMachine::connect "127.0.0.1", 5348, FBIClient
 	end
 	
 	
 	def initialize
     @port, @ip = Socket.unpack_sockaddr_in get_peername
-    puts "connected to #{@ip}:#{@port}"
+    puts "Connected to FBI at #{@ip}:#{@port}"
     @buffer = ''
     @lbp_mode = :lines
     @@instance = self
+    
+    send_data "sender #{@@component}\n"
 	end
 	
   def receive_data data
     @buffer += data
     while @buffer.include? "\n"
-    	got_line @buffer.slice!(0, @buffer.index("\n")+1).chomp
+    	puts @buffer.slice!(0, @buffer.index("\n")+1).chomp
     end
-  end
-  
-  def got_line line
-  	@@handler.call line if @@handler
   end
 	
 	def unbind

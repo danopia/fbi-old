@@ -392,7 +392,6 @@ class Connection
 	protected
 	
 	def handle_message type, origin, args
-		p args
 		if ctcp? args[1]
 			handle_ctcp type, origin, *args
 		else
