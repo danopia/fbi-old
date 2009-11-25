@@ -1,43 +1,25 @@
-require 'rubygems'
-require 'eventmachine'
-require 'socket'
+require File.join(File.dirname(__FILE__), 'client')
 
-class FBIClient < EM::Protocols::LineAndTextProtocol
-	def self.on_packet &blck
-		@@handler = blck
-	end
-	
-	def self.connect
-		EventMachine::connect "127.0.0.1", 5348, FBIClient
-	end
-	
-	
-	def initialize
-    @port, @ip = Socket.unpack_sockaddr_in get_peername
-    puts "connected to #{@ip}:#{@port}"
-    @buffer = ''
-    @lbp_mode = :lines
-    @@instance = self
-	end
-	
-  def receive_data data
-    @buffer += data
-    while @buffer.include? "\n"
-    	got_line @buffer.slice!(0, @buffer.index("\n")+1).chomp
-    end
-  end
-  
-  def got_line line
-  	@@handler.call line if @@handler
-  end
-	
-	def unbind
-		puts "Disconnected from FBI"
+module FBI
+	class Receiver < Client
+		def self.on_object &blck
+			@@handler = blck
+		end
+		
+		def initialize *channels
+			super *channels
+			subscribe_to channels if channels.any?
+		end
+		
+		def subscribe_to channels
+			send_object({
+				'subscribe' => true,
+				'feeds' => channels
+			})
+		end
+		
+		def receive_object hash
+			@@handler.call hash['channel'], hash['data'] if @@handler && hash.has_key?('data')
+		end
 	end
 end
-
-#~ EventMachine::run do
-  #~ EventMachine::connect "127.0.0.1", 5348, FBIClient
-  #~ EventMachine::open_datagram_socket '127.0.0.1', 1337, UDPServer
-  #~ #EventMachine::add_periodic_timer( 10 ) { $stderr.write "*" }
-#~ end

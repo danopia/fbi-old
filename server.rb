@@ -1,8 +1,18 @@
+#$stdout.sync = true
+
 require 'rubygems'
 require 'eventmachine'
 require 'socket'
+require 'open-uri'
+require 'json'
 
-class FBIServer < EM::Protocols::LineAndTextProtocol
+def shorten_url url
+	open('http://is.gd/api.php?longurl=' + url).read
+end
+
+module FBI
+class Server < EventMachine::Connection
+	attr_accessor :subscriptions, :sender, :port, :ip
 	INSTANCES = []
 	
   def initialize
@@ -10,6 +20,7 @@ class FBIServer < EM::Protocols::LineAndTextProtocol
     puts "connection from #{@ip}:#{@port}"
     @buffer = ''
     @sender = false
+    @subscriptions = []
     
     INSTANCES << self
   end
@@ -22,13 +33,27 @@ class FBIServer < EM::Protocols::LineAndTextProtocol
   end
   
   def got_line line
-  	if line.index('sender ') == 0
-  		@sender = line.split(' ', 2).last
+		data = JSON.parse line
+		if data.has_key? 'auth'
+			@sender = data['user']
     	puts "#{@ip}:#{@port} asked to be a sender, as #{@sender}"
+    
+  	elsif data.has_key? 'subscribe'
+			@subscriptions |= data['feeds']
+    	puts "#{@ip}:#{@port} subscribed to #{data['feeds'].join ', '}"
+    
   	elsif @sender
-			puts "#{@sender}: #{line}"
+  	
+  		if data['data'].has_key? 'url'
+				data['data']['shorturl'] = shorten_url data['data']['url']
+			end
+			
+  		json = data['data'].to_json
+			puts "#{@sender} to #{data['channel']}: #{json}"
+  		json = {'channel' => data['channel'], 'data' => data['data']}.to_json
+			
 			INSTANCES.each do |conn|
-				conn.send_data "#{line}\n"
+				conn.send_data "#{json}\n" if conn.subscriptions.include? data['channel']
 			end
 		end
   end
@@ -37,8 +62,10 @@ class FBIServer < EM::Protocols::LineAndTextProtocol
   	puts "connection closed from #{@ip}:#{@port}"
   	INSTANCES.delete self
   end
-end
+end # class
+end # module
 
-EventMachine::run do
-  EventMachine::start_server "127.0.0.1", 5348, FBIServer
+EM.run do
+  EM.start_server "127.0.0.1", 5348, FBI::Server
+  puts "server started"
 end

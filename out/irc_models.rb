@@ -1,6 +1,5 @@
 require 'rubygems'
 require 'activerecord'
-require 'irc_models'
 
 # connect to the database
 ActiveRecord::Base.establish_connection({

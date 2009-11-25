@@ -1,7 +1,9 @@
-require './../common/receiver'
+#$stdout.sync = true
 
-require 'irc_lib'
+require '../common/receiver'
+
 require 'irc_models'
+require 'irc_lib'
 
 manager = FBI_IRC::Manager.new 'FBI-', 'fbi', 'FBI Version Control Informant'
 $manager = manager
@@ -21,7 +23,7 @@ manager.on :ctcp do |e|
       e.respond 'FBI to_irc module v0.1'
      
     when 'PING'
-      e.respond e.params.last
+      e.respond e.params.last.join(' ')
      
 		when 'ACTION'
 			message = e.params.last.join ' '
@@ -58,7 +60,12 @@ manager.on :command do |e|
 			server = Server.find e.network.id
 			channel = server.channels.find_by_name e.target
 			projects = channel.projects.map {|project| project.name }.join(', ')
-			e.respond "Projects currently announcing to #{channel.name}: #{projects}."
+			
+			if channel.catchall
+				e.respond "#{channel.name} is a catchall for all projects."
+			else
+				e.respond "Projects currently announcing to #{channel.name}: #{projects}."
+			end
 			
 		when 'catchall'
 			next unless e.admin?
@@ -126,17 +133,10 @@ def route project, message
 	end
 end
 
-require 'open-uri'
-
-FBIClient.on_packet do |line|
-	data = JSON.parse line
-	url = open('http://is.gd/api.php?longurl=' + data['url']).read
-	
-	message = "\002#{data['project']}:\017 \00303#{data['author']['name']} \00307#{data['branch']}\017 \002#{data['commit'][0,8]}\017: #{data['message'].gsub("\n", ' ')} \00302<\002\002#{url}>"
+FBI::Receiver.on_object do |channel, data|
+	message = "\002#{data['project']}:\017 \00303#{data['author']['name']} \00307#{data['branch']}\017 \002#{data['commit'][0,8]}\017: #{data['message'].gsub("\n", ' ')} \00302<\002\002#{data['shorturl']}>"
 	
 	route data['project'], message
 end
 
-EventMachine::run do
-  FBIClient.connect
-end
+FBI::Receiver.start_loop 'commits'

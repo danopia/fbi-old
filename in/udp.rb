@@ -1,7 +1,6 @@
-require './../common/sender'
+#$stdout.sync = true
 
-require 'rubygems'
-require 'json'
+require '../common/sender'
 
 class UDPServer < EM::Protocols::LineAndTextProtocol
   def initialize
@@ -31,12 +30,12 @@ class UDPServer < EM::Protocols::LineAndTextProtocol
         :message => commit['message'],
         :url => commit['url']
       }
-      FBIClient.send output.to_json
+      FBI::Sender.send 'commits', output
     end
   end
 end
 
 EventMachine::run do
-  FBIClient.connect 'udp'
+  FBI::Sender::connect 'udp'
   EventMachine::open_datagram_socket '127.0.0.1', 1337, UDPServer
 end
