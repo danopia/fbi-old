@@ -1,6 +1,4 @@
-#$stdout.sync = true
-
-require '../common/receiver'
+require '../common/client'
 
 require 'irc_models'
 require 'irc_lib'
@@ -100,6 +98,16 @@ manager.on :command do |e|
 				manager.spawn_from_record server
 				e.respond "Connecting to #{server.hostname}, and I'll join #{channel.name} once I'm there."
 			end
+		
+		else
+			FBI::Client.publish 'irc', {
+				:server => e.network.id,
+				:channel => e.target,
+				:sender => e.origin,
+				:command => command,
+				:args => args,
+				:admin => e.admin?,
+			}
 	end
 end
 
@@ -133,10 +141,16 @@ def route project, message
 	end
 end
 
-FBI::Receiver.on_object do |channel, data|
+
+FBI::Client.on_published do |channel, data|
 	message = "\002#{data['project']}:\017 \00303#{data['author']['name']} \00307#{data['branch']}\017 \002#{data['commit'][0,8]}\017: #{data['message'].gsub("\n", ' ')} \00302<\002\002#{data['shorturl']}>"
 	
 	route data['project'], message
 end
 
-FBI::Receiver.start_loop 'commits'
+FBI::Client.on_private do |from, data|
+	$manager.route_to data['server'], data['channel'], data['message']
+end
+
+
+FBI::Client.start_loop 'irc', 'hil0l', ['commits']

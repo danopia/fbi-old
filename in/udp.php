@@ -6,7 +6,7 @@ if (!$fp)
 
 socket_set_timeout($fp, 10);
 
-$write = fwrite($fp, $_POST['payload'] . "\n");
+$write = fwrite($fp, stripslashes($_POST['payload']) . "\n");
 fclose($fp);
 
 if (!$write)

@@ -1,10 +1,21 @@
-require 'rubygems'
-require 'eventmachine'
-require 'socket'
-require 'json'
+require File.join(File.dirname(__FILE__), 'connection')
 
 module FBI
-	class Client < EventMachine::Connection
+	class Client < Connection
+		@@on_auth = nil
+		@@on_private = nil
+		@@on_published = nil
+		
+		def self.on_auth &blck
+			@@on_auth = blck
+		end
+		def self.on_published &blck
+			@@on_published = blck
+		end
+		def self.on_private &blck
+			@@on_private = blck
+		end
+		
 		def self.connect *args
 			EventMachine::connect "127.0.0.1", 5348, self, *args
 		end
@@ -12,48 +23,42 @@ module FBI
 			EventMachine::run { self.connect *args }
 		end
 		
-		def initialize *args
-			super
-			begin
-				@port, @ip = Socket.unpack_sockaddr_in get_peername
-				puts "Connected to FBI at #{@ip}:#{@port}"
-			rescue TypeError
-				puts "Unable to determine endpoint (connection refused?)"
-			end
-			@args = args
-			@buffer = ''
-			@@instance = self
+		def self.private target, data
+			@@instance.send_object 'private', {
+				'to'		=> target,
+				'data'	=> data
+			}
+		end
+		def self.publish channel, data
+			@@instance.send_object 'publish', {
+				'channel'	=> channel,
+				'data'		=> data
+			}
 		end
 		
-		def receive_data data
-			@buffer += data
-			while @buffer.include? "\n"
-				packet = @buffer.slice!(0, @buffer.index("\n")+1).chomp
-				data = JSON.parse packet
-				receive_object data
-			end
+  
+		def startup channels=[]
+			subscribe_to channels if channels.any?
 		end
 		
-		def receive_object hash
+		def subscribe_to channels
+			send_object 'subscribe', {'channels' => channels}
 		end
 		
-		def send_object hash
-			send_data "#{hash.to_json}\n"
-		end
-		
-		def unbind
-			puts "Disconnected from FBI, reconnecting in 5 seconds"
+		def receive_object action, data
+			case action
+				when 'auth'
+					puts "logged in"
+					@@on_auth.call data if @@on_auth
+				
+				when 'private'
+					puts "got private packet from #{data['from']}"
+					@@on_private.call data['from'], data['data'] if @@on_private
 			
-   		EventMachine::add_timer 5 do # add_periodic_timer
-   			EventMachine.next_tick { self.class.connect *@args }
-				#timer.cancel if (n+=1) > 5
+				when 'publish'
+					puts "got public packet from #{data['from']} via #{data['channel']}"
+					@@on_published.call data['channel'], data['data'] if @@on_published
 			end
 		end
 	end
 end
-
-#~ EventMachine::run do
-  #~ EventMachine::connect "127.0.0.1", 5348, FBIClient
-  #~ EventMachine::open_datagram_socket '127.0.0.1', 1337, UDPServer
-  #~ EventMachine::add_periodic_timer( 10 ) { $stderr.write "*" }
-#~ end
