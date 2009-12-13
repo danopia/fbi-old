@@ -39,7 +39,7 @@ class Server < Connection
 					data['data']['shorturl'] = shorten_url data['data']['url']
 				end
 				
-				puts "#{@username} for #{data['to']} (#{data['id']}: #{data['data'].to_json}"
+				puts "#{@username} for #{data['to']} (#{data['id']}): #{data['data'].to_json}"
 				data['from'] = @username
 				INSTANCES.find {|conn| conn.username == data['to']}.send_object 'private', data
     

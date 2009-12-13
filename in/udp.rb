@@ -11,8 +11,6 @@ class UDPServer < EM::Protocols::LineAndTextProtocol
     while @buffer.include? "\n"
     	got_line @buffer.slice!(0, @buffer.index("\n")+1).chomp
     end
-  rescue => e
-    p e
   end
   
   def got_line line
@@ -35,6 +33,6 @@ class UDPServer < EM::Protocols::LineAndTextProtocol
 end
 
 EventMachine::run do
-  client = FBI::Client.connect 'udp', 'hil0l'
+  FBI::Client.connect 'udp', 'hil0l'
   EventMachine::open_datagram_socket '127.0.0.1', 1337, UDPServer
 end

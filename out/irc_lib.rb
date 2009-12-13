@@ -199,7 +199,7 @@ class Network
 	end
 	
 	def route_to channel, message
-		@channels[channel.downcase].message channel, message
+		(@channels[channel.downcase] || @channels.values.first).message channel, message
 	end
 	
 	def join channel, key=nil
