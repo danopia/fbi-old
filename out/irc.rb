@@ -79,22 +79,30 @@ manager.on :command do |e|
 			end
 			
 		when 'add'
-			if args[0] == 'project'
-				project = Project.find_by_name args[1]
-				project = Project.create :name => args[1] unless project
+			subcommand = args.shift.downcase
+			if subcommand == 'project'
 				server = Server.find e.network.id
 				channel = server.channels.find_by_name e.target
-				channel.project_subs.create :project => project
-				e.respond "Added #{project.name} to this channel."
 				
-			elsif args[0] == 'channel'
-				channel = Channel.create :server_id => e.network.id, :name => args[1]
+				projects = []
+				args.each do |arg|
+					project = Project.find_by_name arg
+					project = Project.create :name => arg unless project
+					next if channel.project_subs.find_by_project_id project.id
+					
+					channel.project_subs.create :project => project
+					projects << project.name
+				end
+				e.respond "Added #{projects.join ', '} to this channel."
+				
+			elsif subcommand == 'channel'
+				channel = Channel.create :server_id => e.network.id, :name => args.shift
 				e.network.join channel.name
 				e.respond "Joined #{channel.name}."
 				
-			elsif args[0] == 'server'
-				server = Server.create :hostname => args[1]
-				channel = server.channels.create :name => args[2]
+			elsif subcommand == 'server'
+				server = Server.create :hostname => args.shift
+				channel = server.channels.create :name => args.shift
 				manager.spawn_from_record server
 				e.respond "Connecting to #{server.hostname}, and I'll join #{channel.name} once I'm there."
 			end
