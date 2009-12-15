@@ -85,15 +85,20 @@ manager.on :command do |e|
 				channel = server.channels.find_by_name e.target
 				
 				projects = []
+				already_added = 0
 				args.each do |arg|
 					project = Project.find_by_name arg
 					project = Project.create :name => arg unless project
-					next if channel.project_subs.find_by_project_id project.id
+					if channel.project_subs.find_by_project_id project.id
+						already_added += 1
+						next
+					end
 					
 					channel.project_subs.create :project => project
 					projects << project.name
 				end
-				e.respond "Added #{projects.join ', '} to this channel."
+				
+				e.respond "Added #{projects.join ', '} to this channel." + (already_added > 0 ? " (#{already_added} projects were already added.)" : '')
 				
 			elsif subcommand == 'channel'
 				channel = Channel.create :server_id => e.network.id, :name => args.shift
