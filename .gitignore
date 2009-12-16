@@ -1,2 +1,5 @@
 */geany_run_script.sh
 */*.sqlite3
+
+www/db/*.sqlite3
+www/log

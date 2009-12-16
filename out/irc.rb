@@ -27,7 +27,7 @@ manager.on :ctcp do |e|
 			message = e.params.last.join ' '
 			
 			e.action "shoots #{e.origin[:nick]}" if message.index("evades the FBI") == 0
-			e.action "tastes crunchy" if message.index("eats FBI") == 0
+			e.action "tastes crunchy" if message.index("eats #{e.conn.nick}") == 0
 			e.action "dies" if message.index("kills #{e.conn.nick}") == 0
 			e.action "hugs #{e.origin[:nick]}" if message.index("hugs #{e.conn.nick}") == 0
 			e.message "ow" if message.index("kicks #{e.conn.nick}") == 0
