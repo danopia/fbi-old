@@ -16,19 +16,8 @@ class UDPServer < EM::Protocols::LineAndTextProtocol
   def got_line line
     next unless line && line.size > 0
     
-    data = JSON.parse line
-    
-    data['commits'].each do |commit|
-      output = {
-        :project => data['repository']['name'],
-        :author => commit['author'],
-        :branch => data['ref'].split('/').last,
-        :commit => commit['id'],
-        :message => commit['message'],
-        :url => commit['url']
-      }
-      FBI::Client.publish 'commits', output
-    end
+    data = JSON.parse line # validate
+		FBI::Client.publish 'commits', data
   end
 end
 
