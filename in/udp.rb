@@ -7,7 +7,7 @@ class UDPServer < EM::Protocols::LineAndTextProtocol
 
   def receive_data data
     @buffer += data
-    p data
+    puts data
     while @buffer.include? "\n"
     	got_line @buffer.slice!(0, @buffer.index("\n")+1).chomp
     end

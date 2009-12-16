@@ -1,0 +1,46 @@
+
+
+Processing ApplicationController#index (for 192.168.1.46 at 2009-12-16 17:35:55) [GET]
+
+ActionController::RoutingError (No route matches "/a" with {:method=>:get}):
+  thin (1.2.5) lib/thin/connection.rb:76:in `pre_process'
+  thin (1.2.5) lib/thin/connection.rb:74:in `catch'
+  thin (1.2.5) lib/thin/connection.rb:74:in `pre_process'
+  thin (1.2.5) lib/thin/connection.rb:57:in `process'
+  thin (1.2.5) lib/thin/connection.rb:42:in `receive_data'
+  eventmachine (0.12.10) lib/eventmachine.rb:256:in `run_machine'
+  eventmachine (0.12.10) lib/eventmachine.rb:256:in `run'
+  thin (1.2.5) lib/thin/backends/base.rb:57:in `start'
+  thin (1.2.5) lib/thin/server.rb:156:in `start'
+  thin (1.2.5) lib/thin/controllers/controller.rb:80:in `start'
+  thin (1.2.5) lib/thin/runner.rb:177:in `send'
+  thin (1.2.5) lib/thin/runner.rb:177:in `run_command'
+  thin (1.2.5) lib/thin/runner.rb:143:in `run!'
+  thin (1.2.5) bin/thin:6
+  /var/lib/gems/1.8/bin/thin:19:in `load'
+  /var/lib/gems/1.8/bin/thin:19
+
+Rendering rescues/layout (not_found)
+
+
+Processing ApplicationController#index (for 192.168.1.46 at 2009-12-16 17:35:57) [GET]
+
+ActionController::RoutingError (No route matches "/github" with {:method=>:get}):
+  thin (1.2.5) lib/thin/connection.rb:76:in `pre_process'
+  thin (1.2.5) lib/thin/connection.rb:74:in `catch'
+  thin (1.2.5) lib/thin/connection.rb:74:in `pre_process'
+  thin (1.2.5) lib/thin/connection.rb:57:in `process'
+  thin (1.2.5) lib/thin/connection.rb:42:in `receive_data'
+  eventmachine (0.12.10) lib/eventmachine.rb:256:in `run_machine'
+  eventmachine (0.12.10) lib/eventmachine.rb:256:in `run'
+  thin (1.2.5) lib/thin/backends/base.rb:57:in `start'
+  thin (1.2.5) lib/thin/server.rb:156:in `start'
+  thin (1.2.5) lib/thin/controllers/controller.rb:80:in `start'
+  thin (1.2.5) lib/thin/runner.rb:177:in `send'
+  thin (1.2.5) lib/thin/runner.rb:177:in `run_command'
+  thin (1.2.5) lib/thin/runner.rb:143:in `run!'
+  thin (1.2.5) bin/thin:6
+  /var/lib/gems/1.8/bin/thin:19:in `load'
+  /var/lib/gems/1.8/bin/thin:19
+
+Rendering rescues/layout (not_found)
