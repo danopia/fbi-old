@@ -14,12 +14,14 @@ class CommitHookController < ApplicationController
 			data['commits'].first['message'] = "(previous commits dropped --FBI) " + data['commits'].first['message']
 		end
 		
+		data['commits'].pop if data['commits'].size > 1 && data['commits'].last['message'] =~ /^Merge remote branch/ && data['repository']['fork']
+		
 		data['commits'].each do |commit|
 		
 			# previous commit?
-			dup = `grep sha1s.txt #{commit['id']}`.size > 0
+			dup = `grep #{commit['id']} sha1s.txt`.size > 0
 			if dup
-				next if !data['repository']['fork']
+				next if data['repository']['fork'] || !(commit['message'] =~ /^Merge remote branch/)
 				commit['message'] << ' (merged into upstream from fork --FBI)'
 			else
 				`echo #{commit['id']} >> sha1s.txt`
@@ -27,6 +29,7 @@ class CommitHookController < ApplicationController
 			
 			output = {
 				:project => data['repository']['name'],
+				:project2 => data['repository']['owner']['name'],
 				:author => commit['author'],
 				:branch => data['ref'].split('/').last,
 				:commit => commit['id'],

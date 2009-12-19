@@ -78,6 +78,18 @@ manager.on :command do |e|
 				e.respond "#{channel.name} is no longer a catchall."
 			end
 			
+		when 'default'
+			server = Server.find e.network.id
+			channel = server.channels.find_by_name e.target
+			e.respond "The default GitHub project for #{channel.name} is #{channel.default_project}."
+			
+		when 'set-default'
+			server = Server.find e.network.id
+			channel = server.channels.find_by_name e.target
+			channel.default_project = (args.shift.downcase rescue nil)
+			channel.save
+			e.respond "The default GitHub project for #{channel.name} is now #{channel.default_project}."
+			
 		when 'add'
 			subcommand = args.shift.downcase
 			if subcommand == 'project'
@@ -113,6 +125,8 @@ manager.on :command do |e|
 			end
 		
 		else
+			server = Server.find e.network.id
+			channel = server.channels.find_by_name e.target
 			FBI::Client.publish 'irc', {
 				:server => e.network.id,
 				:channel => e.target,
@@ -120,6 +134,7 @@ manager.on :command do |e|
 				:command => command,
 				:args => args,
 				:admin => e.admin?,
+				:default_project => channel.default_project,
 			}
 	end
 end
@@ -156,7 +171,8 @@ end
 
 
 FBI::Client.on_published do |channel, data|
-	message = "\002#{data['project']}:\017 \00303#{data['author']['name']} \00307#{data['branch']}\017 \002#{data['commit'][0,8]}\017: #{data['message'].gsub("\n", ' ')} \00302<\002\002#{data['shorturl']}>"
+	data['project2'] << '/' if data['project2']
+	message = "#{data['project2']}\002#{data['project']}:\017 \00303#{data['author']['name']} \00307#{data['branch']}\017 \002#{data['commit'][0,8]}\017: #{data['message'].gsub("\n", ' ')} \00302<\002\002#{data['shorturl']}>"
 	
 	route data['project'], message
 end

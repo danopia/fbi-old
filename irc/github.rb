@@ -10,20 +10,43 @@ end
 class GithubCommands < CommandProvider
 	auth 'github irc commands', 'hil0l'
 	
+	on :repo do |data|
+		if project = data['default_project']
+			reply_to data, "The GitHub project for #{data['channel']} is at <http://github.com/#{data['default_project']}>. Clone command: `git clone git://github.com/#{data['default_project']}.git`"
+		else
+			reply_to data, "#{data['channel']} doesn't have a default project set up. Use the set-default project to add one."
+		end
+	end
+	
 	on :github do |data|
 		begin
 			cmd = data['args'].shift
 			case cmd.downcase
+				
+				when 'issues'
+					project = data['args'].last || data['default_project']
+					
+					open = load_api('issues', 'list', project, 'open')['issues']
+					closed = load_api('issues', 'list', project, 'closed')['issues']
+					
+					message = "#{project} has #{open.size} open and #{closed.size} closed issues."
+					
+					if open.any?
+						open.sort! {|a, b| b['updated_at'] <=> a['updated_at'] }
+						message << " Recent issues: " + open[0,3].map{|issue| issue['title'] }.join(' || ')
+					end
+					
+					reply_to data, message
 			
 				when 'ls'
 					reply_to data, load_api('repos', 'show', data['args'].shift)['repositories'].map{|repo| repo[:name]}.join(', ')
 			
 				when 'info'
-					info = load_api('repos', 'show', data['args'].shift)['repository']
-					reply_to data, "#{info[:owner]}/#{info[:name]}: #{info[:description]} [#{info[:watchers]} watcher(s), #{info[:forks]} fork(s)]"
+					info = load_api('repos', 'show', data['args'].shift || data['default_project'])['repository']
+					reply_to data, "#{info[:owner]}/#{info[:name]}: #{info[:description]} [#{info[:watchers]} watchers, #{info[:forks]} forks, #{info[:open_issues]} open issues]"
 	
 				when 'network'
-					info = load_api('repos', 'show', data['args'].shift, 'network')
+					info = load_api('repos', 'show', data['args'].shift || data['default_project'], 'network')
 					info = info['network'].map do |fork|
 						"#{fork[:owner]}/#{fork[:name]}"
 					end
@@ -32,41 +55,8 @@ class GithubCommands < CommandProvider
 			end
 		rescue OpenURI::HTTPError => e
 			reply_to data, e.message
-		end
-	end
-	
-	on :convert do |data|
-		types = data['args'].shift.split('->')
-		number = data['args'].join ' '
-		
-		types.map! do |type|
-			case type
-				when 'hex': 16
-				when 'dec': 10
-				when 'oct': 7
-				when 'ter': 3
-				when 'bin': 2
-				else; type.to_i
-			end
-		end
-		
-		reply_to data, number.to_i(types[0]).to_s(types[1])
-	end
-	
-	on :bin2dec do |data|
-		reply_to data, data['args'].join(' ').to_i(2).to_s
-	end
-	on :dec2bin do |data|
-		reply_to data, data['args'].join(' ').to_i.to_s(2)
-	end
-	
-	on :badtime do |data|
-		reply_to data, (Time.now.utc+(11*60*60)).strftime('It is currently %I:%M:%S %p where baddog lives.')
-	end
-	
-	on :fortune do |data|
-		`fortune -s`.chomp.each_line do |line|
-			reply_to data, line
+		rescue => e
+			STDOUT.puts e.class, e.inspect, e.bactrace
 		end
 	end
 	

@@ -111,5 +111,14 @@ class CreateProjectSubs < Migration::V(4)
 	end
 end
 
+class AddDefaultProjectToChannel < Migration::V(5)
+	def self.up
+		add_column :channels, :default_project, :string
+	end
+	def self.down
+		remove_column :channels, :default_project
+	end
+end
+
 Migration::debug
 Migration::create_schema
