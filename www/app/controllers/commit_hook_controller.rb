@@ -5,9 +5,26 @@ class CommitHookController < ApplicationController
 	protect_from_forgery :only => []
 	
 	def github
-		return unless params[:payload]
-		data = JSON.parse params[:payload]
+		return unless params['payload']
+		data = JSON.parse params['payload']
+		
+		# merge floods
+		if data['commits'].size > 3
+			data['commits'].shift until data['commits'].size == 3
+			data['commits'].first['message'] = "(previous commits dropped --FBI) " + data['commits'].first['message']
+		end
+		
 		data['commits'].each do |commit|
+		
+			# previous commit?
+			dup = `grep sha1s.txt #{commit['id']}`.size > 0
+			if dup
+				next if !data['repository']['fork']
+				commit['message'] << ' (merged into upstream from fork --FBI)'
+			else
+				`echo #{commit['id']} >> sha1s.txt`
+			end
+			
 			output = {
 				:project => data['repository']['name'],
 				:author => commit['author'],
