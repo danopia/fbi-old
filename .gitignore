@@ -2,4 +2,5 @@
 */*.sqlite3
 
 www/db/*.sqlite3
-www/log
+www/log/
+www/tmp/
