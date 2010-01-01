@@ -39,7 +39,7 @@ class GithubCommands < CommandProvider
 					reply_to data, message
 			
 				when 'ls'
-					reply_to data, load_api('repos', 'show', data['args'].shift)['repositories'].map{|repo| repo[:name]}.join(', ')
+					reply_to data, load_api('repos', 'show', data['args'].shift)['repositories'].map{|repo| repo[:name] + (repo[:fork] ? ' (fork)' : '')}.join(', ')
 			
 				when 'info'
 					info = load_api('repos', 'show', data['args'].shift || data['default_project'])['repository']
