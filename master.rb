@@ -25,7 +25,7 @@ class ModuleRunner < EventMachine::Connection
   
   def self.add_runner name, script
 		EM.next_tick do
-      EM.popen "ruby ./#{script}.rb 2>&1", ModuleRunner, name, script
+      EM.popen "sh ./run.sh #{File.dirname script} #{File.basename script}.rb", ModuleRunner, name, script
 		end
   end
 
@@ -34,6 +34,7 @@ class ModuleRunner < EventMachine::Connection
 		
     @name = name
 		@script = script
+    @buffer = ''
     
     $bot[:main].send_cmd :privmsg, '#bots', "Started #{@name} (#{@script})"
     puts "Started #{@name} (#{@script})"
@@ -74,8 +75,10 @@ bot[:main].on '001' do
   join '#illusion'
 
   # doesn't go here
+  ModuleRunner.add_runner 'server', modules['server']
+  sleep 1
   modules.each_pair do |name, script|
-    ModuleRunner.add_runner name, script
+    ModuleRunner.add_runner name, script unless name == 'server'
   end
 end
  
