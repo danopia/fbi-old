@@ -76,7 +76,7 @@ bot[:main].on '001' do
 
   # doesn't go here
   ModuleRunner.add_runner 'server', modules['server']
-  sleep 1
+  sleep 2.5
   modules.each_pair do |name, script|
     ModuleRunner.add_runner name, script unless name == 'server'
   end
