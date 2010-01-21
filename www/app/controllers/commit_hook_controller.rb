@@ -10,8 +10,9 @@ class CommitHookController < ApplicationController
 		
 		# merge floods
 		if data['commits'].size > 3
+			dropped = data['commits'].size - 3
 			data['commits'].shift until data['commits'].size == 3
-			data['commits'].first['message'] = "(previous commits dropped --FBI) " + data['commits'].first['message']
+			data['commits'].first['message'] = "(#{dropped} previous commit[s] dropped --FBI) " + data['commits'].first['message']
 		end
 		
 		data['commits'].pop if data['commits'].size > 1 && data['commits'].last['message'] =~ /^Merge remote branch/ && data['repository']['fork']
