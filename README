@@ -1,16 +1,47 @@
 FBI Version Control Informant
 ==============================================
 
-This code depends on an IRCd running at localhost:6667. It uses Scott's on_irc library for clients.
+FBI is, at the core, a code-oriented message relay. It is what you would
+get when you cross XMPP with IRC, except with JSON instead of XML. The
+relay server allows components to connect, auth, subscribe to channels,
+and publish to channels or to named components.
 
-out/ - The different methods/bots that take info out of the system. These bots commonly have a nick that starts with "out_". The most important bot here will eventually be the IRC one.
+I'm not getting into the protocol here; that belongs elsewhere.
 
-in/ - The different methods/bots that bring info in to the system. These bots commonly have a nick that starts with "in_". Important note here: The email one wants you to pipe in an email stream. On unix-y systems, this would involve something like `tail -n 0 -f /var/mail/fbi | ruby bot.rb`.
+FBI has a few different categories of components. There are input
+components, which bring data into the system; output components, which
+bring data out of the system; and IRC components, which basically just
+communicate with the IRC output component to provide IRC commands.
 
-on_irc/ - on_irc library.
+Contents
+-------
 
-server/ - A special server just for FBI message hubbing. Current GServer's source :)
+out/ - Contains the output components. The big one here is IRC. Please
+       note that the IRC module will not run until you migrate the DB
+       tables, so run a quick `ruby irc_migrate.rb` before you run
+       irc.rb. You'll have to remigrate if I change the schemas later.
 
-common/ - Shared classes for all the FBI bots to use. These are used for the JSON parsing and other cool stuff.
+in/  - Contains the input components. The big one here is UDP. The UDP
+       component receives messages from a UDP socket on port 1337 and
+       publishes what it receives to the "irc" channel. The web-app uses
+       this (but soon it will either connect personally or just forward
+       what it gets to a GitHub component for processing).
+       
+       Important note here: The (non-working) email one wants you to
+       pipe in an email stream. On unix-y systems, this would involve
+       something like `tail -n 0 -f /var/mail/fbi | ruby email.rb`.
+
+www/ - A rails app that is used to receive webhooks from github. Soon to
+       be replaced by a PHP file for RAM reasons. Depends on the 'udp'
+       in component to fully work.
+
+server.rb - The FBI message relay hub. Uses a custom JSON protocol.
+            Listens on TCP port 5348. Binds to localhost by default as
+            of the writing of this sentence (to be changed to 0.0.0.0).
+            
+            Everything relies on this.
+
+common/ - Shared classes for all the FBI components to use. Contains
+          goodies for EventMachine and some other misc stuff.
 
 --danopia
