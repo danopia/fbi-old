@@ -1,9 +1,5 @@
 require File.join(File.dirname(__FILE__), 'common', 'connection')
-
-require 'open-uri'
-def shorten_url url
-  open('http://is.gd/api.php?longurl=' + url).read
-end
+require File.join(File.dirname(__FILE__), 'common', 'tinyurl')
 
 module FBI
   class Server < Connection
