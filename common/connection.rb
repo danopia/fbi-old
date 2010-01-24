@@ -1,12 +1,11 @@
+require File.join(File.dirname(__FILE__), 'lineconnection')
+
 $stdout.sync = true
 
-require 'rubygems'
-require 'eventmachine'
-require 'socket'
 require 'json'
 
 module FBI
-class Connection < EventMachine::Connection
+class Connection < LineConnection
 	attr_accessor :username, :secret, :args, :port, :ip
 	INSTANCES = []
 	
@@ -16,7 +15,6 @@ class Connection < EventMachine::Connection
 		@username		= username
 		@secret			= secret
 		@args				= args
-		@buffer			= ''
 		
 		@@instance	= self
     INSTANCES << self
@@ -25,25 +23,19 @@ class Connection < EventMachine::Connection
   def post_init
 		login if @username
 		startup *@args if respond_to? :startup
-    
-    sleep 0.25
-    @port, @ip = Socket.unpack_sockaddr_in get_peername
-    puts "Connected to #{@ip}:#{@port}"
+		
+		super
   end
 		
 	def send_object action, hash
 		hash['action'] = action
-		send_data "#{hash.to_json}\n"
+		send_line hash.to_json
 	end
 
-  def receive_data data
-    @buffer += data
-    while @buffer.include? "\n"
-      line = @buffer.slice!(0, @buffer.index("\n")+1).chomp
-      hash = JSON.parse line
-      receive_object hash['action'], hash
-    end
-    
+  def receive_line line
+		hash = JSON.parse line
+		receive_object hash['action'], hash
+ 
   rescue JSON::ParserError => ex
     puts "Error parsing JSON: #{ex.message}"
   end
@@ -52,7 +44,7 @@ class Connection < EventMachine::Connection
   end
   
   def unbind
-  	puts "connection closed to #{@ip}:#{@port}"
+  	super
   	INSTANCES.delete self
   end
 end # class
