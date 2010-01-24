@@ -38,9 +38,7 @@ module FBI
 		end
 
 		def on_private data
-			if data['data'].has_key? 'url'
-				data['data']['shorturl'] = shorten_url data['data']['url']
-			end
+			shorten_url_if_present data['data']
 
 			puts "#{@username} for #{data['to']} (#{data['id']}): #{data['data'].to_json}"
 			data['from'] = @username
@@ -48,9 +46,7 @@ module FBI
 		end
 
 		def on_publish data
-			if data['data'].has_key? 'url'
-				data['data']['shorturl'] = shorten_url data['data']['url']
-			end
+			shorten_url_if_present data['data']
 
 			puts "#{@username} to #{data['channel']}: #{data['data'].to_json}"
 			data['from'] = @username
