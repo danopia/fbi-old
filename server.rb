@@ -61,12 +61,12 @@ module FBI
 		
 		def for_client name, &blck
 			client = INSTANCES.find {|conn| conn.username == name}
-			&blck.call client if client
+			blck.call client if client
 			client
 		end
 		def for_subscribers_of channel, &blck
 			INSTANCES.each do |conn|
-				&blck.call conn if conn.channels.include? channel
+				blck.call conn if conn.channels.include? channel
 			end
 		end
   end
