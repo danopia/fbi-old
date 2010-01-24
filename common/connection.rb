@@ -39,10 +39,13 @@ class Connection < EventMachine::Connection
   def receive_data data
     @buffer += data
     while @buffer.include? "\n"
-    	line = @buffer.slice!(0, @buffer.index("\n")+1).chomp
-    	hash = JSON.parse line
-    	receive_object hash['action'], hash
+      line = @buffer.slice!(0, @buffer.index("\n")+1).chomp
+      hash = JSON.parse line
+      receive_object hash['action'], hash
     end
+    
+  rescue JSON::ParserError => ex
+    puts "Error parsing JSON: #{ex.message}"
   end
   
   def receive_object action, data
