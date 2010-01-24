@@ -1,10 +1,3 @@
-# irc.rb: Ruby IRC bot library
-# Copyright (c) 2009 Nick Markwell (duckinator/RockerMONO on irc.freenode.net)
-# usage:
-#   irc = IRC.new("irc.freenode.net", 6667, "ircbot1", "#botters")
-#  	irc.connect
-#   irc.main_loop
- 
 require "socket"
 
 module FBI_IRC
@@ -78,20 +71,6 @@ class Manager
 		@networks[network].route_to channel, message
 	end
 	
-	# Just keep on truckin'. Forever.
-	def run
-		handle_socks while true
-	end
-	
-	def handle_socks
-		ready = select self.socks, nil, self.socks
-		return unless ready
-		
-		(ready[0] + ready[2]).each do |sock|
-			sock.connection.read_packet
-		end
-	end
-	
 	def spawn_network config
 		network = Network.new self, config
 		@networks[network.id] = network # TODO: Only does one connection/ip (ports anyone?)
@@ -99,14 +78,7 @@ class Manager
 	
 	def spawn_from_record record
 		spawn_network :id => record.id, :server => record.hostname, :port => record.port, :channels => record.channels.map{|chan| chan.name}
-	end
-	
-	protected
-	
-	def socks
-		@networks.values.map {|network| network.socks }.flatten
-	end
-	
+	end	
 end # manager class
 
 class EventContext
@@ -229,7 +201,7 @@ class Network
 	end
 	
 	def spawn_connection
-		conn = Connection.spawn self
+		conn = EventMachine::connect @server, (@port || 6667), Connection, self
 		@next_id += 1
 		conn
 	end
@@ -241,14 +213,10 @@ class Network
 		
 		@connections.delete conn
 	end
-	
-	def socks
-		@connections.map {|conn| conn.sock }
-	end
 end # network class
 
-class Connection
-	attr_reader :network, :nick, :sock, :channels
+class Connection < FBI::LineConnection
+	attr_reader :network, :nick, :channels
 	
 	def self.spawn network
 		conn = self.new network
