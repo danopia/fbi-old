@@ -42,6 +42,10 @@ module FBI
 
 			puts "#{@username} for #{data['to']} (#{data['id']}): #{data['data'].to_json}"
 			data['from'] = @username
+<<<<<<< HEAD:server.rb
+=======
+			
+>>>>>>> f3c1aba481b89753a7f35e6565b4e2452e0db7d7:server.rb
 			for_client data['to'] do |client|
 				client.send_object 'private', data
 			end
@@ -53,8 +57,8 @@ module FBI
 			puts "#{@username} to #{data['channel']}: #{data['data'].to_json}"
 			data['from'] = @username
 
-			for_subscribers_of data['channel'] do |conn|
-				conn.send_object 'publish', data
+			for_subscribers_of data['channel'] do |client|
+				client.send_object 'publish', data
 			end
     end
 		
