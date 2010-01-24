@@ -28,6 +28,7 @@ module FBI
 			@username = data['user']
 			@secret = data['secret']
 			puts "#{@ip}:#{@port} authed as #{@username}:#{@secret}"
+			data.delete 'secret'
 			send_object 'auth', data
 		end
 		
