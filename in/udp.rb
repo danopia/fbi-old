@@ -1,4 +1,4 @@
-require '../common/client'
+require File.join(File.dirname(__FILE__), '..', 'common', 'client')
 
 class UDPServer < EM::Protocols::LineAndTextProtocol
   def initialize

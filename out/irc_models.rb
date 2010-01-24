@@ -4,7 +4,7 @@ require 'active_record'
 # connect to the database
 ActiveRecord::Base.establish_connection({
 	:adapter => "sqlite3",
-	:database => "irc.sqlite3"
+	:database => File.join(File.dirname(__FILE__), 'irc.sqlite3')
 })
  
 class Project < ActiveRecord::Base

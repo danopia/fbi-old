@@ -1,7 +1,7 @@
-require '../common/client'
+require File.join(File.dirname(__FILE__), '..', 'common', 'client')
 
-require 'irc_models'
-require 'irc_lib'
+require File.join(File.dirname(__FILE__), 'irc_models')
+require File.join(File.dirname(__FILE__), 'irc_lib')
 
 manager = FBI_IRC::Manager.new 'FBI-', 'fbi', 'FBI Version Control Informant'
 $manager = manager

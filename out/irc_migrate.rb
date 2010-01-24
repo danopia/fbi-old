@@ -1,4 +1,4 @@
-require 'irc_models'
+require File.join(File.dirname(__FILE__), 'irc_models')
 
 class Object #:nodoc:
 	def meta_def(m,&b) #:nodoc:
