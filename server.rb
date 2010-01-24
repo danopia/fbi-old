@@ -17,44 +17,52 @@ module FBI
     end
 
     def receive_object action, data
-      case action
-	when 'auth'
-	  @username = data['user']
-	  @secret = data['secret']
-	  puts "#{@ip}:#{@port} authed as #{@username}:#{@secret}"
-	  send_object 'auth', data
+			if respond_to? "on_#{action}"
+				__send__ "on_#{action}", data
+			else
+				puts "Recieved unknown packet #{action}"
+			end
+		end
+		
+		def on_auth data
+			@username = data['user']
+			@secret = data['secret']
+			puts "#{@ip}:#{@port} authed as #{@username}:#{@secret}"
+			send_object 'auth', data
+		end
+		
+		def on_subscribe data
+			@channels |= data['channels']
+			puts "#{@username} subscribed to #{data['channels'].join ', '}"
+			send_object 'subscribe', data
+		end
 
-	when 'subscribe'
-	  @channels |= data['channels']
-	  puts "#{@username} subscribed to #{data['channels'].join ', '}"
-	  send_object 'subscribe', data
+		def on_private data
+			if data['data'].has_key? 'url'
+				data['data']['shorturl'] = shorten_url data['data']['url']
+			end
 
-	when 'private'
-	  if data['data'].has_key? 'url'
-	    data['data']['shorturl'] = shorten_url data['data']['url']
-	  end
+			puts "#{@username} for #{data['to']} (#{data['id']}): #{data['data'].to_json}"
+			data['from'] = @username
+			INSTANCES.find {|conn| conn.username == data['to']}.send_object 'private', data
+		end
 
-	  puts "#{@username} for #{data['to']} (#{data['id']}): #{data['data'].to_json}"
-	  data['from'] = @username
-	  INSTANCES.find {|conn| conn.username == data['to']}.send_object 'private', data
+		def on_publish data
+			if data['data'].has_key? 'url'
+				data['data']['shorturl'] = shorten_url data['data']['url']
+			end
 
-	when 'publish'
-	  if data['data'].has_key? 'url'
-	    data['data']['shorturl'] = shorten_url data['data']['url']
-	  end
+			puts "#{@username} to #{data['channel']}: #{data['data'].to_json}"
+			data['from'] = @username
 
-	  puts "#{@username} to #{data['channel']}: #{data['data'].to_json}"
-	  data['from'] = @username
-
-	  INSTANCES.each do |conn|
-	    conn.send_object 'publish', data if conn.channels.include? data['channel']
-	  end
-	end
+			INSTANCES.each do |conn|
+				conn.send_object 'publish', data if conn.channels.include? data['channel']
+			end
     end
   end
 end
 
 EM.run do
   FBI::Server.serve
-  puts "server started"
+  puts "Server started"
 end
