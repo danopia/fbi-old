@@ -42,7 +42,10 @@ module FBI
 
 			puts "#{@username} for #{data['to']} (#{data['id']}): #{data['data'].to_json}"
 			data['from'] = @username
-			INSTANCES.find {|conn| conn.username == data['to']}.send_object 'private', data
+			
+			for_client data['to'] do |client|
+				client.send_object 'private', data
+			end
 		end
 
 		def on_publish data
@@ -51,10 +54,23 @@ module FBI
 			puts "#{@username} to #{data['channel']}: #{data['data'].to_json}"
 			data['from'] = @username
 
-			INSTANCES.each do |conn|
-				conn.send_object 'publish', data if conn.channels.include? data['channel']
+			for_subscribers_of data['channel'] do |client|
+				client.send_object 'publish', data
 			end
     end
+		
+		
+		def for_client name, &blck
+			client = INSTANCES.find {|conn| conn.username == name}
+			&blck.call client if client
+			client
+		end
+		
+		def for_subscribers_of channel, &blck
+			INSTANCES.each do |conn|
+				&blck.call conn if conn.channels.include? channel
+			end
+		end
   end
 end
 
