@@ -1,3 +1,5 @@
+# WARNING! THIS FILE IS EXTREMELY OUT OF DATE AND WILL NOT RUN!
+# File an issue on GitHub if you would like a working email component.
 
 if STDIN.tty?  # we need a pipeline
 	puts "You need to feed me mail!"
