@@ -36,6 +36,12 @@ module FBI
 			}
 		end
 		
+		def login
+			send_object 'auth', {
+				'user'		=> @username,
+				'secret'	=> @secret
+			}
+		end
   
 		def startup channels=[]
 			subscribe_to channels if channels.any?

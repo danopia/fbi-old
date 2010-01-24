@@ -47,13 +47,6 @@ class Connection < EventMachine::Connection
   
   def receive_object action, data
   end
-		
-	def login
-		send_object 'auth', {
-			'user'		=> @username,
-			'secret'	=> @secret
-		}
-	end
   
   def unbind
   	puts "connection closed to #{@ip}:#{@port}"
