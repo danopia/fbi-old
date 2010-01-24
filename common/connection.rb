@@ -6,11 +6,11 @@ require 'json'
 
 module FBI
 class Connection < LineConnection
-	attr_accessor :username, :secret, :args, :port, :ip
+	attr_accessor :username, :secret, :args
 	INSTANCES = []
 	
 	def initialize username=nil, secret=nil, *args
-		super()
+		super() # init @buffer
 		
 		@username		= username
 		@secret			= secret
@@ -24,7 +24,7 @@ class Connection < LineConnection
 		login if @username
 		startup *@args if respond_to? :startup
 		
-		super
+		super # grab IP
   end
 		
 	def send_object action, hash
@@ -44,7 +44,7 @@ class Connection < LineConnection
   end
   
   def unbind
-  	super
+  	super # log to console
   	INSTANCES.delete self
   end
 end # class
