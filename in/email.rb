@@ -92,17 +92,17 @@ Thread.new{ irc.connect }
 inmessage = false
 
 while((line = STDIN.gets))
-	p line
-	if inmessage
-		if line =~ /^==END MESSAGE$/
-			inmessage = false
-		elsif line[0] == ''
-			irc.msg('#email', line)
-		else
-			irc.msg('#email', line)
-			#irc.msg('#email', 'charlie fails')
-		end
-	elsif line =~ /^==BEGIN MESSAGE$/
-		inmessage = true
-	end
+  p line
+  if inmessage
+    if line =~ /^==END MESSAGE$/
+      inmessage = false
+    elsif line[0] == ''
+      irc.msg('#email', line)
+    else
+      irc.msg('#email', line)
+      #irc.msg('#email', 'charlie fails')
+    end
+  elsif line =~ /^==BEGIN MESSAGE$/
+    inmessage = true
+  end
 end

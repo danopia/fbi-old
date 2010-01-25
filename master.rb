@@ -14,23 +14,23 @@ end
 $bot = bot
 
 class ModuleRunner < EventMachine::Connection
-	attr_accessor :name, :script
-  
-	def self.runners
-		@@runners ||= {}
-	end
+  attr_accessor :name, :script
+
+  def self.runners
+    @@runners ||= {}
+  end
   def runners
     @@runners ||= {}
   end
   
   def self.add_runner name, script
-		EM.next_tick do
+    EM.next_tick do
       EM.popen "sh ./run.sh #{File.dirname script} #{File.basename script}.rb", ModuleRunner, name, script
-		end
+    end
   end
 
-	def initialize name, script
-		super
+  def initialize name, script
+    super
 		
     @name = name
 		@script = script
@@ -39,26 +39,26 @@ class ModuleRunner < EventMachine::Connection
     $bot[:main].send_cmd :privmsg, '#bots', "Started #{@name} (#{@script})"
     puts "Started #{@name} (#{@script})"
 		
-		runners[name] = self
-	end
+    runners[name] = self
+  end
 	
-	def replace
-		close_connection
-		self.class.add_runner @name, @script
-	end
+  def replace
+    close_connection
+    self.class.add_runner @name, @script
+  end
 	
-	def receive_data data
-		@buffer += data
-		while @buffer.include? "\n"
-			line = @buffer.slice! 0, @buffer.index("\n") + 1
-			puts "#{@name}: #{line}"
-		end
-	end
+  def receive_data data
+    @buffer += data
+    while @buffer.include? "\n"
+      line = @buffer.slice! 0, @buffer.index("\n") + 1
+      puts "#{@name}: #{line}"
+    end
+  end
 
-	def unbind
-		puts "\e[0;1;31m#{@name}: DIED with exit status #{get_status.exitstatus}\e[0m"
-    $bot[:main].send_cmd :privmsg, '#bots', "#{@name} has \002DIED\002! Exit code: #{get_status.exitstatus}"
-	end
+  def unbind
+    puts "\e[0;1;31m#{@name}: DIED with exit status #{get_status.exitstatus}\e[0m"
+$bot[:main].send_cmd :privmsg, '#bots', "#{@name} has \002DIED\002! Exit code: #{get_status.exitstatus}"
+  end
 end
 
 modules = {
