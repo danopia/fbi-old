@@ -157,8 +157,6 @@ Server.all.each do |server|
 	manager.spawn_from_record server
 end
 
-Thread.new { manager.run }
-
 def route project, message
 	channels = Channel.find_all_by_catchall true
 	

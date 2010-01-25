@@ -77,7 +77,9 @@ class Manager
 	end
 	
 	def spawn_from_record record
-		spawn_network :id => record.id, :server => record.hostname, :port => record.port, :channels => record.channels.map{|chan| chan.name}
+		EM.next_tick do
+			spawn_network :id => record.id, :server => record.hostname, :port => record.port, :channels => record.channels.map{|chan| chan.name}
+		end
 	end	
 end # manager class
 
