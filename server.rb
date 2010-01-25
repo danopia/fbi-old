@@ -50,7 +50,7 @@ module FBI
 		end
 
 		def on_publish data
-			shorten_url_if_present data['data']
+			FBI.shorten_url_if_present data['data']
 
 			puts "#{@username} to #{data['channel']}: #{data['data'].to_json}"
 			data['from'] = @username
