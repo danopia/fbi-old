@@ -4,7 +4,7 @@ require File.join(File.dirname(__FILE__), 'common', 'tinyurl')
 module FBI
   class Server < Connection
     def self.serve *args
-      EventMachine::start_server "127.0.0.1", 5348, self, *args
+      EventMachine::start_server "0.0.0.0", 5348, self, *args
     end
     def self.start_loop *args
       EventMachine::run { self.serve *args }
