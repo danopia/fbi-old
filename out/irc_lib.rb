@@ -185,8 +185,10 @@ class Network
 			conn = spawn_connection
 		end
 		
-		@channels[channel.downcase] = conn
-		conn.join channel, key
+		if conn
+			@channels[channel.downcase] = conn
+			conn.join channel, key
+		end
 	end
 	
 	def part channel, message
@@ -206,6 +208,9 @@ class Network
 		conn = EventMachine::connect @server, (@port || 6667), Connection, self
 		@next_id += 1
 		conn
+	rescue EventMachine::ConnectionError => ex
+		puts "Error while connecting to IRC server #{@server}:#{@port||6667}: #{ex.message}"
+		nil
 	end
 	
 	def remove_conn conn
