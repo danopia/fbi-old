@@ -218,31 +218,27 @@ end # network class
 class Connection < FBI::LineConnection
 	attr_reader :network, :nick, :channels
 	
-	def self.spawn network
-		conn = self.new network
-		conn.connect
-		network.connections << conn
-		conn
-	end
-	
 	def initialize network
+		super()
+		network.connections << self
+
 		@network = network
 		@nick = "#{network.manager.base_nick}#{network.next_id}"
 		@channels = []
+		
+		send 'nick', @nick
+		send 'user', @network.manager.ident, '0', '0', @network.manager.realname, true
+		#join @channels.join(',')
 	end
 	
 	def handle event, origin, target, *params
 		@network.manager.handle self, event, origin, target, *params
 	end
 	
-	def send_raw packet
+	def send_line packet
 		packet = packet[0,497] + '...' if packet.size > 500
-		@sock.puts packet
+		super packet
 		puts "Sent as #{@nick}: #{packet}"
-	rescue Errno::EPIPE => e
-		puts "Caught EPIPE! (I'm #{@nick}) #{e.message}"
-	rescue Errno::ECONNRESET => e
-		puts "Connection reset by peer! (I'm #{@nick})"
 	end
 	
 	# true as last arg puts a : before the last param
@@ -254,7 +250,7 @@ class Connection < FBI::LineConnection
 		
 		params[0].upcase!
 		params[1] = params[1][:nick] if params.size > 0 && params[1].is_a?(Hash)
-		send_raw params.join(' ')
+		send_line params.join(' ')
 	end
 	
 	def message target, message
@@ -292,29 +288,7 @@ class Connection < FBI::LineConnection
 		@channels.clear
 	end
 	
-	def connect
-		puts "Connecting to #{@network.server}:#{@network.port || 6667} as #{@nick}"
-		@sock = TCPSocket.open @network.server, @network.port || 6667
-		
-		@sock.instance_variable_set '@connection', self
-		def @sock.connection
-			@connection
-		end
-		
-		send 'nick', @nick
-		send 'user', @network.manager.ident, '0', '0', @network.manager.realname, true
-		#join @channels.join(',')
-	end
-	
-	def read_packet
-		packet = @sock.gets
-		handle_packet packet.chomp if packet
-	rescue Errno::ECONNRESET => e
-		puts "Connection reset by peer when reading. I'm #{@nick} on #{@network.server}."
-		@network.remove_conn self
-	end
-	
-	def handle_packet packet
+	def receive_line packet
 		puts packet
 		parts = packet.split ' :', 2
 		args = parts[0].split ' '
