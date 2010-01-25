@@ -13,6 +13,20 @@ components, which bring data into the system; output components, which
 bring data out of the system; and IRC components, which basically just
 communicate with the IRC output component to provide IRC commands.
 
+Setup
+-----
+At its current state, each component that wants a database needs to
+manage it itself. This means that some components (namely IRC) require
+you to migrate a sqlite up before they will run.
+
+What this means is that you must `ruby out/irc_migrate.rb` before you
+will be able to run the IRC component.
+
+After this, you should be able to skip to Running. Please note that, if
+my FBI is running, you will get "Nick in use" errors. Until I have a
+global config file, you'll need to open out/irc.rb and grep for "FBI-".
+Change this nick prefix to something else, such as "NRA-".
+
 Runnning
 --------
 FBI consists of a server and components. The current convention for
