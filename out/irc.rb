@@ -122,11 +122,29 @@ manager.on :command do |e|
 			elsif subcommand == 'server'
 				server = Server.create :hostname => args.shift
 				channel = server.channels.create :name => args.shift
-				manager.spawn_from_record server
-				e.respond "Connecting to #{server.hostname}, and I'll join #{channel.name} once I'm there."
+				if manager.spawn_from_record server
+					e.respond "Connecting to #{server.hostname}, and I'll join #{channel.name} once I'm there."
+				else
+					e.respond "There was an error connecting to #{server.hostname}."
+				end
+			end
+		
+		when 'remove'
+			if args.first == 'for real'
+				server = Server.find e.network.id
+				channel = server.channels.find_by_name e.target
+				channel.subscriptions.each do |subscription|
+					subscription.delete!
+				end
+				channel.delete!
+				e.respond "#{e.target} has been completely removed from FBI."
+				e.network.part channel
+			else
+				e.respond "To confirm completely removing this channel from FBI, please use the 'remove for real' command."
 			end
 		
 		else
+			puts "Unknown command #{command}; broadcasting a packet"
 			server = Server.find e.network.id
 			channel = server.channels.find_by_name e.target
 			FBI::Client.publish 'irc', {
@@ -156,8 +174,6 @@ end
 Server.all.each do |server|
 	manager.spawn_from_record server
 end
-
-Thread.new { manager.run }
 
 def route project, message
 	channels = Channel.find_all_by_catchall true

@@ -1,10 +1,3 @@
-# irc.rb: Ruby IRC bot library
-# Copyright (c) 2009 Nick Markwell (duckinator/RockerMONO on irc.freenode.net)
-# usage:
-#   irc = IRC.new("irc.freenode.net", 6667, "ircbot1", "#botters")
-#  	irc.connect
-#   irc.main_loop
- 
 require "socket"
 
 module FBI_IRC
@@ -78,35 +71,16 @@ class Manager
 		@networks[network].route_to channel, message
 	end
 	
-	# Just keep on truckin'. Forever.
-	def run
-		handle_socks while true
-	end
-	
-	def handle_socks
-		ready = select self.socks, nil, self.socks
-		return unless ready
-		
-		(ready[0] + ready[2]).each do |sock|
-			sock.connection.read_packet
-		end
-	end
-	
 	def spawn_network config
 		network = Network.new self, config
 		@networks[network.id] = network # TODO: Only does one connection/ip (ports anyone?)
 	end
 	
 	def spawn_from_record record
-		spawn_network :id => record.id, :server => record.hostname, :port => record.port, :channels => record.channels.map{|chan| chan.name}
-	end
-	
-	protected
-	
-	def socks
-		@networks.values.map {|network| network.socks }.flatten
-	end
-	
+		EM.next_tick do
+			spawn_network :id => record.id, :server => record.hostname, :port => record.port, :channels => record.channels.map{|chan| chan.name}
+		end
+	end	
 end # manager class
 
 class EventContext
@@ -211,8 +185,10 @@ class Network
 			conn = spawn_connection
 		end
 		
-		@channels[channel.downcase] = conn
-		conn.join channel, key
+		if conn
+			@channels[channel.downcase] = conn
+			conn.join channel, key
+		end
 	end
 	
 	def part channel, message
@@ -229,9 +205,12 @@ class Network
 	end
 	
 	def spawn_connection
-		conn = Connection.spawn self
+		conn = EventMachine::connect @server, (@port || 6667), Connection, self
 		@next_id += 1
 		conn
+	rescue EventMachine::ConnectionError => ex
+		puts "Error while connecting to IRC server #{@server}:#{@port||6667}: #{ex.message}"
+		nil
 	end
 	
 	def remove_conn conn
@@ -241,40 +220,32 @@ class Network
 		
 		@connections.delete conn
 	end
-	
-	def socks
-		@connections.map {|conn| conn.sock }
-	end
 end # network class
 
-class Connection
-	attr_reader :network, :nick, :sock, :channels
-	
-	def self.spawn network
-		conn = self.new network
-		conn.connect
-		network.connections << conn
-		conn
-	end
+class Connection < FBI::LineConnection
+	attr_reader :network, :nick, :channels
 	
 	def initialize network
+		super()
+		network.connections << self
+
 		@network = network
 		@nick = "#{network.manager.base_nick}#{network.next_id}"
 		@channels = []
+		
+		send 'nick', @nick
+		send 'user', @network.manager.ident, '0', '0', @network.manager.realname, true
+		#join @channels.join(',')
 	end
 	
 	def handle event, origin, target, *params
 		@network.manager.handle self, event, origin, target, *params
 	end
 	
-	def send_raw packet
+	def send_line packet
 		packet = packet[0,497] + '...' if packet.size > 500
-		@sock.puts packet
+		super packet
 		puts "Sent as #{@nick}: #{packet}"
-	rescue Errno::EPIPE => e
-		puts "Caught EPIPE! (I'm #{@nick}) #{e.message}"
-	rescue Errno::ECONNRESET => e
-		puts "Connection reset by peer! (I'm #{@nick})"
 	end
 	
 	# true as last arg puts a : before the last param
@@ -286,7 +257,7 @@ class Connection
 		
 		params[0].upcase!
 		params[1] = params[1][:nick] if params.size > 0 && params[1].is_a?(Hash)
-		send_raw params.join(' ')
+		send_line params.join(' ')
 	end
 	
 	def message target, message
@@ -324,29 +295,7 @@ class Connection
 		@channels.clear
 	end
 	
-	def connect
-		puts "Connecting to #{@network.server}:#{@network.port || 6667} as #{@nick}"
-		@sock = TCPSocket.open @network.server, @network.port || 6667
-		
-		@sock.instance_variable_set '@connection', self
-		def @sock.connection
-			@connection
-		end
-		
-		send 'nick', @nick
-		send 'user', @network.manager.ident, '0', '0', @network.manager.realname, true
-		#join @channels.join(',')
-	end
-	
-	def read_packet
-		packet = @sock.gets
-		handle_packet packet.chomp if packet
-	rescue Errno::ECONNRESET => e
-		puts "Connection reset by peer when reading. I'm #{@nick} on #{@network.server}."
-		@network.remove_conn self
-	end
-	
-	def handle_packet packet
+	def receive_line packet
 		puts packet
 		parts = packet.split ' :', 2
 		args = parts[0].split ' '

@@ -4,7 +4,7 @@ require File.join(File.dirname(__FILE__), 'common', 'tinyurl')
 module FBI
   class Server < Connection
     def self.serve *args
-      EventMachine::start_server "127.0.0.1", 5348, self, *args
+      EventMachine::start_server "0.0.0.0", 5348, self, *args
     end
     def self.start_loop *args
       EventMachine::run { self.serve *args }
@@ -39,7 +39,7 @@ module FBI
 		end
 
 		def on_private data
-			shorten_url_if_present data['data']
+			FBI.shorten_url_if_present data['data']
 
 			puts "#{@username} for #{data['to']} (#{data['id']}): #{data['data'].to_json}"
 			data['from'] = @username
@@ -50,7 +50,7 @@ module FBI
 		end
 
 		def on_publish data
-			shorten_url_if_present data['data']
+			FBI.shorten_url_if_present data['data']
 
 			puts "#{@username} to #{data['channel']}: #{data['data'].to_json}"
 			data['from'] = @username
