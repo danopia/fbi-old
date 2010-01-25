@@ -13,6 +13,43 @@ components, which bring data into the system; output components, which
 bring data out of the system; and IRC components, which basically just
 communicate with the IRC output component to provide IRC commands.
 
+Runnning
+--------
+FBI consists of a server and components. The current convention for
+running components is to run each component in its own ruby instance.
+This means that to properly run all of FBI you need to have have
+server.rb, in/udp.rb, out/irc.rb, irc/github.rb, irc/misc_commands.rb,
+etc. running independently of each other.
+
+The only rule is to run server.rb first. The server prints a line when
+it is ready but if you wait a second in a script you should be fine.
+Eventually components will autoretry until they connect to the server
+anyway.
+
+There are two different ruby scripts that attempt to handle all this for
+you. runner.rb tries to act like a CLI WM and gives each component a
+section of a terminal. The titlebars are colored green for running and
+red for stopped/errored. You can type commands such as "restart irc" to
+restart the process labeled irc. master.rb simply merges all the logs
+into one and takes commands via IRC. Both of these *work* but are pretty
+faily.
+
+To start all the components backgrounded in one terminal, use something
+like this:
+
+  ruby server.rb &
+  sleep 1
+  ruby out/irc.rb &
+  ruby in/udp.rb &
+  ruby irc/github.rb &
+  ruby irc/misc_commands.rb &
+
+My prefered method of running FBI is to create a screen window (^A-c)
+for each script and run them in the foreground. You can use ^A-p and
+^A-n to switch between them. This lets me look later on why a component
+crashed. Unfortunately you have to create each window and enter every
+command (unless someone tells me how to script stuff like that).
+
 Contents
 -------
 
