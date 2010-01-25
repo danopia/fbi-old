@@ -4,13 +4,13 @@ require 'socket'
 
 module FBI
 class LineConnection < EventMachine::Connection
-	attr_accessor :port, :ip
-	INSTANCES = []
-	
-	def initialize *args
-		super()
-    
-		@buffer = ''
+  attr_accessor :port, :ip
+  INSTANCES = []
+
+  def initialize *args
+    super()
+
+    @buffer = ''
   end
 	
   def post_init
@@ -19,9 +19,9 @@ class LineConnection < EventMachine::Connection
     puts "Connected to #{@ip}:#{@port}"
   end
 		
-	def send_line data
-		send_data "#{data}\n"
-	end
+  def send_line data
+    send_data "#{data}\n"
+  end
 
   def receive_data data
     @buffer += data
@@ -35,7 +35,7 @@ class LineConnection < EventMachine::Connection
   end
   
   def unbind
-  	puts "connection closed to #{@ip}:#{@port}"
+    puts "connection closed to #{@ip}:#{@port}"
   end
 end # class
 end # module

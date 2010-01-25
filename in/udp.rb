@@ -1,23 +1,13 @@
 require File.join(File.dirname(__FILE__), '..', 'common', 'client')
 
-class UDPServer < EM::Protocols::LineAndTextProtocol
-  def initialize
-    @buffer = ''
-  end
+class UDPServer < FBI::LineConnection
+  # prevent LineConnection from grabbing an IP
+  def post_init; end
 
-  def receive_data data
-    @buffer += data
-    puts data
-    while @buffer.include? "\n"
-    	got_line @buffer.slice!(0, @buffer.index("\n")+1).chomp
-    end
-  end
-  
-  def got_line line
-    next unless line && line.size > 0
-    
-    data = JSON.parse line # validate
-		FBI::Client.publish 'commits', data
+  def receive_line line
+		FBI::Client.publish 'commits', JSON.parse(line)
+  rescue JSON::ParserError => ex
+    puts "Error parsing JSON: #{ex.message}"
   end
 end
 
