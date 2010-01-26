@@ -26,7 +26,7 @@ class Manager
 			params = e.param.split ' ', 3
 			params.unshift e.conn.nick if e.pm?
 			
-			next if params.size < 2 || params.first.index(e.conn.nick) != 0
+			next if params.size < 2 || params.first.downcase.index(e.conn.nick.downcase) != 0
 			next if params.first.size > e.conn.nick.size + 1
 			
 			params.shift
