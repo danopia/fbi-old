@@ -189,10 +189,17 @@ end
 
 
 FBI::Client.on_published do |channel, data|
-	data['project2'] << '/' if data['project2']
-	message = "#{data['project2']}\002#{data['project']}:\017 \00303#{data['author']['name']} \00307#{data['branch']}\017 \002#{data['commit'][0,8]}\017: #{data['message'].gsub("\n", ' ')} \00302<\002\002#{data['shorturl']}>"
-	
-	route data['project'], message
+	data[-3..-1].each do |commit|
+		if commit['fork']
+			commit['owner'] << '/'
+		else
+			commit['owner'] = ''
+		end
+
+		message = "#{commit['owner']}\002#{commit['project']}:\017 \00303#{commit['author']['name']} \00307#{commit['branch']}\017 \002#{commit['commit'][0,8]}\017: #{commit['message'].gsub("\n", ' ')} \00302<\002\002#{commit['shorturl']}>"
+
+		route commit['project'], message
+	end
 end
 
 FBI::Client.on_private do |from, data|
