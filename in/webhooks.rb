@@ -16,7 +16,7 @@ Hooks['/github'] = lambda {|env|
   #~ 
   #~ data['commits'].pop if data['commits'].size > 1 && data['commits'].last['message'] =~ /^Merge remote branch/ && data['repository']['fork']
   
-  data['commits'].each do |commit|
+  output = data['commits'].map do |commit|
   
     # previous commit?
     #~ dup = `grep #{commit['id']} sha1s.txt`.size > 0
@@ -32,7 +32,7 @@ Hooks['/github'] = lambda {|env|
       #~ commit['message'] << ' (merged into upstream from fork --FBI)'
     #~ end
     
-    output = {
+    {
       :project => data['repository']['name'],
       :owner => data['repository']['owner']['name'],
       :fork => data['repository']['fork'],
@@ -42,8 +42,8 @@ Hooks['/github'] = lambda {|env|
       :message => commit['message'],
       :url => commit['url']
     }
-    FBI::Client.publish 'commits', output
   end
+  FBI::Client.publish 'commits', output
   FBI::Client.publish 'github', data
 }
 
