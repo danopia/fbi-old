@@ -183,7 +183,7 @@ def route project, message
 	
 	channels.each do |channel|
 		$manager.route_to channel.server_id, channel.name, message
-		sleep 0.5
+		#sleep 0.5
 	end
 end
 
