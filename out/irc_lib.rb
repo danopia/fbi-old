@@ -18,7 +18,7 @@ class Manager
 		# :ping (to pong)
 		on :ping do |e|
 			p e.params
-			e.conn.send 'pong', e.param, true
+			e.conn.send 'pong', e.params.first, true
 		end
 		
 		# and :message (to emit :command)
@@ -319,7 +319,7 @@ class Connection < FBI::LineConnection
 		
 		case command.downcase
 			when 'ping'
-				handle :ping, origin, *args
+				handle :ping, origin, nil, *args
 			
 			when 'privmsg'
 				handle_message :message, origin, args
