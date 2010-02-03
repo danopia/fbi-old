@@ -4,3 +4,5 @@
 www/db/*.sqlite3
 www/log/
 www/tmp/
+
+server.yaml

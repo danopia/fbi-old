@@ -1,0 +1,32 @@
+hostname: localhost # aesthetic purposes
+label: Official FBI Router # if this is actually published... heh.
+
+# who can do what (this isn't permanent, later on each component/master block
+# will have an option on what it allows with this block only creating templates.
+permissions:
+  guests: subscribe
+  components: subscribe, publish, private
+
+# port binds
+binds:
+- host: 0.0.0.0
+  port: 5348
+- host: 0.0.0.0
+  port: 5349
+  transports: ssl
+  label: ssl # used to restrict components
+
+# master keys can be used to let trusted people connect their components without
+# listing each one seperately
+master keys:
+- password: hil0l
+  host: 127.0.0.1
+  label: local
+- password: PASSWORD
+  label: nixeagle
+
+components:
+- name: jabber
+  password: iohjauioa
+  host: danopia.no-ip.org # checks the host's IP
+  bind: ssl # only accept on the bind labeled ssl
