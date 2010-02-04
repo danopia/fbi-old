@@ -39,7 +39,7 @@ class Server < Connection
   end
 
   def on_private data
-    FBI.shorten_url_if_present data['data']
+    FBI.shorten_urls_if_present data['data']
 
     puts "#{@username} for #{data['to']} (#{data['id']}): #{data['data'].to_json}"
     data['from'] = @username

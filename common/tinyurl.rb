@@ -13,4 +13,12 @@ module FBI
       data['shorturl'] = shorten_url data['url']
     end
   end
+  
+  def self.shorten_urls_if_present data
+    if data.is_a? Array
+      data.each {|entry| shorten_url_if_present entry}
+    elsif data.is_a? Hash
+      shorten_url_if_present data
+    end
+  end
 end
