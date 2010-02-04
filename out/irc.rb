@@ -189,7 +189,9 @@ end
 
 
 FBI::Client.on_published do |channel, data|
-	data[-3..-1].each do |commit|
+	commits = data
+	commits = commits[-3..-1] if commits.size > 3
+	commits.each do |commit|
 		if commit['fork']
 			commit['owner'] << '/'
 		else
