@@ -47,6 +47,26 @@ Hooks['/github'] = lambda {|env|
   FBI::Client.publish 'github', data
 }
 
+Hooks['/bitbucket'] = lambda {|env|
+  data = env['rack.input'].read
+  data = JSON.parse CGI::unescape(data[8..-1])
+  
+  output = data['commits'].map do |commit|
+    {
+      :project => data['repository']['name'],
+      :owner => data['repository']['owner'],
+      :fork => false,
+      :author => {:email => nil, :name => commit['author']},
+      :branch => commit['branch'],
+      :commit => commit['node'],
+      :message => commit['message'],
+      :url => "http://bitbucket.org/#{data['repository']['owner']}/#{data['repository']['slug']}/changeset/#{commit['node']}"
+    }
+  end
+  FBI::Client.publish 'commits', output
+  FBI::Client.publish 'bitbucket', data
+}
+
 Webhooks = Rack::Builder.new do
   use Rack::Reloader, 0
   use Rack::ContentLength
