@@ -56,7 +56,7 @@ Hooks['/bitbucket'] = lambda {|env|
       :project => data['repository']['name'],
       :owner => data['repository']['owner'],
       :fork => false,
-      :author => {:email => nil, :name => commit['author']},
+      :author => {:email => nil, :name => commit['author'].strip},
       :branch => commit['branch'],
       :commit => commit['node'],
       :message => commit['message'],
