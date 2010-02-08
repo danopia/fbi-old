@@ -13,6 +13,15 @@ components, which bring data into the system; output components, which
 bring data out of the system; and IRC components, which basically just
 communicate with the IRC output component to provide IRC commands.
 
+Input Support
+-------------
+Right now, FBI's webhook input component can receive commits from GitHub
+(git) and from BitBucket (hg). The live hooks for the official instance
+of FBI are:
+
+    http://fbi.danopia.net/github
+    http://fbi.danopia.net/bitbucket
+
 Setup
 -----
 At its current state, each component that wants a database needs to
