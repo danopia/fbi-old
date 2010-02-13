@@ -152,7 +152,7 @@ manager.on :command do |e|
 				:channel => e.target,
 				:sender => e.origin,
 				:command => command,
-				:args => args,
+				:args => e.params[1],
 				:admin => e.admin?,
 				:default_project => channel.default_project,
 			}
