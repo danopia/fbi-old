@@ -17,7 +17,6 @@ class Manager
 		# Only two come stock:
 		# :ping (to pong)
 		on :ping do |e|
-			p e.params
 			e.conn.send 'pong', e.params.first, true
 		end
 		
