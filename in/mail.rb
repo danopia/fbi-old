@@ -44,6 +44,10 @@ class MailServer < FBI::LineConnection
           @message = ''
           send_line "354 Go ahead"
           
+        when 'QUIT'
+          send_line "221 #{HOSTNAME} Service closing transmission channel"
+          close_connection
+          
       end
     
     elsif line == '.'
