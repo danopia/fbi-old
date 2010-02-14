@@ -57,7 +57,7 @@ class MailServer < FBI::LineConnection
       end
     
     elsif line == '.'
-      puts @message
+      @in_message = false
       got_mail
       send_line '250 2.0.0 OK'
     else
