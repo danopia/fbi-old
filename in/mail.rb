@@ -81,7 +81,7 @@ class MailServer < FBI::LineConnection
       p @message =~ /^Author: +(.+)$/
       author = $1
       
-      p @message =~ /^Subject: .+ \[.+-list\] SF.net .+: .+:\[[0-9]+\] +(.+)$/
+      p @message =~ /^Subject: SF.net .+: .+:\[[0-9]+\] +(.+)$/
       path = $1
       
       index = @message.index("Log Message:") + 20
@@ -105,7 +105,7 @@ class MailServer < FBI::LineConnection
         :owner => nil,
         :fork => false,
         :author => {:email => nil, :name => author},
-        :branch => 'svn',
+        :branch => path,
         :commit => "r#{rev}",
         :message => message,
         :url => url,
