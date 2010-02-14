@@ -58,16 +58,42 @@ class MailServer < FBI::LineConnection
     
     elsif line == '.'
       # got mail!
-      puts
-      puts "From #{@from}"
-      puts "To #{@to}"
-      puts
-      puts @message
-      puts
+      got_mail
       send_line '250 2.0.0 OK'
     else
       line = line[1..-1] if line[0,1] == '.'
-      @message << line
+      @message << line + "\n"
+    end
+  end
+  
+  def got_mail
+    if @message.include?('Log Message:') && @message.include?('sourceforge.net')
+      
+      @message =~ /^Revision: ([0-9]+)$/
+      rev = $1.to_i
+      
+      @message =~ /(http:\/\/.+\.sourceforge\.net\/(.+)\/\?rev=[0-0]+&view=rev)/
+      url = $1
+      project = $2
+      
+      @message =~ /^Author: +(.+)$/
+      author = $1
+      
+      index = @message.index("Log Message:") + 20
+      index = @message.index("\n", index) + 1
+      end_index = @message.index("\n\nModified Paths:") - 1
+      message = @message[index..end_index]
+
+      FBI::Client.publish 'commits', [{
+        :project => project,
+        :owner => nil,
+        :fork => false,
+        :author => {:email => nil, :name => author},
+        :branch => 'svn',
+        :commit => "r#{rev}",
+        :message => message,
+        :url => url,
+      }]
     end
   end
 end
