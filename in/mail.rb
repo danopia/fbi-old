@@ -42,16 +42,16 @@ class MailServer < FBI::LineConnection
           if @to.include? HOSTNAME
             send_line "250 2.1.5 OK"
           else
-            puts 'FAIL'
+            send_line "550 5.1.1 The email account that you tried to reach does not exist."
           end
         
         when 'DATA'
           @in_message = true
           @message = ''
-          send_line "354 Go ahead"
+          send_line "354  Go ahead"
           
         when 'QUIT'
-          send_line "221 #{HOSTNAME} Service closing transmission channel"
+          send_line "221 2.0.0 #{HOSTNAME} closing connection"
           close_connection
           
       end
@@ -64,6 +64,7 @@ class MailServer < FBI::LineConnection
       puts
       puts @message
       puts
+      send_line '250 2.0.0 OK'
     else
       message = message[1..-1] if message[0,1] == '.'
       @message << message
