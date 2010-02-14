@@ -74,7 +74,7 @@ class MailServer < FBI::LineConnection
       p @message =~ /^Revision: ([0-9]+)$/
       rev = $1.to_i
       
-      p @message =~ /(http:\/\/.+\.sourceforge\.net\/(.+)\/\?rev=[0-0]+&view=rev)/
+      p @message =~ /(http:\/\/.+\.sourceforge\.net\/(.+)\/\?rev=[0-9]+&view=rev)/
       url = $1
       project = $2
       
