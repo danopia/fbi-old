@@ -1,7 +1,7 @@
 require File.join(File.dirname(__FILE__), '..', 'common', 'client')
 
 class MailServer < FBI::LineConnection
-  HOSTNAME = 'vps.danopia.net'
+  HOSTNAME = 'fbi.danopia.net'
   
   def post_init
     super
