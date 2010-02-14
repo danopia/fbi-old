@@ -75,7 +75,7 @@ Webhooks = Rack::Builder.new do
       Hooks[env['PATH_INFO']].call env
       [200, {'Content-Type' => 'text/plain'}, "Hook processed."]
     else
-      [500, {'Content-Type' => 'text/plain'}, "No such hook."]
+      [404, {'Content-Type' => 'text/plain'}, "No such hook."]
     end
   end
   run app
