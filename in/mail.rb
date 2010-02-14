@@ -66,8 +66,8 @@ class MailServer < FBI::LineConnection
       puts
       send_line '250 2.0.0 OK'
     else
-      message = message[1..-1] if message[0,1] == '.'
-      @message << message
+      line = line[1..-1] if line[0,1] == '.'
+      @message << line
     end
   end
 end
