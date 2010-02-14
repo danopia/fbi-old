@@ -69,7 +69,7 @@ class MailServer < FBI::LineConnection
   def got_mail
     puts @message.size
     File.open('mail.txt', 'w') {|f| f.puts @message }
-    if @message.include?('Log Message:') && @message.include?('sourceforge.net')
+    if @message.include?('Log Message:') && @from.include?('sourceforge.net')
       
       p @message =~ /^Revision: ([0-9]+)$/
       rev = $1.to_i
