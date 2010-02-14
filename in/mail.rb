@@ -8,6 +8,10 @@ class MailServer < FBI::LineConnection
     
     send_line "220 #{HOSTNAME} ESMTP FBIMail 0.0.1; Mail Receiver Ready"
   end
+  
+  def send_line data
+    send_data "#{data}\r\n"
+  end
 
   def receive_line line
     if !@in_message
