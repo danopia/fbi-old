@@ -57,16 +57,18 @@ class MailServer < FBI::LineConnection
       end
     
     elsif line == '.'
-      # got mail!
+      puts @message
       got_mail
       send_line '250 2.0.0 OK'
     else
       line = line[1..-1] if line[0,1] == '.'
-      @message << line + "\n"
+      @message += line + "\n"
     end
   end
   
   def got_mail
+    puts @message.size
+    File.open('mail.txt', 'w') {|f| f.puts @message }
     if @message.include?('Log Message:') && @message.include?('sourceforge.net')
       
       @message =~ /^Revision: ([0-9]+)$/
