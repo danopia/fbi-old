@@ -30,12 +30,12 @@ class MailServer < FBI::LineConnection
           send_line "250 PIPELINING"
           
         when 'MAIL'
-          args[1] =~ /^FROM:\<(.+)\>$/
+          args[1] =~ /^FROM:\<(.+)\>$/i
           @from = $1
           send_line "250 2.1.0 OK"
           
         when 'RCPT'
-          args[1] =~ /^TO:\<(.+)\>$/
+          args[1] =~ /^TO:\<(.+)\>$/i
           @to = $1
           if @to.include? HOSTNAME
             send_line "250 2.1.5 OK"
