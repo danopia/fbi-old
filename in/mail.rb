@@ -36,7 +36,7 @@ class MailServer < FBI::LineConnection
           
         when 'RCPT'
           args[1] =~ /^TO:\<(.+)\>$/i
-          @to = $1
+          @to = $1 || args[2][1..-2]
           if @to.include? HOSTNAME
             send_line "250 2.1.5 OK"
           else
