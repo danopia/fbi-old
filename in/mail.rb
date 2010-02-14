@@ -1,7 +1,7 @@
 require File.join(File.dirname(__FILE__), '..', 'common', 'client')
 
 class MailServer < FBI::LineConnection
-  HOSTNAME = 'home.danopia.net'
+  HOSTNAME = 'vps.danopia.net'
   
   def post_init
     super
@@ -22,7 +22,7 @@ class MailServer < FBI::LineConnection
         when 'HELO'
           send_line "250 #{HOSTNAME} at your service"
           
-        when 'HELO'
+        when 'EHLO'
           send_line "250-#{HOSTNAME} at your service, [127.0.0.1]"
           send_line "250-SIZE 35651584"
           send_line "250-8BITMIME"
@@ -37,7 +37,11 @@ class MailServer < FBI::LineConnection
         when 'RCPT'
           args[1] =~ /^TO:\<(.+)\>$/
           @to = $1
-          send_line "250 2.1.5 OK"
+          if @to.include? HOSTNAME
+            send_line "250 2.1.5 OK"
+          else
+          
+          end
         
         when 'DATA'
           @in_message = true
