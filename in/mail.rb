@@ -11,11 +11,13 @@ class MailServer < FBI::LineConnection
   
   def send_line data
     send_data "#{data}\r\n"
+    puts "--> #{data}"
   end
 
   def receive_line line
+    puts "<-- #{line}"
+    
     if !@in_message
-      p line
       args = line.split
       case args.first.upcase
       
@@ -40,7 +42,7 @@ class MailServer < FBI::LineConnection
           if @to.include? HOSTNAME
             send_line "250 2.1.5 OK"
           else
-          
+            puts 'FAIL'
           end
         
         when 'DATA'
