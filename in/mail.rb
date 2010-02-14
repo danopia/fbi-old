@@ -71,20 +71,31 @@ class MailServer < FBI::LineConnection
     File.open('mail.txt', 'w') {|f| f.puts @message }
     if @message.include?('Log Message:') && @message.include?('sourceforge.net')
       
-      @message =~ /^Revision: ([0-9]+)$/
+      p @message =~ /^Revision: ([0-9]+)$/
       rev = $1.to_i
       
-      @message =~ /(http:\/\/.+\.sourceforge\.net\/(.+)\/\?rev=[0-0]+&view=rev)/
+      p @message =~ /(http:\/\/.+\.sourceforge\.net\/(.+)\/\?rev=[0-0]+&view=rev)/
       url = $1
       project = $2
       
-      @message =~ /^Author: +(.+)$/
+      p @message =~ /^Author: +(.+)$/
       author = $1
       
       index = @message.index("Log Message:") + 20
       index = @message.index("\n", index) + 1
       end_index = @message.index("\n\nModified Paths:") - 1
-      message = @message[index..end_index]
+      p message = @message[index..end_index]
+      
+      p({
+        :project => project,
+        :owner => nil,
+        :fork => false,
+        :author => {:email => nil, :name => author},
+        :branch => 'svn',
+        :commit => "r#{rev}",
+        :message => message,
+        :url => url,
+      })
 
       FBI::Client.publish 'commits', [{
         :project => project,
