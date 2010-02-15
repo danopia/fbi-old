@@ -154,7 +154,7 @@ manager.on :command do |e|
 				:command => command,
 				:args => e.params[1],
 				:admin => e.admin?,
-				:default_project => channel.default_project,
+				:default_project => channel && channel.default_project,
 			}
 	end
 end
