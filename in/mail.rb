@@ -65,31 +65,39 @@ class MailServer < FBI::LineConnection
   end
   
   def got_mail
+  end
+end
+
+EventMachine::run do
+  FBI::Client.connect 'mail', 'hil0l'
+  smtp = EventMachine::start_server '0.0.0.0', 25, MailServer
+  
+  smtp.on_message do |to, from, body|
     #File.open('mail.txt', 'w') {|f| f.puts @message }
-    if @message.include?('Log Message:') && @from.include?('sourceforge.net')
+    if body.include?('Log Message:') && from.include?('sourceforge.net')
       
-      @message =~ /^Revision: ([0-9]+)$/
+      body =~ /^Revision: ([0-9]+)$/
       rev = $1.to_i
       
-      @message =~ /(http:\/\/.+\.sourceforge\.net\/(.+)\/\?rev=[0-9]+&view=rev)/
+      body =~ /(http:\/\/.+\.sourceforge\.net\/(.+)\/\?rev=[0-9]+&view=rev)/
       url, project = $1, $2
       
-      @message =~ /^Author: +(.+)$/
+      body =~ /^Author: +(.+)$/
       author = $1
       
-      @message =~ /^Subject: SF.net .+: .+:\[[0-9]+\] +(.+)$/
+      body =~ /^Subject: SF.net .+: .+:\[[0-9]+\] +(.+)$/
       path = $1
       
-      index = @message.index("Log Message:") + 20
-      index = @message.index("\n", index) + 1
-      end_index = @message.index("\n\nModified Paths:") - 1
-      message = @message[index..end_index]
+      index = body.index("Log Message:") + 20
+      index = body.index("\n", index) + 1
+      end_index = body.index("\n\nModified Paths:") - 1
+      message = body[index..end_index]
       
       FBI::Client.publish 'commits', [{
         :project => project,
         :owner => nil,
         :fork => false,
-        :author => {:email => nil, :name => author},
+        :author => {:email => "#{author}@users.sourceforge.net", :name => author},
         :branch => path,
         :commit => "r#{rev}",
         :message => message,
@@ -97,10 +105,6 @@ class MailServer < FBI::LineConnection
       }]
     end
   end
-end
-
-EventMachine::run do
-  FBI::Client.connect 'mail', 'hil0l'
-  EventMachine::start_server '0.0.0.0', 25, MailServer
+  
   puts "Started mail server"
 end
