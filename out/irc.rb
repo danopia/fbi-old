@@ -3,7 +3,7 @@ require File.join(File.dirname(__FILE__), '..', 'common', 'client')
 require File.join(File.dirname(__FILE__), 'irc_models')
 require File.join(File.dirname(__FILE__), 'irc_lib')
 
-manager = FBI_IRC::Manager.new 'FBI-', 'fbi', 'FBI Version Control Informant'
+manager = FBI_IRC::Manager.new 'NRA-', 'fbi', 'FBI Version Control Informant'
 $manager = manager
 
 #manager.on :invite do |e|
@@ -18,7 +18,7 @@ $manager = manager
 manager.on :ctcp do |e|
 	case e.params.first
     when 'VERSION'
-      e.respond 'FBI to_irc module v0.1'
+      e.respond 'FBI to_irc module v0.0.1'
      
     when 'PING'
       e.respond e.params.last.join(' ')
@@ -54,7 +54,9 @@ manager.on :command do |e|
 			e.respond 'It worked!'
 		
 		when 'route'
-			manager.networks[args[0].to_i].route_to args[1], args[2..-1].join(' ')
+			message = args[2..-1].join(' ')
+			message = "\001ACTION #{$1}\001" if message =~ /^\/me (.+)$/i
+			manager.networks[args[0].to_i].route_to args[1], message
 			
 		when 'list'
 			server = Server.find e.network.id
