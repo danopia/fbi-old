@@ -53,7 +53,7 @@ class MailServer < FBI::LineConnection
         when 'RCPT'
           args[1] =~ /^TO:\<(.+)\>$/i
           @to = $1 || args[2][1..-2]
-          if @to.include? hostname
+          if @domains.include? @to.split('@').last
             send_line "250 2.1.5 OK"
           else # don't want to be marked as an open relay
             send_line "550 5.1.1 The email account that you tried to reach does not exist."
