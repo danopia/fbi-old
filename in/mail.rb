@@ -1,17 +1,31 @@
 require File.join(File.dirname(__FILE__), '..', 'common', 'client')
 
 class MailServer < FBI::LineConnection
-  attr_accessor :hostname
+  attr_reader :hostname, :domains
+  attr_accessor :handler
   
   def post_init hostname=nil
     super
-    @hostname = hostname || `hostname`.chomp
+    
+    @domains = []
+    self.hostname = hostname || `hostname`.chomp
+    
     send_line "220 #{@hostname} ESMTP FBIMail 0.0.1; Mail Receiver Ready"
+  end
+  
+  def hostname= newname
+    @domains.delete @hostname
+    @domains << newname
+    @hostname = newname
   end
   
   def send_line data
     send_data "#{data}\r\n"
     puts "--> #{data}"
+  end
+  
+  def on_message &blck
+    @handler = blck
   end
 
   def receive_line line
@@ -56,21 +70,20 @@ class MailServer < FBI::LineConnection
       end
     elsif line == '.'
       @in_message = false
-      got_mail
+      @handler && @handler.call @to, @from, @message
       send_line '250 2.0.0 OK'
     else
       line = line[1..-1] if line[0,1] == '.'
       @message += line + "\n"
     end
   end
-  
-  def got_mail
-  end
 end
 
 EventMachine::run do
   FBI::Client.connect 'mail', 'hil0l'
+  
   smtp = EventMachine::start_server '0.0.0.0', 25, MailServer
+  smtp.domains << 'fbi.danopia.net' # accept mail to this domain
   
   smtp.on_message do |to, from, body|
     #File.open('mail.txt', 'w') {|f| f.puts @message }
