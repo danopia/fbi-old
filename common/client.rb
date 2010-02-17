@@ -17,7 +17,7 @@ module FBI
 		end
 		
 		def self.connect *args
-			EventMachine::connect "127.0.0.1", 5348, self, *args
+			EventMachine::connect "danopia.net", 5348, self, *args
 		end
 		def self.start_loop *args
 			EventMachine::run { self.connect *args }

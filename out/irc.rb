@@ -50,6 +50,9 @@ manager.on :command do |e|
 	args = (e.params[1] || '').split
 	
 	case command.downcase
+		when 'help'
+			e.respond "My commands include help, list, default, set-default, add channel/project/server, and remove. There are some more but lowlings like you don't need to know them."
+			
 		when 'test'
 			e.respond 'It worked!'
 		
