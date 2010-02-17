@@ -72,7 +72,7 @@ class MailServer < FBI::LineConnection
       end
     elsif line == '.'
       @in_message = false
-      @@handler && @@handler.call @to, @from, @message
+      @@handler && @@handler.call(@to, @from, @message)
       send_line '250 2.0.0 OK'
     else
       line = line[1..-1] if line[0,1] == '.'
