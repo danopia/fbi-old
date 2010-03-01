@@ -17,7 +17,7 @@ class Manager
 		# Only two come stock:
 		# :ping (to pong)
 		on :ping do |e|
-			e.conn.send 'pong', e.params.first, true
+			e.conn.force_send 'pong', e.params.first, true
 		end
 		
 		# and :message (to emit :command)
@@ -58,6 +58,7 @@ class Manager
 	
 	def raise_event e
 		puts "Handling #{e.event} from #{e.origin[:nick]} to #{e.target} via #{e.conn.nick} with params #{e.params.join ' '}" if e.origin
+		puts "Handling #{e.event} from <no origin> to #{e.target} via #{e.conn.nick} with params #{e.params.join ' '}" unless e.origin
 		
 		return unless @handlers[e.event]
 		
@@ -274,6 +275,14 @@ class Connection < FBI::LineConnection
 		params[0].upcase!
 		params[1] = params[1][:nick] if params.size > 0 && params[1].is_a?(Hash)
 		send_line params.join(' ')
+	end
+	
+	# send through queue
+	def force_send *params
+		pending = @pending
+		@pending = false
+		send *params
+		@pending = pending
 	end
 	
 	def message target, message
