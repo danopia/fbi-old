@@ -118,6 +118,34 @@ EventMachine::run do
         :message => message,
         :url => url,
       }]
+    elsif from.include?('@lists.launchpad.net')
+      
+      body =~ /^From: (.+) <([^>]+)>$/
+      author = {:name => $1, :email => $2}
+      
+      body.gsub("\n    ", ' ') =~ /^Subject: (.+)$/
+      subject = $1
+      subject.gsub!('  ', ' ') while subject.include?('  ')
+      
+      body =~ /^List-Id: <([^>]+)>$/
+      list = $1
+      
+      body =~ /^List-Archive: <([^>]+)>$/
+      archive = $1
+      
+      project = case list
+        when 'ooc-dev.lists.launchpad.net'; 'ooc'
+        else; nil
+      end
+      
+      return unless project
+      FBI::Client.publish 'mailinglist', [{
+        :list => list,
+        :author => author,
+        :subject => subject,
+        :url => archive,
+        :project => project,
+      }]
     end
   end
   

@@ -194,18 +194,27 @@ end
 
 
 FBI::Client.on_published do |channel, data|
-	commits = data
-	commits = commits[-3..-1] if commits.size > 3
-	commits.each do |commit|
-		if commit['fork']
-			commit['owner'] << '/'
-		else
-			commit['owner'] = ''
+	if channel == 'commits'
+		commits = data
+		commits = commits[-3..-1] if commits.size > 3
+		commits.each do |commit|
+			if commit['fork']
+				commit['owner'] << '/'
+			else
+				commit['owner'] = ''
+			end
+
+			message = "#{commit['owner']}\002#{commit['project']}:\017 \00303#{commit['author']['name']} \00307#{commit['branch']}\017 \002#{commit['commit'][0,8]}\017: #{commit['message'].gsub("\n", ' ')} \00302<\002\002#{commit['shorturl']}>"
+
+			route commit['project'], message
 		end
+		
+	elsif channel == 'mailinglist'
+		data.each do |post|
+			message = "\002#{post['project']} mailing list:\017 \00303#{post['author']['name']}\017 : #{post['subject'].gsub("\n", ' ')} \00302<\002\002#{post['shorturl']}>"
 
-		message = "#{commit['owner']}\002#{commit['project']}:\017 \00303#{commit['author']['name']} \00307#{commit['branch']}\017 \002#{commit['commit'][0,8]}\017: #{commit['message'].gsub("\n", ' ')} \00302<\002\002#{commit['shorturl']}>"
-
-		route commit['project'], message
+			route post['project'], message
+		end
 	end
 end
 
@@ -214,4 +223,4 @@ FBI::Client.on_private do |from, data|
 end
 
 
-FBI::Client.start_loop 'irc', 'hil0l', ['commits']
+FBI::Client.start_loop 'irc', 'hil0l', ['commits', 'mailinglist']
