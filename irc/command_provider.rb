@@ -13,6 +13,9 @@ class CommandProvider
 	
 	def self.start &blck
 		FBI::Client.on_published do |channel, data|
+			data['args_str'] = data['args']
+			data['args'] = data['args'].split
+			
 			@@commands[data['command'].to_sym].call data rescue nil
 		end
 		
