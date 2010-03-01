@@ -85,6 +85,7 @@ EventMachine::run do
   FBI::Client.connect 'mail', 'hil0l'
   
   smtp = EventMachine::start_server '0.0.0.0', 25, MailServer
+  submission = EventMachine::start_server '127.0.0.1', 587, MailServer
   MailServer.domains << 'fbi.danopia.net' # accept mail to this domain
   
   MailServer.on_message do |to, from, body|
