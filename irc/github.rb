@@ -1,5 +1,7 @@
 require 'command_provider'
 
+require '../common/tinyurl'
+
 require 'yaml'
 require 'open-uri'
 
@@ -22,6 +24,17 @@ class GithubCommands < CommandProvider
 		begin
 			cmd = data['args'].shift
 			case cmd.downcase
+				
+				when 'commits'
+					project = data['args'].last || data['default_project']
+					commits = load_api('commits', 'list', project, 'master')['commits']
+					
+					message = "Recent commits to #{project}: "
+					message += commits.first(3).map do |c|
+						"#{c['message'][0,50]}... \00302<\002\002#{FBI.shorten_url c['url']}>\017"
+					end.join(' || ')
+					
+					reply_to data, message
 				
 				when 'issues'
 					project = data['args'].last || data['default_project']
