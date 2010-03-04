@@ -179,8 +179,8 @@ def handle_project env
   project.commits.map! do |commit|
     data = JSON.parse commit[:json]
     data[:repo] = project.repos.find{|r| r[:id] == commit[:repo_id] }
-    data['committed_date'] = Time.parse(data['committed_date']).utc.strftime('%b %d %Y %I:%M %p')
-    data['short_message'] = data['message'][0,100]
+    data['committed_date'] = Time.parse(data['committed_date']).utc.strftime('%B %d, %Y') # %I:%M %p
+    data['short_message'] = data['message'][0,500]
     data['short_message'] << '...' if data['message'].size > data['short_message'].size
     data['short_hash'] = data['id'][0,8]
     data
