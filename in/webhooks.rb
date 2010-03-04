@@ -1,6 +1,79 @@
 require File.join(File.dirname(__FILE__), '..', 'common', 'client')
 require 'cgi'
 
+require 'yaml'
+require 'open-uri'
+
+require 'time'
+
+def load_api *args
+	YAML.load open("http://github.com/api/v2/yaml/#{args.join '/'}").read
+end
+
+require 'rubygems'
+require 'sequel'
+require 'json'
+require 'mustache'
+
+DB = Sequel.sqlite('www.db')
+Commits = DB[:commits]
+Repos = DB[:repos]
+Projects = DB[:projects]
+
+unless DB.table_exists? :commits
+  DB.create_table :commits do
+    primary_key :id
+    
+    String :author, :null => false
+    foreign_key :repo_id, :repos
+    String :hash, :null => false
+    String :json, :null => false
+    Time :committed_at, :null => false
+  end
+  
+  DB.create_table :repos do
+    primary_key :id
+    
+    String :name
+    String :url
+    foreign_key :project_id, :projects
+    
+    Time :created_at, :null => false
+    Time :modified_at
+  end
+  
+  DB.create_table :projects do
+    primary_key :id
+    
+    String :title, :null => false
+    String :slug, :unique => true, :null => false
+    
+    Time :created_at, :null => false
+    Time :modified_at
+  end
+  
+  Projects << {:title => 'ooc', :slug => 'ooc', :created_at => Time.now}
+  Projects << {:title => 'FBI', :slug => 'fbi', :created_at => Time.now}
+  
+  ['nddrylliog/ooc', 'nddrylliog/nagaqueen', 'nddrylliog/rock', 'danopia/remora', 'danopia/fbi', 'nddrylliog/greg', 'nddrylliog/yajit', 'nddrylliog/ooc-curl'].each do |project|
+    proj = project.include?('ndd') ? 1 : (project == 'danopia/fbi' ? 2 : nil)
+    Repos << {:project_id => proj, :name => project, :url => "http://github.com/#{project}", :created_at => Time.now}
+    repo = Repos.filter(:name => project).first[:id]
+    
+    load_api('commits', 'list', project, 'master')['commits'].each do |data|
+      Commits << {
+        :author => data['author']['name'],
+        :repo_id => repo,
+        :hash => data['id'],
+        :committed_at => Time.parse(data['committed_date']),
+        :json => data.to_json,
+      }
+    end
+  end
+end
+
+
+
 Hooks = {}
 
 Hooks['/github'] = lambda {|env|
@@ -67,6 +140,55 @@ Hooks['/bitbucket'] = lambda {|env|
   FBI::Client.publish 'bitbucket', data
 }
 
+class Project < Mustache
+  #self.template_path = File.dirname(__FILE__) + '/views'
+  self.template_file = File.dirname(__FILE__) + '/views/commit_timeline.mustache'
+  
+  attr_accessor :data, :title, :slug, :repos, :commits
+  
+  def initialize data=nil
+    data ||= {}
+    @data = data
+    @title = data[:title]
+    @slug = data[:slug]
+  end
+end
+
+def handle_project env
+  path = env['PATH_INFO'].split('/')[2..-1]
+  message = ''
+  
+  project = Project.new Projects.filter(:slug => path.first).first
+  if path.size == 1 || path[1] != 'repos'
+    project.repos = Repos.filter(:project_id => project.data[:id]).all.map do |repo|
+      repo[:short] = repo[:name].split('/').last
+      repo
+    end
+  else
+    repo = Repos.filter(:project_id => project.data[:id], :id => path[2].to_i).first
+    repo[:short] = repo[:name].split('/').last
+    project.repos = [repo]
+  end
+  
+  if path.size > 1 && path[1] == 'authors'
+    project.commits = Commits.filter(:repo_id => project.repos.map{|r| r[:id] }, :author => CGI::unescape(path[2])).reverse_order(:committed_at).all
+  else
+    project.commits = Commits.filter(:repo_id => project.repos.map{|r| r[:id] }).reverse_order(:committed_at).all
+  end
+  
+  project.commits.map! do |commit|
+    data = JSON.parse commit[:json]
+    data[:repo] = project.repos.find{|r| r[:id] == commit[:repo_id] }
+    data['committed_date'] = Time.parse(data['committed_date']).utc.strftime('%b %d %Y %I:%M %p')
+    data['short_message'] = data['message'][0,100]
+    data['short_message'] << '...' if data['message'].size > data['short_message'].size
+    data['short_hash'] = data['id'][0,8]
+    data
+  end
+  
+  [200, {'Content-Type' => 'text/html'}, project.render]
+end
+
 Webhooks = Rack::Builder.new do
   use Rack::Reloader, 0
   use Rack::ContentLength
@@ -74,6 +196,8 @@ Webhooks = Rack::Builder.new do
     if Hooks.has_key? env['PATH_INFO']
       Hooks[env['PATH_INFO']].call env
       [200, {'Content-Type' => 'text/plain'}, "Hook processed."]
+    elsif env['PATH_INFO'] =~ /^\/projects\/(.*)$/
+      handle_project env
     else
       [404, {'Content-Type' => 'text/plain'}, "No such hook."]
     end
