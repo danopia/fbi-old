@@ -24,4 +24,8 @@ class Repo
   def project
     Project.from_id @data[:project_id]
   end
+  
+  def url
+    @data[:url]
+  end
 end

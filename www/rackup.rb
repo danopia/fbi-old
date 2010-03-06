@@ -72,6 +72,18 @@ Rackup = Rack::Builder.new do
         end
       end
     end
+    
+    class Layout < Mustache
+      self.template_path = File.dirname(__FILE__) + '/views'
+      
+      def initialize target
+        @target = target
+      end
+      
+      def yield
+        @target.render
+      end
+    end
 
     if File.exists? File.join(File.dirname(__FILE__), 'controllers', parts[0] + '.rb')
       require File.join(File.dirname(__FILE__), 'controllers', parts[0] + '.rb')
@@ -84,7 +96,8 @@ Rackup = Rack::Builder.new do
         controller.__send__ "do_#{action}", env, parts[1..-1]
         #puts controller.template.compile
         #p eval(controller.template.compile)
-        [200, {'Content-Type' => 'text/html'}, controller.render]
+        layout = Layout.new controller
+        [200, {'Content-Type' => 'text/html'}, layout.render]
       else
         [404, {'Content-Type' => 'text/plain'}, "404: Page not found."]
       end
