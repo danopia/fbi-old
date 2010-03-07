@@ -33,4 +33,14 @@ class Project
   def created_at
     @data[:created_at].utc.strftime('%B %d, %Y')
   end
+  
+  def commits
+    repos = self.repos.map {|repo| repo.id }
+    Commits.filter(:repo_id => repos).reverse_order(:committed_at).all.map {|c| Commit.new c }
+  end
+  
+  def commits_5
+    repos = self.repos.map {|repo| repo.id }
+    Commits.filter(:repo_id => repos).reverse_order(:committed_at).first(5).map {|c| Commit.new c }
+  end
 end

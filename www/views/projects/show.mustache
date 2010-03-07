@@ -4,15 +4,25 @@
 
 <div style="float: right;">
   <h3>code repositories</h3>
-  <ul style="list-style: none; padding: 0; margin: 0;">
+  <ul style="padding: 0 0 0 1.5em; margin: 0;">
   {{# repos }}
-    <li><a href="/projects/ooc/repos/{{ id }}">{{ name }}</a></li>
+    <li><a href="/projects/ooc/repos/{{ id }}">{{ short_name }}</a></li>
   {{/ repos }}
   </ul>
 </div>
 
 <p>This is a project page for {{ title }}.</p>
 <p>Stuff goes here.</p>
+
+<hr />
+
+<h3>recent commits</h3>
+<ul style="margin: 0;" class="fixedwidth">
+{{# commits_5 }}
+  <li>{{#repo}}<a href="/projects/{{#project}}{{slug}}{{/project}}/repos/{{id}}">{{short_name}}</a>: {{/repo}}{{ short_message }} [<a href="/projects/{{#project}}{{slug}}{{/project}}/commits/authors/{{author}}">{{author}}</a>]</li>
+{{/ commits_5 }}
+  <li><a href="/projects/{{#project}}{{slug}}{{/project}}/commits">more...</a></li>
+</ul>
 
 <br clear="all" />
 

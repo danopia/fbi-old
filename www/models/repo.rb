@@ -18,11 +18,11 @@ class Repo
   end
   
   def commits
-    Commits.filter(:repo_id => @id).all.map {|c| Commit.new c}
+    Commits.filter(:repo_id => @id).reverse_order(:committed_at).all.map {|c| Commit.new c}
   end
   
   def commits_5
-    Commits.filter(:repo_id => @id).first(5).map {|c| Commit.new c}
+    Commits.filter(:repo_id => @id).reverse_order(:committed_at).first(5).map {|c| Commit.new c}
   end
   
   def project
