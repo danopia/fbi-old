@@ -22,8 +22,8 @@ class Commit
   end
   
   def short_message
-    return @json['message'] if @json['message'].size <= 500
-    @json['message'][0,497] + '...'
+    return @json['message'] if @json['message'].size <= 50
+    @json['message'][0,47] + '...'
   end
   
   def short_hash

@@ -7,10 +7,64 @@
       font-family: Monaco, 'Courier New', 'DejaVu Sans Mono', 'Bitstream Vera Sans Mono', monospace;
       font-size: 90%;
     }
+    
+    body {
+      margin: 0;
+    }
+    
+    #headerwrapper {
+      width: 100%;
+      background-color: #ddd;
+      padding-bottom: 1em;
+    }
+    
+    #headerdiv {
+      width: 80%;
+      margin: 0 auto;
+      
+      font-family: Monaco, 'Courier New', 'DejaVu Sans Mono', 'Bitstream Vera Sans Mono', monospace;
+    }
+    
+    h1, h2, h3, h4, h5, h6 {
+      margin: 0;
+    }
+    
+    h1 {
+      display: inline;
+      padding: 0 1em 0 0;
+    }
+    
+    #headerdiv h2 {
+      display: inline;
+      color: #555;
+    }
+    
+    #wrapper h2, #wrapper h3 {
+      font-family: helvetica, arial, freesans, clean, sans-serif;
+      /*font-size: 16px;*/
+    }
+
+    
+    #wrapper {
+      width: 80%;
+      border: 1px solid #999;
+      background-color: #fff;
+      margin: -1em auto 0 auto;
+      padding: 1em;
+    }
   </style>
 </head>
 
 <body>
-{{{yield}}}
+  <div id="headerwrapper">
+    <div id="headerdiv">
+      <h1>FBI</h1>
+      <h2>bringing projects together</h2>
+    </div>
+  </div>
+
+  <div id="wrapper">
+    {{{yield}}}
+  </div>
 </body>
 </html>
