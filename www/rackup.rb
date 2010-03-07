@@ -94,7 +94,7 @@ Rackup = Rack::Builder.new do
       if controller.respond_to? "do_#{action}"
         controller.template = File.read(Mustache.template_path + "/#{parts[0]}/#{action}.mustache")
         controller.__send__ "do_#{action}", env, parts[1..-1]
-        #puts controller.template.compile
+        puts controller.template.compile
         #p eval(controller.template.compile)
         layout = Layout.new controller
         [200, {'Content-Type' => 'text/html'}, layout.render]

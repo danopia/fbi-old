@@ -21,6 +21,10 @@ class Repo
     Commits.filter(:repo_id => @id).all.map {|c| Commit.new c}
   end
   
+  def commits_5
+    Commits.filter(:repo_id => @id).first(5).map {|c| Commit.new c}
+  end
+  
   def project
     Project.from_id @data[:project_id]
   end

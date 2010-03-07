@@ -9,6 +9,11 @@ class ProjectsController < Mustache
     @project = Project.from_slug path.first
   end
   
+  def do_repos env, path
+    @project = Project.from_slug path.first
+    @repo = @project.repo_by_id path[2].to_i
+  end
+  
   def do_commits env, path
     @project = Project.from_slug path.first
     
