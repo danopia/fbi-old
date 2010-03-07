@@ -9,6 +9,10 @@ class Project
     self.new Projects.filter(:id => id).first
   end
   
+  def self.all
+    Projects.all.map {|p| self.new p }
+  end
+  
   
   def initialize data=nil
     data ||= {}

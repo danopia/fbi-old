@@ -1,5 +1,9 @@
 class ProjectsController < Mustache
-  attr_reader :project, :repo, :repos, :commits
+  attr_reader :project, :projects, :repo, :repos, :commits
+  
+  def do_main env, path
+    @projects = Project.all
+  end
   
   def do_show env, path
     @project = Project.from_slug path.first
