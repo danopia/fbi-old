@@ -1,0 +1,16 @@
+<h2>Projects using FBI</h2>
+
+{{# projects }}
+
+<hr />
+
+<h3><a href="/projects/{{ slug }}">{{ title }}</a></h3>
+
+<h4>Repos</h4>
+<ul>
+{{# repos }}
+  <li><a href="/projects/ooc/repos/{{ id }}">{{ name }}</a> [<a href="{{ url }}">details</a>] [<a href="/projects/ooc/commits/repos/{{ id }}">commits</a>]</li>
+{{/ repos }}
+</ul>
+
+{{/ projects }}
