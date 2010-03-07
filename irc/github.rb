@@ -25,6 +25,16 @@ class GithubCommands < CommandProvider
 			cmd = data['args'].shift
 			case cmd.downcase
 				
+				when 'tags'
+					project = data['args'].last || data['default_project']
+					tags = load_api('repos', 'show', project, 'tags')['tags']
+					reply_to data, "Tags on #{project}: " + tags.keys.join(', ')
+				
+				when 'branches'
+					project = data['args'].last || data['default_project']
+					branches = load_api('repos', 'show', project, 'branches')['branches']
+					reply_to data, "Branches on #{project}: " + branches.keys.join(', ')
+				
 				when 'commits'
 					project = data['args'].last || data['default_project']
 					commits = load_api('commits', 'list', project, 'master')['commits']
