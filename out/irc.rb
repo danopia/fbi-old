@@ -212,5 +212,5 @@ fbi.on :private do |from, data|
 end
 
 fbi.subscribe_to 'commits'
-
-fbi.start_loop if $0 == __FILE__
+fbi.connect
+EventMachine.run {} if $0 == __FILE__

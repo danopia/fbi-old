@@ -55,8 +55,9 @@ fbi.cmd :github do |data|
 	rescue OpenURI::HTTPError => e
 		reply_to data, e.message
 	rescue => e
-		STDOUT.puts e.class, e.inspect, e.bactrace
+		STDOUT.puts e.class, e.inspect, e.backtrace
 	end
 end
 
-fbi.start_loop if $0 == __FILE__
+fbi.connect
+EventMachine.run {} if $0 == __FILE__

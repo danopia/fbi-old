@@ -9,9 +9,6 @@ module FBI
       args[:port] ||= 5348
 			EventMachine::connect args[:host], args[:port], self, master
 		end
-		def self.start_loop *args
-			EventMachine::run { self.connect *args }
-		end
 		
 		def initialize master
 			@master = master

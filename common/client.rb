@@ -17,11 +17,13 @@ module FBI
 		end
 		
 		def connect args={}
-			@drone = Drone.connect self, args
-			subscribe_to @subscriptions if @subscriptions.any?
+			EventMachine.next_tick do
+				@drone = Drone.connect self, args
+				subscribe_to @subscriptions if @subscriptions.any?
+			end
 		end
 		def start_loop *args
-			@drone = Drone.start_loop self, args
+			EventMachine::run { connect *args }
 		end
 		
 		def private target, data

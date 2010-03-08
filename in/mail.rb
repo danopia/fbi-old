@@ -79,8 +79,9 @@ class MailServer < FBI::LineConnection
   end
 end
 
-EventMachine::next_step do
-  fbi = FBI::Client.new 'mail', 'hil0l'
+fbi = FBI::Client.new 'mail', 'hil0l'
+
+EventMachine::next_tick do
   
   smtp = EventMachine::start_server '0.0.0.0', 25, MailServer
   smtp.domains << 'fbi.danopia.net' # accept mail to this domain
@@ -119,9 +120,8 @@ EventMachine::next_step do
     end
   end
   
-  fbi.start
-  
   puts "Started mail server"
 end
 
-EventMachine::run {} if $0 == __FILE__
+fbi.connect
+EventMachine.run {} if $0 == __FILE__
