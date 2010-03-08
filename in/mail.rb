@@ -1,31 +1,33 @@
 require File.join(File.dirname(__FILE__), '..', 'common', 'client')
 
 class MailServer < FBI::LineConnection
-  attr_reader :hostname, :domains
-  attr_accessor :handler
+  @@hostname = `hostname`.chomp
+  @@domains = [@@hostname]
+  @@handler = nil
   
-  def post_init hostname=nil
-    super
-    
-    @domains = []
-    self.hostname = hostname || `hostname`.chomp
-    
-    send_line "220 #{@hostname} ESMTP FBIMail 0.0.1; Mail Receiver Ready"
+  def self.domains; @@domains; end
+  
+  def self.hostname= newname
+    @@domains.delete @@hostname
+    @@domains << newname
+    @@hostname = newname
   end
   
-  def hostname= newname
-    @domains.delete @hostname
-    @domains << newname
-    @hostname = newname
+  def self.on_message &blck
+    @@handler = blck
+  end
+  
+  
+  
+  def post_init
+    super
+    
+    send_line "220 #{@@hostname} ESMTP FBIMail 0.0.1; Mail Receiver Ready"
   end
   
   def send_line data
     send_data "#{data}\r\n"
     puts "--> #{data}"
-  end
-  
-  def on_message &blck
-    @handler = blck
   end
 
   def receive_line line
@@ -36,10 +38,10 @@ class MailServer < FBI::LineConnection
       case args.first.upcase
       
         when 'HELO'
-          send_line "250 #{hostname} at your service"
+          send_line "250 #{@@hostname} at your service"
           
         when 'EHLO'
-          send_line "250-#{hostname} at your service"
+          send_line "250-#{@@hostname} at your service"
           send_line "250-SIZE 35651584" # heh? got this from google
           send_line "250-8BITMIME"
           send_line "250-ENHANCEDSTATUSCODES"
@@ -53,7 +55,7 @@ class MailServer < FBI::LineConnection
         when 'RCPT'
           args[1] =~ /^TO:\<(.+)\>$/i
           @to = $1 || args[2][1..-2]
-          if @domains.include? @to.split('@').last
+          if @@domains.include? @to.split('@').last
             send_line "250 2.1.5 OK"
           else # don't want to be marked as an open relay
             send_line "550 5.1.1 The email account that you tried to reach does not exist."
@@ -65,12 +67,12 @@ class MailServer < FBI::LineConnection
           send_line "354  Go ahead"
           
         when 'QUIT'
-          send_line "221 2.0.0 #{hostname} closing connection"
+          send_line "221 2.0.0 #{@@hostname} closing connection"
           close_connection
       end
     elsif line == '.'
       @in_message = false
-      @handler && @handler.call @to, @from, @message
+      @@handler && @@handler.call(@to, @from, @message)
       send_line '250 2.0.0 OK'
     else
       line = line[1..-1] if line[0,1] == '.'
@@ -84,9 +86,10 @@ fbi = FBI::Client.new 'mail', 'hil0l'
 EventMachine::next_tick do
   
   smtp = EventMachine::start_server '0.0.0.0', 25, MailServer
-  smtp.domains << 'fbi.danopia.net' # accept mail to this domain
+  submission = EventMachine::start_server '127.0.0.1', 587, MailServer
+  MailServer.domains << 'fbi.danopia.net' # accept mail to this domain
   
-  smtp.on_message do |to, from, body|
+  MailServer.on_message do |to, from, body|
     #File.open('mail.txt', 'w') {|f| f.puts @message }
     if body.include?('Log Message:') && from.include?('sourceforge.net')
       
@@ -116,6 +119,34 @@ EventMachine::next_tick do
         :commit => "r#{rev}",
         :message => message,
         :url => url,
+      }]
+    elsif from.include?('@lists.launchpad.net')
+      
+      body =~ /^From: (.+) <([^>]+)>$/
+      author = {:name => $1, :email => $2}
+      
+      body.gsub("\n    ", ' ') =~ /^Subject: (.+)$/
+      subject = $1
+      subject.gsub!('  ', ' ') while subject.include?('  ')
+      
+      body =~ /^List-Id: <([^>]+)>$/
+      list = $1
+      
+      body =~ /^List-Archive: <([^>]+)>$/
+      archive = $1
+      
+      project = case list
+        when 'ooc-dev.lists.launchpad.net'; 'ooc'
+        else; nil
+      end
+      
+      return unless project
+      FBI::Client.publish 'mailinglist', [{
+        :list => list,
+        :author => author,
+        :subject => subject,
+        :url => archive,
+        :project => project,
       }]
     end
   end

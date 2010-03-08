@@ -1,0 +1,21 @@
+<style type="text/css">
+.fixedwidth {
+  font-family: Monaco, 'Courier New', 'DejaVu Sans Mono', 'Bitstream Vera Sans Mono', monospace;
+  font-size: 90%;
+}
+</style>
+
+<table class="fixedwidth">
+  <tr>
+    <th width="15%">Repository</th>
+    <th width="15%">Age</th>
+    <th width="70%">Message</th>
+  </tr>
+{{# commits }}
+  <tr>
+    <td>{{#repo}}<a href="/projects/ooc/repos/{{id}}">{{short}}</a>{{/repo}}</td>
+    <td>{{ committed_date }}</td>
+    <td>{{ short_message }} [{{#author}}<a href="/projects/ooc/authors/{{name}}">{{name}}</a>{{/author}}]</td>
+  </tr>
+{{/ commits }}
+</table>

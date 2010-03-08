@@ -17,7 +17,7 @@ class Manager
 		# Only two come stock:
 		# :ping (to pong)
 		on :ping do |e|
-			e.conn.send 'pong', e.params.first, true
+			e.conn.force_send 'pong', e.params.first, true
 		end
 		
 		# and :message (to emit :command)
@@ -58,6 +58,7 @@ class Manager
 	
 	def raise_event e
 		puts "Handling #{e.event} from #{e.origin[:nick]} to #{e.target} via #{e.conn.nick} with params #{e.params.join ' '}" if e.origin
+		puts "Handling #{e.event} from <no origin> to #{e.target} via #{e.conn.nick} with params #{e.params.join ' '}" unless e.origin
 		
 		return unless @handlers[e.event]
 		
@@ -222,7 +223,7 @@ class Network
 end # network class
 
 class Connection < FBI::LineConnection
-	attr_reader :network, :nick, :channels
+	attr_reader :network, :nick, :channels, :queue, :pending
 	
 	def initialize network
 		super()
@@ -235,6 +236,9 @@ class Connection < FBI::LineConnection
 		send 'nick', @nick
 		send 'user', @network.manager.ident, '0', '0', @network.manager.realname, true
 		#join @channels.join(',')
+		
+		@pending = true
+		@queue = []
 	end
 	
 	def handle event, origin, target, *params
@@ -242,9 +246,23 @@ class Connection < FBI::LineConnection
 	end
 	
 	def send_line packet
-		packet = packet[0,497] + '...' if packet.size > 500
-		super packet
-		puts "Sent as #{@nick}: #{packet}"
+		packet = packet[0,472] + '...' if packet.size > 475
+		
+		if @pending
+			@queue << packet
+		else
+			super packet
+			puts "Sent as #{@nick}: #{packet}"
+		end
+	end
+	
+	def flush!
+		puts "Flushing queue..."
+		@pending = false
+		while @queue.any?
+			send_line @queue.shift
+		end
+		puts "Done flushing queue."
 	end
 	
 	# true as last arg puts a : before the last param
@@ -257,6 +275,14 @@ class Connection < FBI::LineConnection
 		params[0].upcase!
 		params[1] = params[1][:nick] if params.size > 0 && params[1].is_a?(Hash)
 		send_line params.join(' ')
+	end
+	
+	# send through queue
+	def force_send *params
+		pending = @pending
+		@pending = false
+		send *params
+		@pending = pending
 	end
 	
 	def message target, message
@@ -331,6 +357,10 @@ class Connection < FBI::LineConnection
 				handle :part, origin, *args
 			when 'quit'
 				handle :quit, origin, nil, *args
+				
+			when '001'
+				flush!
+				handle :connected, origin, *args
 				
 			else
 				handle :unhandled, origin, command, nil, *args

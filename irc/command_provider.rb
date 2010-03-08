@@ -11,8 +11,15 @@ class CommandProvider < FBI::Client
 		
 		on :publish do |channel, data|
 			command = data['command'].to_sym
+			data['args_str'] = data['args']
+			data['args'] = (data['args'] || '').split
+			
 			next unless @commands.has_key? command
-			@commands[command].call data
+			begin
+				@commands[command].call data
+			rescue => ex
+				puts ex, ex.message, ex.backtrace
+			end
 		end
 	end
 	
@@ -32,6 +39,7 @@ class CommandProvider < FBI::Client
 			data['channel'] = data['sender']['nick']
 		end
 		send_to data['server'], data['channel'], message
+		puts message
 	end
 
 	def cmd command, &blck
