@@ -11,8 +11,13 @@ module FBI
 		end
 		
 		def initialize master
+      super()
 			@master = master
 		end
+    
+    def startup *args
+      @master.startup *args
+    end
 		
 		def receive_object action, data
 			@master.receive_object action, data

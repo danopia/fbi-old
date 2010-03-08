@@ -1,7 +1,7 @@
 require File.join(File.dirname(__FILE__), 'drone')
 
 module FBI
-	class Client < Connection
+	class Client
 		attr_reader :handlers, :drone, :subscriptions
 		attr_accessor :name, :secret
 		
@@ -19,7 +19,6 @@ module FBI
 		def connect args={}
 			EventMachine.next_tick do
 				@drone = Drone.connect self, args
-				subscribe_to @subscriptions if @subscriptions.any?
 			end
 		end
 		def start_loop *args
@@ -46,8 +45,8 @@ module FBI
 			}
 		end
   
-		def startup channels=[]
-			subscribe_to channels if channels.any?
+		def startup
+			subscribe_to @subscriptions if @subscriptions.any?
 		end
 		
 		def subscribe_to channels
