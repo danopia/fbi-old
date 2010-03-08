@@ -2,13 +2,14 @@ require File.join(File.dirname(__FILE__), 'drone')
 
 module FBI
 	class Client < Connection
-		attr_reader :handlers, :drone
+		attr_reader :handlers, :drone, :subscriptions
 		attr_accessor :name, :secret
 		
 		def initialize name, secret=nil
 			@name = name
 			@secret = secret
 			@handlers = {}
+			@subscriptions = []
 		end
 		
 		def on event, &blck
@@ -17,6 +18,7 @@ module FBI
 		
 		def connect args={}
 			@drone = Drone.connect self, args
+			subscribe_to @subscriptions if @subscriptions.any?
 		end
 		def start_loop *args
 			@drone = Drone.start_loop self, args
@@ -47,7 +49,10 @@ module FBI
 		end
 		
 		def subscribe_to channels
-			@drone.send_object 'subscribe', {'channels' => channels}
+			@subscriptions |= channels
+			if @drone
+				@drone.send_object 'subscribe', {'channels' => channels}
+			end
 		end
 		
 		def handle event, *args
