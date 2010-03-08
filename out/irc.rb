@@ -213,4 +213,4 @@ end
 
 fbi.subscribe_to 'commits'
 
-fbi.start_loop
+fbi.start_loop if $0 == __FILE__

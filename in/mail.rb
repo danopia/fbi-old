@@ -79,7 +79,7 @@ class MailServer < FBI::LineConnection
   end
 end
 
-EventMachine::run do
+EventMachine::next_step do
   fbi = FBI::Client.new 'mail', 'hil0l'
   
   smtp = EventMachine::start_server '0.0.0.0', 25, MailServer
@@ -123,3 +123,5 @@ EventMachine::run do
   
   puts "Started mail server"
 end
+
+EventMachine::run {} if $0 == __FILE__
