@@ -49,7 +49,7 @@ module FBI
 			subscribe_to @subscriptions if @subscriptions.any?
 		end
 		
-		def subscribe_to channels
+		def subscribe_to *channels
 			@subscriptions |= channels
 			if @drone
 				@drone.send_object 'subscribe', {'channels' => channels}
@@ -74,6 +74,8 @@ module FBI
 					puts "got public packet from #{data['from']} via #{data['channel']}"
 					handle :publish, data['channel'], data['data']
 			end
+		rescue => ex
+			p ex, ex.message, ex.backtrace
 		end
 	end
 end
