@@ -149,7 +149,7 @@ manager.on :command do |e|
 			puts "Unknown command #{command}; broadcasting a packet"
 			server = Server.find e.network.id
 			channel = server.channels.find_by_name e.target
-			FBI::Client.publish 'irc', {
+			fbi.publish 'irc', {
 				:server => e.network.id,
 				:channel => e.target,
 				:sender => e.origin,
@@ -189,8 +189,9 @@ def route project, message
 	end
 end
 
+fbi = FBI::Client.new 'irc', 'hil0l'
 
-FBI::Client.on_published do |channel, data|
+fbi.on :published do |channel, data|
 	commits = data
 	commits = commits[-3..-1] if commits.size > 3
 	commits.each do |commit|
@@ -206,9 +207,10 @@ FBI::Client.on_published do |channel, data|
 	end
 end
 
-FBI::Client.on_private do |from, data|
+fbi.on :private do |from, data|
 	$manager.route_to data['server'], data['channel'], data['message']
 end
 
+fbi.subscribe_to 'commits'
 
-FBI::Client.start_loop 'irc', 'hil0l', ['commits']
+fbi.start_loop

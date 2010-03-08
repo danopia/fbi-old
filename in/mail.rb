@@ -80,7 +80,7 @@ class MailServer < FBI::LineConnection
 end
 
 EventMachine::run do
-  FBI::Client.connect 'mail', 'hil0l'
+  fbi = FBI::Client.new 'mail', 'hil0l'
   
   smtp = EventMachine::start_server '0.0.0.0', 25, MailServer
   smtp.domains << 'fbi.danopia.net' # accept mail to this domain
@@ -106,7 +106,7 @@ EventMachine::run do
       end_index = body.index("\n\nModified Paths:") - 1
       message = body[index..end_index]
       
-      FBI::Client.publish 'commits', [{
+      fbi.publish 'commits', [{
         :project => project,
         :owner => nil,
         :fork => false,
@@ -118,6 +118,8 @@ EventMachine::run do
       }]
     end
   end
+  
+  fbi.start
   
   puts "Started mail server"
 end
