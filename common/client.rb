@@ -1,44 +1,43 @@
-require File.join(File.dirname(__FILE__), 'connection')
+require File.join(File.dirname(__FILE__), 'drone')
 
 module FBI
 	class Client < Connection
-		@@on_auth = nil
-		@@on_private = nil
-		@@on_published = nil
+		attr_reader :handlers, :drone
+		attr_accessor :name, :secret
 		
-		def self.on_auth &blck
-			@@on_auth = blck
-		end
-		def self.on_published &blck
-			@@on_published = blck
-		end
-		def self.on_private &blck
-			@@on_private = blck
+		def initialize name, secret=nil
+			@name = name
+			@secret = secret
+			@handlers = {}
 		end
 		
-		def self.connect *args
-			EventMachine::connect "127.0.0.1", 5348, self, *args
-		end
-		def self.start_loop *args
-			EventMachine::run { self.connect *args }
+		def on event, &blck
+			@handlers[event.to_sym] = blck
 		end
 		
-		def self.private target, data
-			@@instance.send_object 'private', {
+		def connect args={}
+			@drone = Drone.connect self, args
+		end
+		def start_loop *args
+			@drone = Drone.start_loop self, args
+		end
+		
+		def private target, data
+			@drone.send_object 'private', {
 				'to'		=> target,
 				'data'	=> data
 			}
 		end
-		def self.publish channel, data
-			@@instance.send_object 'publish', {
+		def publish channel, data
+			@drone.send_object 'publish', {
 				'channel'	=> channel,
 				'data'		=> data
 			}
 		end
 		
 		def login
-			send_object 'auth', {
-				'user'		=> @username,
+			@drone.send_object 'auth', {
+				'user'		=> @name,
 				'secret'	=> @secret
 			}
 		end
@@ -48,22 +47,26 @@ module FBI
 		end
 		
 		def subscribe_to channels
-			send_object 'subscribe', {'channels' => channels}
+			@drone.send_object 'subscribe', {'channels' => channels}
+		end
+		
+		def handle event, *args
+			@handlers[event].call *args if @handlers.has_key? event
 		end
 		
 		def receive_object action, data
 			case action
 				when 'auth'
 					puts "logged in"
-					@@on_auth.call data if @@on_auth
+					handle :auth, data
 				
 				when 'private'
 					puts "got private packet from #{data['from']}"
-					@@on_private.call data['from'], data['data'] if @@on_private
+					handle :private, data['from'], data['data']
 			
 				when 'publish'
 					puts "got public packet from #{data['from']} via #{data['channel']}"
-					@@on_published.call data['channel'], data['data'] if @@on_published
+					handle :publish, data['channel'], data['data']
 			end
 		end
 	end
