@@ -3,6 +3,8 @@ require File.join(File.dirname(__FILE__), '..', 'common', 'client')
 require File.join(File.dirname(__FILE__), 'irc_models')
 require File.join(File.dirname(__FILE__), 'irc_lib')
 
+$fbi = fbi = FBI::Client.new('irc', 'hil0l')
+
 manager = FBI_IRC::Manager.new 'NRA-', 'fbi', 'FBI Version Control Informant'
 $manager = manager
 
@@ -152,7 +154,7 @@ manager.on :command do |e|
 			puts "Unknown command #{command}; broadcasting a packet"
 			server = Server.find e.network.id
 			channel = server.channels.find_by_name e.target
-			fbi.publish 'irc', {
+			$fbi.publish 'irc', {
 				:server => e.network.id,
 				:channel => e.target,
 				:sender => e.origin,
@@ -191,8 +193,6 @@ def route project, message
 		#sleep 0.5
 	end
 end
-
-fbi = FBI::Client.new 'irc', 'hil0l'
 
 fbi.on :published do |channel, data|
 	if channel == 'commits'
