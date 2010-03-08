@@ -1,30 +1,23 @@
 require File.join(File.dirname(__FILE__), '..', 'common', 'client')
 
-class CommandProvider
-	@@commands = {}
-	@@client = nil
-	@@username = nil
-	@@password = nil
+class CommandProvider < FBI::Client
+	attr_reader :commands
 	
-	def self.auth username, password
-		@@username = username
-		@@password = password
-	end
-	
-	def self.start &blck
-		FBI::Client.on_published do |channel, data|
-			@@commands[data['command'].to_sym].call data rescue nil
-		end
+	def initialize *args
+		super
 		
-		EventMachine::run {
-			yield false if blck && blck.arity > 0
-			@@client = FBI::Client.connect @@username, @@password, ['irc']
-			yield true if blck
-		}
+		@commands = {}
+		@subscriptions |= ['irc']
+		
+		on :publish do |channel, data|
+			command = data['command'].to_sym
+			next unless @commands.has_key? command
+			@commands[command].call data
+		end
 	end
 	
-	def self.send_to server, channel, message
-		FBI::Client.private 'irc', {
+	def send_to server, channel, message
+		private 'irc', {
 			'id' => nil,
 			'server' => server,
 			'channel' => channel,
@@ -32,7 +25,7 @@ class CommandProvider
 		}
 	end
 	
-	def self.reply_to data, message
+	def reply_to data, message
 		if data['channel'][0,1] == '#'
 			message = "#{data['sender']['nick']}: #{message}"
 		else
@@ -41,7 +34,7 @@ class CommandProvider
 		send_to data['server'], data['channel'], message
 	end
 
-	def self.on command, &blck
-		@@commands[command.to_sym] = blck
+	def cmd command, &blck
+		@commands[command.to_sym] = blck
 	end
 end
