@@ -2,9 +2,9 @@
 <h2>{{ title }}</h2>
 <hr />
 
-<div style="float: right;">
+<div style="float: right; border-left: 1px solid #999; padding-left: 1em;">
   <h3>code repositories</h3>
-  <ul style="padding: 0 0 0 1.5em; margin: 0;">
+  <ul style="list-style: none; padding: 0 0 0 1em; margin: 0;" class="fixedwidth">
   {{# repos }}
     <li><a href="/projects/ooc/repos/{{ id }}">{{ short_name }}</a></li>
   {{/ repos }}
