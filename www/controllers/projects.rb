@@ -1,5 +1,5 @@
 class ProjectsController < Mustache
-  attr_reader :project, :projects, :repo, :repos, :commits
+  attr_reader :project, :projects, :repo, :repos, :commits, :page, :pages
   
   def do_main env, path
     @projects = Project.all
@@ -7,6 +7,13 @@ class ProjectsController < Mustache
   
   def do_show env, path
     @project = Project.from_slug path.first
+  end
+  
+  def do_pages env, path
+    @project = Project.from_slug path.first
+    @pages = @project.pages
+    p @pages
+    @page = @project.page_by_slug path[2] if path.size > 2
   end
   
   def do_repos env, path

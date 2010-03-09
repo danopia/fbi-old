@@ -11,6 +11,7 @@ DB = Sequel.sqlite('www.db')
 Commits = DB[:commits]
 Repos = DB[:repos]
 Projects = DB[:projects]
+Pages = DB[:pages]
 
 Mustache.template_path = File.dirname(__FILE__) + '/views'
 
@@ -24,6 +25,7 @@ Rackup = Rack::Builder.new do
     require 'models/project'
     require 'models/repo'
     require 'models/commit'
+    require 'models/page'
     
     class Mustache
       class Template

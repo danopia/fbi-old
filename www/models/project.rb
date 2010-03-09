@@ -25,9 +25,15 @@ class Project
   def repos
     Repos.filter(:project_id => @id).all.map {|r| Repo.new r}
   end
+  def pages
+    Pages.filter(:project_id => @id).all.map {|p| Page.new p}
+  end
   
   def repo_by_id id
     Repo.new Repos.filter(:project_id => @id, :id => id).first
+  end
+  def page_by_slug slug
+    Page.new Pages.filter(:project_id => @id, :slug => slug).first
   end
   
   def created_at

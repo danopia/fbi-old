@@ -15,6 +15,7 @@ DB = Sequel.sqlite('www.db')
 Commits = DB[:commits]
 Repos = DB[:repos]
 Projects = DB[:projects]
+Pages = DB[:pages]
 
 DB.create_table :commits do
   primary_key :id
@@ -42,6 +43,18 @@ DB.create_table :projects do
   
   String :title, :null => false
   String :slug, :unique => true, :null => false
+  
+  Time :created_at, :null => false
+  Time :modified_at
+end
+
+DB.create_table :pages do
+  primary_key :id
+  
+  String :slug
+  String :title
+  String :contents
+  foreign_key :project_id, :projects
   
   Time :created_at, :null => false
   Time :modified_at
