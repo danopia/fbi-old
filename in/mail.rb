@@ -149,13 +149,13 @@ class MailServer < FBI::LineConnection
           send_line "250 PIPELINING"
           
         when 'MAIL'
-          args[1] =~ /^FROM:\<(.+)\>$/i
+          args[1] =~ /^FROM:\ ?<(.+)\>$/i
           @message = MailMessage.new $1
           @message.remote = true unless @@domains.include? @message.from.split('@').last
           send_line "250 2.1.0 OK"
           
         when 'RCPT'
-          args[1] =~ /^TO:\<(.+)\>$/i
+          args[1] =~ /^TO:\ ?<(.+)\>$/i
           addr = $1 || args[2][1..-2]
           if @@domains.include? addr.split('@').last
             send_line "250 2.1.5 OK"
