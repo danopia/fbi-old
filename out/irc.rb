@@ -5,7 +5,7 @@ require File.join(File.dirname(__FILE__), 'irc_lib')
 
 $fbi = fbi = FBI::Client.new('irc', 'hil0l')
 
-manager = FBI_IRC::Manager.new 'NRA-', 'fbi', 'FBI Version Control Informant'
+manager = FBI_IRC::Manager.new 'FBI-', 'fbi', 'FBI Version Control Informant'
 $manager = manager
 
 #manager.on :invite do |e|
@@ -45,6 +45,10 @@ manager.on :ctcp do |e|
 			end
 
 	end
+end
+
+manager.on :message do |e|
+	e.respond "It's 'ooc', not 'OOC'!" if e.target == '#ooc-lang' && e.params.join.include?('OOC') && !e.params.join.include?('OOC_')
 end
 
 manager.on :command do |e|
