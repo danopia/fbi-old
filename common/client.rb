@@ -45,8 +45,10 @@ module FBI
 			}
 		end
   
-		def startup
-			subscribe_to @subscriptions if @subscriptions.any?
+		def startup drone
+			@drone = drone
+			login
+			subscribe_to *@subscriptions if @subscriptions.any?
 		end
 		
 		def subscribe_to *channels
@@ -61,6 +63,7 @@ module FBI
 		end
 		
 		def receive_object action, data
+			p data
 			case action
 				when 'auth'
 					puts "logged in"

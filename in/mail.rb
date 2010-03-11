@@ -1,5 +1,102 @@
 require File.join(File.dirname(__FILE__), '..', 'common', 'client')
 
+require 'rubygems'
+require 'net/dns/resolver'
+require 'set'
+
+class MailMessage
+  attr_accessor :from, :to, :body, :remote
+  
+  def initialize from, to=nil, body=nil
+    @from = from
+    to = [to].compact unless to.is_a? Array
+    @to = to
+    @body = body
+    @remote = false
+  end
+end
+
+class MailSender < FBI::LineConnection
+  def self.send message
+    res = Net::DNS::Resolver.new
+    
+    # Set is amazing! And so fun/easy to abuse!
+    targets = Set.new(message.to.map{|addr| addr.match(/^(.+)@(.+)$/).captures }).classify{|addr| addr[1] }
+    targets.each_pair do |domain, addresses|
+      exchanges = Set.new(res.mx(domain)).classify{|record| record.preference }.sort.last[1].map{|rec| rec.exchange }
+      exchange = exchanges[rand(exchanges.size)]
+      EventMachine.next_tick {
+        EventMachine::connect exchange, 25, self, message, addresses.map{|addr| addr.join('@') }
+      }
+    end
+  end
+  
+  def initialize message, addresses
+    super()
+    
+    @message = message
+    @addresses = addressess
+    
+    @state = :awaiting_welcome
+  end
+  
+  def send_line data
+    send_data "#{data}\r\n"
+    puts "--> #{data}"
+  end
+
+  def receive_line line
+    puts "<-- #{line}"
+    
+    numeric = line.match(/^[0-9]+/).to_s.to_s
+    complete = !(line =~ /^[0-9]+\-/) # last resultant line?
+    
+    return unless complete
+    
+    case numeric
+      when 354 # ready for data
+        send_body
+      when 250 # ok
+        go_ahead
+      when 220 # banner
+        send_line "EHLO #{MailServer.hostname}"
+        @state = :ehlo
+      when 221 # quit
+        close_connection
+      when 550 # bad recipient
+    end
+  end
+  
+  def go_ahead
+    @state = case @state
+      when :said_hai
+        send_line "MAIL FROM:<#{@message.from}>"
+        :sending_rcpts
+        
+      when :sending_rcpts
+        if @addresses.any?
+          send_line "RCPT TO:<#{@addresses.pop}>"
+          :sending_rcpts
+        else
+          send_line 'DATA'
+          :data
+        end
+        
+      when :data
+        send_line 'QUIT'
+        :done
+    end
+  end
+  
+  def go_ahead
+    @message.each_line do |line|
+      line = ".#{line}" if line[0,1] == '.'
+      send_line line.chomp
+    end
+    send_line '.'
+  end
+end
+
 class MailServer < FBI::LineConnection
   @@hostname = `hostname`.chomp
   @@domains = [@@hostname]
@@ -12,17 +109,21 @@ class MailServer < FBI::LineConnection
     @@domains << newname
     @@hostname = newname
   end
+  def self.hostname
+    @@hostname
+  end
   
   def self.on_message &blck
     @@handler = blck
   end
   
   
-  
-  def post_init
-    super
+  def initialize relay=false
+    super()
     
-    send_line "220 #{@@hostname} ESMTP FBIMail 0.0.1; Mail Receiver Ready"
+    send_line "220 #{@@hostname} ESMTP FBIMail 0.0.1; Mail #{relay ? 'Relay' : 'Receiver'} Ready"
+    @message = nil
+    @relay = relay
   end
   
   def send_line data
@@ -49,21 +150,27 @@ class MailServer < FBI::LineConnection
           
         when 'MAIL'
           args[1] =~ /^FROM:\<(.+)\>$/i
-          @from = $1
+          @message = MailMessage.new $1
+          @message.remote = true unless @@domains.include? @message.from.split('@').last
           send_line "250 2.1.0 OK"
           
         when 'RCPT'
           args[1] =~ /^TO:\<(.+)\>$/i
-          @to = $1 || args[2][1..-2]
-          if @@domains.include? @to.split('@').last
+          addr = $1 || args[2][1..-2]
+          if @@domains.include? addr.split('@').last
             send_line "250 2.1.5 OK"
+            @message.to << addr
+          elsif @relay
+            send_line "250 2.1.5 OK"
+            @message.to << addr
+            @message.remote ||= true
           else # don't want to be marked as an open relay
             send_line "550 5.1.1 The email account that you tried to reach does not exist."
           end
         
         when 'DATA'
           @in_message = true
-          @message = ''
+          @message.body = ''
           send_line "354  Go ahead"
           
         when 'QUIT'
@@ -72,43 +179,55 @@ class MailServer < FBI::LineConnection
       end
     elsif line == '.'
       @in_message = false
-      @@handler && @@handler.call(@to, @from, @message)
+      handle_message
       send_line '250 2.0.0 OK'
     else
       line = line[1..-1] if line[0,1] == '.'
-      @message += line + "\n"
+      @message.body << line + "\n"
     end
+  end
+  
+  def handle_message
+    if @@handler && @@handler.call(@message)
+      @message = nil
+      return
+    end
+
+    if @message.remote && @relay
+      MailSender.send @message
+    end
+    
+    @message = nil
   end
 end
 
 fbi = FBI::Client.new 'mail', 'hil0l'
 
 EventMachine::next_tick do
-  
   smtp = EventMachine::start_server '0.0.0.0', 25, MailServer
-  submission = EventMachine::start_server '127.0.0.1', 587, MailServer
+  submission = EventMachine::start_server '127.0.0.1', 587, MailServer, true
   MailServer.domains << 'fbi.danopia.net' # accept mail to this domain
   
-  MailServer.on_message do |to, from, body|
+  MailServer.on_message do |message|
     #File.open('mail.txt', 'w') {|f| f.puts @message }
-    if body.include?('Log Message:') && from.include?('sourceforge.net')
+    if message.body.include?('Log Message:') && message.from.include?('sourceforge.net')
       
-      body =~ /^Revision: ([0-9]+)$/
+      message.body =~ /^Revision: ([0-9]+)$/
       rev = $1.to_i
       
-      body =~ /(http:\/\/.+\.sourceforge\.net\/(.+)\/\?rev=[0-9]+&view=rev)/
+      message.body =~ /(http:\/\/.+\.sourceforge\.net\/(.+)\/\?rev=[0-9]+&view=rev)/
       url, project = $1, $2
       
-      body =~ /^Author: +(.+)$/
+      message.body =~ /^Author: +(.+)$/
       author = $1
       
-      body =~ /^Subject: SF.net .+: .+:\[[0-9]+\] +(.+)$/
+      message.body =~ /^Subject: SF.net .+: .+:\[[0-9]+\] +(.+)$/
       path = $1
       
-      index = body.index("Log Message:") + 20
-      index = body.index("\n", index) + 1
-      end_index = body.index("\n\nModified Paths:") - 1
-      message = body[index..end_index]
+      index = message.body.index("Log Message:") + 20
+      index = message.body.index("\n", index) + 1
+      end_index = message.body.index("\n\nModified Paths:") - 1
+      log = message.body[index..end_index]
       
       fbi.publish 'commits', [{
         :project => project,
@@ -117,22 +236,22 @@ EventMachine::next_tick do
         :author => {:email => "#{author}@users.sourceforge.net", :name => author},
         :branch => path,
         :commit => "r#{rev}",
-        :message => message,
+        :message => log,
         :url => url,
       }]
-    elsif from.include?('@lists.launchpad.net')
+    elsif message.from.include?('@lists.launchpad.net')
       
-      body =~ /^From: (.+) <([^>]+)>$/
+      message.body =~ /^From: (.+) <([^>]+)>$/
       author = {:name => $1, :email => $2}
       
-      body.gsub("\n    ", ' ') =~ /^Subject: (.+)$/
+      message.body.gsub("\n    ", ' ') =~ /^Subject: (.+)$/
       subject = $1
       subject.gsub!('  ', ' ') while subject.include?('  ')
       
-      body =~ /^List-Id: <([^>]+)>$/
+      message.body =~ /^List-Id: <([^>]+)>$/
       list = $1
       
-      body =~ /^List-Archive: <([^>]+)>$/
+      message.body =~ /^List-Archive: <([^>]+)>$/
       archive = $1
       
       project = case list
@@ -148,7 +267,10 @@ EventMachine::next_tick do
         :url => archive,
         :project => project,
       }]
+    else
+      next false
     end
+    true
   end
   
   puts "Started mail server"

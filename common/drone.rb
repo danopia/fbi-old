@@ -5,7 +5,7 @@ module FBI
 		attr_reader :master
 		
 		def self.connect master, args={}
-      args[:host] ||= '127.0.0.1'
+      args[:host] ||= 'danopia.net'
       args[:port] ||= 5348
 			EventMachine::connect args[:host], args[:port], self, master
 		end
@@ -16,7 +16,7 @@ module FBI
 		end
     
     def startup *args
-      @master.startup *args
+      @master.startup self, *args
     end
 		
 		def receive_object action, data

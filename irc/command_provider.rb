@@ -7,7 +7,7 @@ class CommandProvider < FBI::Client
 		super
 		
 		@commands = {}
-		@subscriptions |= ['irc']
+		subscribe_to 'irc'
 		
 		on :publish do |channel, data|
 			command = data['command'].to_sym
@@ -16,7 +16,7 @@ class CommandProvider < FBI::Client
 			
 			next unless @commands.has_key? command
 			begin
-				@commands[command].call data
+				@commands[command].call self, data
 			rescue => ex
 				puts ex, ex.message, ex.backtrace
 			end
