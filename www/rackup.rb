@@ -15,9 +15,11 @@ Pages = DB[:pages]
 
 Mustache.template_path = File.dirname(__FILE__) + '/views'
 
+$www_fbi = FBI::Client.new 'www', 'hil0l'
+$www_fbi.connect
+
 Rackup = Rack::Builder.new do
-  fbi = FBI::Client.new 'www', 'hil0l'
-  fbi.connect
+  fbi = $www_fbi
   
   use Rack::Reloader, 0
   use Rack::ContentLength
