@@ -26,7 +26,7 @@ class MailSender < FBI::LineConnection
       exchanges = Set.new(res.mx(domain)).classify{|record| record.preference }.sort.last[1].map{|rec| rec.exchange }
       exchange = exchanges[rand(exchanges.size)]
       EventMachine.next_tick {
-        EventMachine::connect exchange, 25, self, message, addresses.map{|addr| addr.join('@') }
+        EventMachine::connect exchange[0..-2].downcase, 25, MailSender, message, addresses.map{|addr| addr.join('@') }
       }
     end
   end
@@ -35,7 +35,7 @@ class MailSender < FBI::LineConnection
     super()
     
     @message = message
-    @addresses = addressess
+    @addresses = addresses
     
     @state = :awaiting_welcome
   end
@@ -48,7 +48,7 @@ class MailSender < FBI::LineConnection
   def receive_line line
     puts "<-- #{line}"
     
-    numeric = line.match(/^[0-9]+/).to_s.to_s
+    numeric = line.match(/^[0-9]+/).to_s.to_i
     complete = !(line =~ /^[0-9]+\-/) # last resultant line?
     
     return unless complete
@@ -59,8 +59,8 @@ class MailSender < FBI::LineConnection
       when 250 # ok
         go_ahead
       when 220 # banner
-        send_line "EHLO #{MailServer.hostname}"
-        @state = :ehlo
+        send_line "EHLO vps.danopia.net" #{MailServer.hostname}"
+        @state = :said_hai
       when 221 # quit
         close_connection
       when 550 # bad recipient
@@ -88,8 +88,8 @@ class MailSender < FBI::LineConnection
     end
   end
   
-  def go_ahead
-    @message.each_line do |line|
+  def send_body
+    @message.body.each_line do |line|
       line = ".#{line}" if line[0,1] == '.'
       send_line line.chomp
     end

@@ -38,9 +38,11 @@ Feeds = DB[:feeds]
 Subs = DB[:subs]
 
 def parse url
-	Hpricot::XML(open(url).read)/'item'
+	doc = Hpricot::XML(open(url).read)
+	(doc/'item').any? ? (doc/'item') : (doc/'entry')
 end
 def shorten_url url
+	p url
 	open('http://is.gd/api.php?longurl=' + url).read
 end
 
@@ -89,7 +91,7 @@ class RSSPoller < CommandProvider
 	end
 	
 	start do
-		EM.add_periodic_timer 15*60 do
+		EM.add_periodic_timer 5*60 do
 			Feeds.where(:active => true).all.each do |feed|
 				items = parse feed[:url]
 				
@@ -102,7 +104,8 @@ class RSSPoller < CommandProvider
 				
 				Subs.where(:feed_id => feed[:id]).each do |sub|
 					items[0,3].each do |item|
-						send_to sub[:server], sub[:channel], "\002#{feed[:title]}:\017 #{item.at('title').innerText} \00302<\002\002#{shorten_url item.at('link').innerText}>"
+						href = item.at('link')['href'] || item.at('link').innerText
+						send_to sub[:server], sub[:channel], "\002#{feed[:title]}:\017 #{item.at('title').innerText} \00302<\002\002#{shorten_url href}>"
 					end
 				end
 			end
