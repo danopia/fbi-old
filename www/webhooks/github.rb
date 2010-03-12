@@ -2,7 +2,7 @@ require 'cgi'
 require 'json'
 
 class GithubHook
-  def run env
+  def run env, fbi
     data = env['rack.input'].read
     data = JSON.parse CGI::unescape(data[8..-1])
     
@@ -42,7 +42,7 @@ class GithubHook
         :url => commit['url']
       }
     end
-    FBI::Client.publish 'commits', output
-    FBI::Client.publish 'github', data
+    fbi.publish 'commits', output
+    fbi.publish 'github', data
   end
 end

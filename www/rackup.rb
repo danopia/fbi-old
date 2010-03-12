@@ -16,6 +16,9 @@ Pages = DB[:pages]
 Mustache.template_path = File.dirname(__FILE__) + '/views'
 
 Rackup = Rack::Builder.new do
+  fbi = FBI::Client.new 'www', 'hil0l'
+  fbi.connect
+  
   use Rack::Reloader, 0
   use Rack::ContentLength
   app = proc do |env|
@@ -103,7 +106,7 @@ Rackup = Rack::Builder.new do
       
     elsif File.exists? File.join(File.dirname(__FILE__), 'webhooks', parts[0] + '.rb')
       require File.join(File.dirname(__FILE__), 'webhooks', parts[0] + '.rb')
-      Class.const_get(parts[0].capitalize + 'Hook').new.run env
+      Class.const_get(parts[0].capitalize + 'Hook').new.run env, fbi
       [200, {'Content-Type' => 'text/plain'}, "Hook processed."]
       
     else
@@ -112,7 +115,3 @@ Rackup = Rack::Builder.new do
   end
   run app
 end.to_app
-
-EM.next_tick do
-  FBI::Client.connect 'thin', 'hil0l'
-end

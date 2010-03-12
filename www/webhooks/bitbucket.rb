@@ -2,7 +2,7 @@ require 'cgi'
 require 'json'
 
 class GithubHook
-  def run env
+  def run env, fbi
     data = env['rack.input'].read
     data = JSON.parse CGI::unescape(data[8..-1])
     
@@ -18,7 +18,7 @@ class GithubHook
         :url => "http://bitbucket.org/#{data['repository']['owner']}/#{data['repository']['slug']}/changeset/#{commit['node']}"
       }
     end
-    FBI::Client.publish 'commits', output
-    FBI::Client.publish 'bitbucket', data
+    fbi.publish 'commits', output
+    fbi.publish 'bitbucket', data
   end
 end
