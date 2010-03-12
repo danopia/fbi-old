@@ -91,13 +91,10 @@ Rackup = Rack::Builder.new do
       require File.join(File.dirname(__FILE__), 'controllers', parts[0] + '.rb')
       controller = Class.const_get(parts[0].capitalize + 'Controller').new
       
-      #parts << 'home' if parts.size == 1
       action = parts[2] || (parts.size == 1 ? 'main' : 'show')
       if controller.respond_to? "do_#{action}"
         controller.template = File.read(Mustache.template_path + "/#{parts[0]}/#{action}.mustache")
         controller.__send__ "do_#{action}", env, parts[1..-1]
-        puts controller.template.compile
-        #p eval(controller.template.compile)
         layout = Layout.new controller
         [200, {'Content-Type' => 'text/html'}, layout.render]
       else
