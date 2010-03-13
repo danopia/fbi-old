@@ -1,5 +1,7 @@
+require 'bluecloth'
+
 class Page
-  attr_accessor :id, :slug
+  attr_accessor :id, :slug, :contents, :title
   
   def self.from_id id
     self.new Repos.filter(:id => id).first
@@ -13,6 +15,8 @@ class Page
     data ||= {}
     @data = data
     @id = data[:id]
+    @contents = data[:contents]
+    @title = data[:title]
     @slug = data[:slug]
   end
   
@@ -20,11 +24,7 @@ class Page
     Project.from_id @data[:project_id]
   end
   
-  def contents
-    @data[:contents]
-  end
-  
-  def title
-    @data[:title]
+  def render
+    BlueCloth.new(@contents).to_html
   end
 end

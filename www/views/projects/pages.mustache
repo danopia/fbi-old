@@ -1,4 +1,4 @@
-<h2>{{# project }}<a href="/projects/{{ slug }}">{{ title }}</a> / {{/ project }}{{# page }}{{ title }}{{/ page }}</h2>
+<h2>{{# project }}<a href="/projects/{{ slug }}">{{ title }}</a> / {{/ project }}{{# page }}{{ title }} {{/ page }}{{# viewing }}[<a href="/projects/{{# project }}{{ slug }}{{/ project }}/pages/edit/{{# page }}{{ title }}{{/ page }}" style="font-size: small;">edit</a>]{{/ viewing }}</h2>
 
 <hr />
 
@@ -6,12 +6,23 @@
   <h3>pages</h3>
   <ul style="list-style: none; padding: 0 0 0 1em; margin: 0;" class="fixedwidth">
   {{# pages }}
-    <li><a href="/projects/ooc/pages/{{ slug }}">{{ title }}</a></li>
+    <li><a href="/projects/ooc/pages/show/{{ title }}">{{ title }}</a></li>
   {{/ pages }}
   </ul>
 </div>
 
-{{# page }}
-{{{ contents }}}
-{{/ page }}
+{{# viewing }}
+  {{# page }}
+    {{{ render }}}
+  {{/ page }}
+{{/ viewing }}
+
+{{# editing }}
+  <form method="post" action="/projects/{{# project }}{{ slug }}{{/ project }}/pages/save/{{# page }}{{ title }}{{/ page }}">
+    <textarea name="contents" cols="80" rows="10">{{# page }}{{ contents }}{{/ page }}</textarea>
+    <br />
+    <input type="submit" value="Save" />
+  </form>
+{{/ editing }}
+
 <br clear="all" />
