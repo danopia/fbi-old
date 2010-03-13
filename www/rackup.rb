@@ -32,54 +32,6 @@ Rackup = Rack::Builder.new do
     require 'models/commit'
     require 'models/page'
     
-    class Mustache
-      class Template
-        def compile_sections(src)
-          res = ""
-          while src =~ /#{otag}\#([^\}]*)#{ctag}\s*(.+?)#{otag}\/\1#{ctag}\s*/m
-            # $` = The string to the left of the last successful match
-            res << compile_tags($`)
-            name = $1.strip.to_sym.inspect
-            code = compile($2)
-            ctxtmp = "ctx#{tmpid}"
-            res << ev(<<-compiled)
-            if v = ctx[#{name}]
-              v = [v] if !v.is_a?(Array) # shortcut when passed a single object
-              v.map { |h| ctx.push(h); c = #{code}; ctx.pop; c }.join
-            end
-            compiled
-            # $' = The string to the right of the last successful match
-            src = $'
-          end
-          res << compile_tags(src)
-        end
-      end
-      
-      class Context
-        def initialize(mustache)
-          @stack = [mustache]
-        end
-        
-        def push new
-          @stack.unshift new
-        end
-        def pop
-          @stack.shift
-        end
-        
-        def [] name
-          responder = @stack.find {|item| item.respond_to?(name) }
-          if responder
-            responder.__send__ name
-          elsif @stack.last.raise_on_context_miss?
-            raise ContextMiss.new("Can't find #{name} in #{@stack.inspect}")
-          else
-            nil
-          end
-        end
-      end
-    end
-    
     class Layout < Mustache
       self.template_path = File.dirname(__FILE__) + '/views'
       
