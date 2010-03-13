@@ -125,6 +125,26 @@ class ProjectsController < Mustache
         Dir.chdir repo do
           @page.contents = `git show master:#{path[3..-1].join('/')}.md`
         end
+      
+      when 'history'
+        @viewing = true
+        @page = Page.new
+        @page.title = path[3..-1].join('/') + ' history'
+        @page.contents = ''
+        Dir.chdir repo do
+          `git log --oneline -- #{path[3..-1].join('/')}.md`.each_line do |line|
+            id, message = line.split(' ', 2)
+            @page.contents << "  * [#{message}](../commits/#{id})\n"
+          end
+        end
+      
+      when 'commits'
+        @viewing = true
+        @page = Page.new
+        @page.title = "Commit #{path[3]}"
+        Dir.chdir repo do
+          @page.contents = `git show #{path[3]}`
+        end
     end
   end
   
