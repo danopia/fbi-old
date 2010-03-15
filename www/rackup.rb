@@ -50,13 +50,20 @@ Rackup = Rack::Builder.new do
     
     routing.add_route /^\/projects\/?$/, 'projects', 'main'
     routing.add_route /^\/projects\/([^\/]+)\/?$/, 'projects', 'show'
-    routing.add_route /^\/projects\/([^\/]+)\/repos\/?$/, 'projects', 'repos'
-    routing.add_route /^\/projects\/([^\/]+)\/repos\/([^\/]+)\/?$/, 'projects', 'repos'
-    routing.add_route /^\/projects\/([^\/]+)\/commits\/?$/, 'projects', 'commits'
-    routing.add_route /^\/projects\/([^\/]+)\/commits\/authors\/([^\/]+)\/?$/, 'projects', 'commits', :mode => 'author'
-    routing.add_route /^\/projects\/([^\/]+)\/commits\/repos\/([^\/]+)\/?$/, 'projects', 'commits', :mode => 'repo'
-    routing.add_route /^\/projects\/([^\/]+)\/pages\/?$/, 'projects', 'pages'
-    routing.add_route /^\/projects\/([^\/]+)\/pages\/([^\/]+)\/([^\/]+)$/, 'projects', 'pages'
+    
+    routing.add_route /^\/projects\/([^\/]+)\/repos\/?$/, 'repos', 'list'
+    routing.add_route /^\/projects\/([^\/]+)\/repos\/([^\/]+)\/?$/, 'repos', 'show'
+    
+    routing.add_route /^\/projects\/([^\/]+)\/commits\/?$/, 'commits', 'list', :mode => 'project'
+    routing.add_route /^\/projects\/([^\/]+)\/commits\/authors\/([^\/]+)\/?$/, 'commits', 'list', :mode => 'author'
+    routing.add_route /^\/projects\/([^\/]+)\/commits\/repos\/([^\/]+)\/?$/, 'commits', 'list', :mode => 'repo'
+    
+    routing.add_route /^\/projects\/([^\/]+)\/wiki\/?$/, 'wiki', 'index'
+    routing.add_route /^\/projects\/([^\/]+)\/wiki\/show\/([^\/]+)$/, 'wiki', 'show'
+    routing.add_route /^\/projects\/([^\/]+)\/wiki\/edit\/([^\/]+)$/, 'wiki', 'edit'
+    routing.add_route /^\/projects\/([^\/]+)\/wiki\/save\/([^\/]+)$/, 'wiki', 'save'
+    routing.add_route /^\/projects\/([^\/]+)\/wiki\/history\/([^\/]+)$/, 'wiki', 'history'
+    routing.add_route /^\/projects\/([^\/]+)\/wiki\/commits\/([^\/]+)$/, 'wiki', 'commits'
 
     route = routing.find env['PATH_INFO']
     if route

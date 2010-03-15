@@ -1,0 +1,20 @@
+<h2>{{# project }}<a href="/projects/{{ slug }}">{{ title }}</a> / <a href="/projects/{{ slug }}{{/ project }}{{# page }}/wiki/show/{{ title }}">{{ title }}</a>{{/ page }}</h2>
+
+<hr />
+
+<div style="float: right; border-left: 1px solid #999; padding-left: 1em;">
+  <h3>pages</h3>
+  <ul style="list-style: none; padding: 0 0 0 1em; margin: 0;" class="fixedwidth">
+  {{# pages }}
+    <li><a href="/projects/ooc/wiki/show/{{ title }}">{{ title }}</a></li>
+  {{/ pages }}
+  </ul>
+</div>
+
+<form method="post" action="/projects/{{# project }}{{ slug }}{{/ project }}/wiki/save/{{# page }}{{ title }}{{/ page }}">
+  <textarea name="contents" cols="80" rows="10">{{# page }}{{ contents }}{{/ page }}</textarea>
+  <br />
+  <input type="submit" value="Save" />
+</form>
+
+<br clear="all" />
