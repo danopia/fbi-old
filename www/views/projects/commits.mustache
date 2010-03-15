@@ -10,11 +10,11 @@
     <th width="20%">Age</th>
     <th width="60%">Message</th>
   </tr>
-{{# commits }}
+{{# commits2 }}
   <tr>
     <td>{{#repo}}<a href="/projects/ooc/commits/repos/{{id}}">{{short_name}}</a>{{/repo}}</td>
     <td>{{ committed_date }}</td>
     <td>{{ short_message }} [<a href="/projects/ooc/commits/authors/{{author}}">{{author}}</a>]</td>
   </tr>
-{{/ commits }}
+{{/ commits2 }}
 </table>

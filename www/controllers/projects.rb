@@ -1,5 +1,5 @@
 class ProjectsController < Mustache
-  attr_reader :project, :projects, :repo, :repos, :commits, :page, :pages, :editing, :viewing
+  attr_reader :project, :projects, :repo, :repos, :commits2, :page, :pages2, :editing, :viewing
   
   def main captures, params, env
     @projects = Project.all
@@ -9,10 +9,10 @@ class ProjectsController < Mustache
     @project = Project.from_slug captures.first
   end
   
-  def do_pages env, path
-    @pages = []
+  def pages captures, params, env
+    @pages2 = []
     
-    @project = Project.from_slug path.first
+    @project = Project.from_slug captures.first
     repo = File.join(File.dirname(__FILE__), '..', 'wikis', @project.slug)
     
     unless File.directory? repo
@@ -49,11 +49,11 @@ class ProjectsController < Mustache
         
         page = Page.new
         page.title = line.split.last.sub('.md', '')
-        @pages << page
+        @pages2 << page
       end
     end
     
-    case path[2]
+    case captures[1]
     
       #~ when nil
         #~ Dir.chdir repo do
@@ -69,21 +69,22 @@ class ProjectsController < Mustache
       when 'edit'
         @editing = true
         @page = Page.new
-        @page.title = path[3..-1].join('/')
+        @page.title = captures[2]
         Dir.chdir repo do
-          @page.contents = `git show master:#{path[3..-1].join('/')}.md`
+          @page.contents = `git show master:#{captures[2]}.md`
         end
       
       when 'save'
         @editing = true
         @page = Page.new
-        @page.title = path[3..-1].join('/')
+        @page.title = captures[2]
         
         data = env['rack.input'].read
         data = CGI::unescape(data[9..-1])
         
+        path = "#{captures[2]}.md"
+        
         Dir.chdir repo do
-          path = "#{path[3..-1].join('/')}.md"
           
           IO.popen("git hash-object -w --path #{path} --stdin", 'w+') do |io|
             io.puts data
@@ -121,18 +122,18 @@ class ProjectsController < Mustache
       when 'show'
         @viewing = true
         @page = Page.new
-        @page.title = path[3..-1].join('/')
+        @page.title = captures[2]
         Dir.chdir repo do
-          @page.contents = `git show master:#{path[3..-1].join('/')}.md`
+          @page.contents = `git show master:#{captures[2]}.md`
         end
       
       when 'history'
         @viewing = true
         @page = Page.new
-        @page.title = path[3..-1].join('/') + ' history'
+        @page.title = captures[2] + ' history'
         @page.contents = ''
         Dir.chdir repo do
-          `git log --oneline -- #{path[3..-1].join('/')}.md`.each_line do |line|
+          `git log --oneline -- #{captures[2]}.md`.each_line do |line|
             id, message = line.split(' ', 2)
             @page.contents << "  * [#{message}](../commits/#{id})\n"
           end
@@ -141,35 +142,35 @@ class ProjectsController < Mustache
       when 'commits'
         @viewing = true
         @page = Page.new
-        @page.title = "Commit #{path[3]}"
+        @page.title = "Commit #{captures[2]}"
         Dir.chdir repo do
-          @page.contents = `git show #{path[3]}`
+          @page.contents = `git show #{captures[2]}`
         end
     end
   end
   
-  def do_repos env, path
-    @project = Project.from_slug path.first
-    @repo = @project.repo_by_id path[2].to_i
+  def repos captures, params, env
+    @project = Project.from_slug captures.first
+    @repo = @project.repo_by_id captures[1].to_i
   end
   
-  def do_commits env, path
-    @project = Project.from_slug path.first
+  def commits captures, params, env
+    @project = Project.from_slug captures.first
     
-    if path.size == 2 || path[2] != 'repos'
-      @repos = @project.repos
-    else
-      @repo = @project.repo_by_id path[3].to_i
+    if params[:mode] == 'repo'
+      @repo = @project.repo_by_id captures[1].to_i
       @repos = [@repo]
-    end
-    
-    if path.size > 2 && path[2] == 'authors'
-      @commits = Commits.filter(:repo_id => @repos.map{|r| r.id }, :author => CGI::unescape(path[3])).reverse_order(:committed_at).all
     else
-      @commits = Commits.filter(:repo_id => @repos.map{|r| r.id }).reverse_order(:committed_at).all
+      @repos = @project.repos
     end
     
-    @commits.map! do |commit|
+    if params[:mode] == 'author'
+      @commits2 = Commits.filter(:repo_id => @repos.map{|r| r.id }, :author => CGI::unescape(captures[1])).reverse_order(:committed_at).all
+    else
+      @commits2 = Commits.filter(:repo_id => @repos.map{|r| r.id }).reverse_order(:committed_at).all
+    end
+    
+    @commits2.map! do |commit|
       Commit.new commit
     end
   end
