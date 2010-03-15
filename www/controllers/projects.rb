@@ -1,12 +1,12 @@
 class ProjectsController < Mustache
   attr_reader :project, :projects, :repo, :repos, :commits, :page, :pages, :editing, :viewing
   
-  def do_main env, path
+  def main captures, params, env
     @projects = Project.all
   end
   
-  def do_show env, path
-    @project = Project.from_slug path.first
+  def show captures, params, env
+    @project = Project.from_slug captures.first
   end
   
   def do_pages env, path
