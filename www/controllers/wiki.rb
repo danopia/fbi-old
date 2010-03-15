@@ -58,21 +58,24 @@ class WikiController < Mustache
   end
   
   def save captures, params, env
+    return edit(captures, params, env) unless env['REQUEST_METHOD'] == 'POST'
+    
     setup captures.first
     
     @editing = true
     @page = Page.new
     @page.title = captures[1]
     
-    data = env['rack.input'].read
-    data = CGI::unescape(data[9..-1])
+    data = CGI.parse(env['rack.input'].read)
+    contents = data['contents'].first
+    message = data['message'].first
     
     path = "#{captures[1]}.md"
     
     Dir.chdir @repo do
       
       IO.popen("git hash-object -w --path #{path} --stdin", 'w+') do |io|
-        io.puts data
+        io.puts contents
         io.close_write
         $blob = io.gets.chomp
       end
@@ -89,8 +92,8 @@ class WikiController < Mustache
       previous = `git show --format=format:%H`
       previous = previous[0, previous.index("\n")]
       
-      IO.popen("git commit-tree #{$tree} -p #{previous}", 'w+') do |io|
-        io.puts "Updated via website"
+      IO.popen("export GIT_AUTHOR_NAME=#{env['REMOTE_ADDR']}; git commit-tree #{$tree} -p #{previous}", 'w+') do |io|
+        io.puts message
         io.close_write
         $commit = io.gets.chomp
       end
