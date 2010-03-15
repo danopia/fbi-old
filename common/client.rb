@@ -17,7 +17,9 @@ module FBI
 		end
 		
 		def connect args={}
-			startup Drone.connect(self, args)
+			EventMachine.next_tick {
+				startup Drone.connect(self, args)
+			}
 		end
 		def start_loop *args
 			EventMachine::run { connect *args }
