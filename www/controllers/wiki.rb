@@ -87,6 +87,7 @@ class WikiController < Mustache
       end
       
       previous = `git show --format=format:%H`
+      previous = previous[0, previous.index("\n")]
       
       IO.popen("git commit-tree #{$tree} -p #{previous}", 'w+') do |io|
         io.puts "Updated via website"
