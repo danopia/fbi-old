@@ -1,7 +1,7 @@
 require 'cgi'
 require 'json'
 
-class GithubHook
+class BitbucketHook
   def run env, fbi
     data = env['rack.input'].read
     data = JSON.parse CGI::unescape(data[8..-1])
