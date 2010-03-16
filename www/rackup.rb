@@ -52,14 +52,18 @@ Rackup = Rack::Builder.new do
       connect '/projects/?$', 'projects', 'main'
       connect '/projects/([^/]+)/?$', 'projects', 'show'
       
-      connect '/projects/([^/]+)/repos/?$', 'repos', 'list'
-      connect '/projects/([^/]+)/repos/([^/]+)/?$', 'repos', 'tree'
-      connect '/projects/([^/]+)/repos/([^/]+)/tree/(.*)$', 'repos', 'tree'
-      connect '/projects/([^/]+)/repos/([^/]+)/blob/(.+)$', 'repos', 'blob'
+      sub_route '/projects/([^/]+)/repos' do
+        connect '/?$', 'repos', 'list'
+        connect '/([^/]+)/?$', 'repos', 'tree'
+        connect '/([^/]+)/tree/(.*)$', 'repos', 'tree'
+        connect '/([^/]+)/blob/(.+)$', 'repos', 'blob'
+      end
       
-      connect '/projects/([^/]+)/commits/?$', 'commits', 'list', :mode => 'project'
-      connect '/projects/([^/]+)/commits/authors/([^/]+)/?$', 'commits', 'list', :mode => 'author'
-      connect '/projects/([^/]+)/commits/repos/([^/]+)/?$', 'commits', 'list', :mode => 'repo'
+      sub_route '/projects/([^/]+)/commits' do
+        connect '/?$', 'commits', 'list', :mode => 'project'
+        connect '/authors/([^/]+)/?$', 'commits', 'list', :mode => 'author'
+        connect '/repos/([^/]+)/?$', 'commits', 'list', :mode => 'repo'
+      end
       
       connect '/projects/([^/]+)/wiki/?$', 'wiki', 'index'
       connect '/projects/([^/]+)/wiki/show/([^/]+)$', 'wiki', 'show'

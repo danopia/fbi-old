@@ -10,7 +10,7 @@ class Routing
   end
   
   def find path
-    @routes.find {|route| route =~ path }
+    @routes.map {|route| route.find path}.compact.first
   end
   
   def setup &blck
@@ -20,19 +20,28 @@ class Routing
   end
 end
 
-class RoutingDSL
-  attr_reader :routing
+class SubRouting
+  attr_reader :base, :regexp, :routes
   
-  def initialize routing
-    @routing = routing
+  def initialize base
+    base = base.source if base.is_a? Regexp
+    
+    @base = base
+    @regexp = Regexp.new "^#{@base}"
+    @routes = []
   end
   
-  def connect *args
-    unless args[0].is_a? Regexp
-      args[0] = Regexp.new("^#{args[0]}") 
-    end
+  def add_route *args
+    regex = args.shift
+    regex = regex.source if regex.is_a? Regexp
+    regex = "#{@base}#{regex}"
     
-    @routing.routes << Route.new(*args)
+    @routes << Route.new(regex, *args)
+  end
+  
+  def find path
+    return nil unless @regexp =~ path
+    @routes.map {|route| route.find path}.compact.first
   end
 end
 
@@ -41,6 +50,8 @@ class Route
   attr_reader :params
   
   def initialize pattern, klass, method, params={}
+    pattern = Regexp.new("^#{pattern}") unless pattern.is_a? Regexp
+    
     @pattern = pattern
     @klass = klass.to_s
     @method = method.to_sym
@@ -49,6 +60,10 @@ class Route
   
   def =~ path
     @pattern =~ path
+  end
+  
+  def find path
+    @pattern =~ path && self
   end
   
   def handle path, env
@@ -80,5 +95,28 @@ class Route
   
   def template_path
     Mustache.template_path + "/#{@klass.downcase}/#{@method}.mustache"
+  end
+end
+
+class RoutingDSL
+  attr_reader :routing
+  
+  def initialize routing
+    @routing = routing
+  end
+  
+  def connect *args
+    @routing.add_route *args
+  end
+  
+  def sub_route path, &blck
+    path = "^#{path}" unless path.is_a? String
+    path = path.source if path.is_a? Regexp
+    
+    route = SubRouting.new path
+    @routing.routes << route
+    dsl = RoutingDSL.new route
+    dsl.instance_eval &blck
+    route
   end
 end
