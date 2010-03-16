@@ -25,11 +25,6 @@ Rackup = Rack::Builder.new do
   use Rack::ContentLength
   app = proc do |env|
   
-    require 'models/project'
-    require 'models/repo'
-    require 'models/commit'
-    require 'models/page'
-    
     class Layout < Mustache
       self.template_path = File.dirname(__FILE__) + '/views'
       
@@ -38,13 +33,19 @@ Rackup = Rack::Builder.new do
       end
       
       def yield
-        @target.render
+        @target
       end
     end
+
+    require 'models/project'
+    require 'models/repo'
+    require 'models/commit'
+    require 'models/page'
     
     parts = env['PATH_INFO'][1..-1].split('/')
     
     require 'lib/routing'
+    require 'lib/renderer'
     
     routing = Routing.new
     

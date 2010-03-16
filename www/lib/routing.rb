@@ -68,12 +68,13 @@ class Route
   
   def handle path, env
     match = @pattern.match(path)
+    
     controller = alloc_controller
     
-    controller.template = File.read template_path
     controller.__send__ @method, match.captures, @params, env
+    content = Renderer.render "#{@klass.downcase}/#{@method}", controller
     
-    Layout.new(controller).render
+    Layout.new(content).render
   end
   
   def alloc_controller
@@ -91,10 +92,6 @@ class Route
   
   def controller_class
     Class.const_get(controller_name)
-  end
-  
-  def template_path
-    Mustache.template_path + "/#{@klass.downcase}/#{@method}.mustache"
   end
 end
 
