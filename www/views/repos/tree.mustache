@@ -1,0 +1,30 @@
+<h2>{{# project }}<a href="/projects/{{ slug }}">{{ title }}</a> / <a href="/projects/{{ slug }}{{/ project }}{{# repo }}/repos/{{ id }}/">{{ short_name }}{{/ repo }}</a></h2>
+<hr />
+
+{{# repo }}
+<p>{{ short_name }} is a code repository which belongs to the {{# project }}{{ title }} {{/ project }}project.</p>
+
+<p>The code exists on <a href="http://github.com/">GitHub</a>. You can download the source from the repo's <a href="{{ url }}">GitHub page</a>.</p>
+{{/ repo }}
+
+<table class="fixedwidth">
+  <tr>
+    <th>file</th>
+    <th>type</th>
+    <th>hash</th>
+  </tr>
+{{# parent }}
+  <tr>
+    <td><a href="/projects/{{# project }}{{ slug }}{{/ project }}/repos/{{# repo }}{{ id }}{{/ repo }}/tree/{{ parent }}">..</td>
+    <td>tree</td>
+    <td></td>
+  </tr>
+{{/ parent }}
+{{# files }}
+  <tr>
+    <td><a href="/projects/{{# project }}{{ slug }}{{/ project }}/repos/{{# repo }}{{ id }}{{/ repo }}/{{ type }}/{{ path }}">{{ name }}</td>
+    <td>{{ type }}</td>
+    <td>{{ hash }}</td>
+  </tr>
+{{/ files }}
+</table>
