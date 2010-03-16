@@ -12,6 +12,24 @@ class Routing
   def find path
     @routes.find {|route| route =~ path }
   end
+  
+  def setup &blck
+    dsl = RoutingDSL.new self
+    dsl.instance_eval &blck
+    self
+  end
+end
+
+class RoutingDSL
+  attr_reader :routing
+  
+  def initialize routing
+    @routing = routing
+  end
+  
+  def connect *args
+    @routing.routes << Route.new(*args)
+  end
 end
 
 class Route

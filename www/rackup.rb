@@ -48,25 +48,27 @@ Rackup = Rack::Builder.new do
     
     routing = Routing.new
     
-    routing.add_route /^\/projects\/?$/, 'projects', 'main'
-    routing.add_route /^\/projects\/([^\/]+)\/?$/, 'projects', 'show'
+    routing.setup do
+      connect /^\/projects\/?$/, 'projects', 'main'
+      connect /^\/projects\/([^\/]+)\/?$/, 'projects', 'show'
+      
+      connect /^\/projects\/([^\/]+)\/repos\/?$/, 'repos', 'list'
+      connect /^\/projects\/([^\/]+)\/repos\/([^\/]+)\/?$/, 'repos', 'tree'
+      connect /^\/projects\/([^\/]+)\/repos\/([^\/]+)\/tree\/(.*)$/, 'repos', 'tree'
+      connect /^\/projects\/([^\/]+)\/repos\/([^\/]+)\/blob\/(.+)$/, 'repos', 'blob'
+      
+      connect /^\/projects\/([^\/]+)\/commits\/?$/, 'commits', 'list', :mode => 'project'
+      connect /^\/projects\/([^\/]+)\/commits\/authors\/([^\/]+)\/?$/, 'commits', 'list', :mode => 'author'
+      connect /^\/projects\/([^\/]+)\/commits\/repos\/([^\/]+)\/?$/, 'commits', 'list', :mode => 'repo'
+      
+      connect /^\/projects\/([^\/]+)\/wiki\/?$/, 'wiki', 'index'
+      connect /^\/projects\/([^\/]+)\/wiki\/show\/([^\/]+)$/, 'wiki', 'show'
+      connect /^\/projects\/([^\/]+)\/wiki\/edit\/([^\/]+)$/, 'wiki', 'edit'
+      connect /^\/projects\/([^\/]+)\/wiki\/save\/([^\/]+)$/, 'wiki', 'save'
+      connect /^\/projects\/([^\/]+)\/wiki\/history\/([^\/]+)$/, 'wiki', 'history'
+      connect /^\/projects\/([^\/]+)\/wiki\/commits\/([^\/]+)$/, 'wiki', 'commits'
+    end
     
-    routing.add_route /^\/projects\/([^\/]+)\/repos\/?$/, 'repos', 'list'
-    routing.add_route /^\/projects\/([^\/]+)\/repos\/([^\/]+)\/?$/, 'repos', 'tree'
-    routing.add_route /^\/projects\/([^\/]+)\/repos\/([^\/]+)\/tree\/(.*)$/, 'repos', 'tree'
-    routing.add_route /^\/projects\/([^\/]+)\/repos\/([^\/]+)\/blob\/(.+)$/, 'repos', 'blob'
-    
-    routing.add_route /^\/projects\/([^\/]+)\/commits\/?$/, 'commits', 'list', :mode => 'project'
-    routing.add_route /^\/projects\/([^\/]+)\/commits\/authors\/([^\/]+)\/?$/, 'commits', 'list', :mode => 'author'
-    routing.add_route /^\/projects\/([^\/]+)\/commits\/repos\/([^\/]+)\/?$/, 'commits', 'list', :mode => 'repo'
-    
-    routing.add_route /^\/projects\/([^\/]+)\/wiki\/?$/, 'wiki', 'index'
-    routing.add_route /^\/projects\/([^\/]+)\/wiki\/show\/([^\/]+)$/, 'wiki', 'show'
-    routing.add_route /^\/projects\/([^\/]+)\/wiki\/edit\/([^\/]+)$/, 'wiki', 'edit'
-    routing.add_route /^\/projects\/([^\/]+)\/wiki\/save\/([^\/]+)$/, 'wiki', 'save'
-    routing.add_route /^\/projects\/([^\/]+)\/wiki\/history\/([^\/]+)$/, 'wiki', 'history'
-    routing.add_route /^\/projects\/([^\/]+)\/wiki\/commits\/([^\/]+)$/, 'wiki', 'commits'
-
     route = routing.find env['PATH_INFO']
     if route
       [200, {'Content-Type' => 'text/html'}, route.handle(env['PATH_INFO'], env)]
