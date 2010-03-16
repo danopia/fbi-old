@@ -65,12 +65,14 @@ Rackup = Rack::Builder.new do
         connect '/repos/([^/]+)/?$', 'commits', 'list', :mode => 'repo'
       end
       
-      connect '/projects/([^/]+)/wiki/?$', 'wiki', 'index'
-      connect '/projects/([^/]+)/wiki/show/([^/]+)$', 'wiki', 'show'
-      connect '/projects/([^/]+)/wiki/edit/([^/]+)$', 'wiki', 'edit'
-      connect '/projects/([^/]+)/wiki/save/([^/]+)$', 'wiki', 'save'
-      connect '/projects/([^/]+)/wiki/history/([^/]+)$', 'wiki', 'history'
-      connect '/projects/([^/]+)/wiki/commits/([^/]+)$', 'wiki', 'commits'
+      sub_route '/projects/([^/]+)/wiki' do
+        connect '/?$', 'wiki', 'index'
+        connect '/show/([^/]+)$', 'wiki', 'show'
+        connect '/edit/([^/]+)$', 'wiki', 'edit'
+        connect '/save/([^/]+)$', 'wiki', 'save'
+        connect '/history/([^/]+)$', 'wiki', 'history'
+        connect '/commits/([^/]+)$', 'wiki', 'commits'
+      end
     end
     
     route = routing.find env['PATH_INFO']
