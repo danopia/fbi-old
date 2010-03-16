@@ -28,6 +28,10 @@ class RoutingDSL
   end
   
   def connect *args
+    unless args[0].is_a? Regexp
+      args[0] = Regexp.new("^#{args[0]}") 
+    end
+    
     @routing.routes << Route.new(*args)
   end
 end
