@@ -1,6 +1,17 @@
 class Renderer < Mustache
-  def self.render file, context
-    #p self.public_methods-Class.public_methods
-    super File.read("#{Mustache.template_path}/#{file}.#{template_extension}"), context
+  attr_accessor :template, :file, :object
+  
+  def initialize file, object
+    @file = file
+    @object = object
+  end
+  
+  def render args={}
+    path = "#{Mustache.template_path}/#{@file}.#{self.class.template_extension}"
+    @template ||= File.read(path)
+    content = super @template, object
+    
+    layout = "#{Mustache.template_path}/layout.#{self.class.template_extension}"
+    super File.read(layout), {:yield => content}
   end
 end

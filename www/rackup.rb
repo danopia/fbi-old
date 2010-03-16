@@ -46,6 +46,7 @@ Rackup = Rack::Builder.new do
     
     require 'lib/routing'
     require 'lib/renderer'
+    require 'lib/controller'
     
     routing = Routing.new
     

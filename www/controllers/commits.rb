@@ -1,4 +1,4 @@
-class CommitsController < Mustache
+class CommitsController < Controller
   attr_reader :project, :repo, :author, :repos, :commits
   
   def list captures, params, env

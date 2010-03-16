@@ -1,4 +1,4 @@
-class ReposController < Mustache
+class ReposController < Controller
   attr_reader :project, :repo, :repos, :commits, :pages, :debug, :files, :filename, :parent
   
   def list captures, params, env

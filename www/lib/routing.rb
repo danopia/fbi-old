@@ -70,11 +70,9 @@ class Route
     match = @pattern.match(path)
     
     controller = alloc_controller
-    
+    controller.action = @method
     controller.__send__ @method, match.captures, @params, env
-    content = Renderer.render "#{@klass.downcase}/#{@method}", controller
-    
-    Layout.new(content).render
+    controller.render
   end
   
   def alloc_controller

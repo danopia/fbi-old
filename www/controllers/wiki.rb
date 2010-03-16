@@ -3,7 +3,7 @@ require 'time'
 require 'octopi'
 include Octopi
 
-class WikiController < Mustache
+class WikiController < Controller
   attr_reader :project, :page, :pages, :commits, :commit
   
   def fetch_repo repo

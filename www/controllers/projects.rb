@@ -1,4 +1,4 @@
-class ProjectsController < Mustache
+class ProjectsController < Controller
   attr_reader :project, :projects
   
   def main captures, params, env
