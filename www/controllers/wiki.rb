@@ -1,5 +1,71 @@
+require 'time'
+
+require 'octopi'
+include Octopi
+
 class WikiController < Mustache
-  attr_reader :project, :page, :pages, :editing, :viewing
+  attr_reader :project, :page, :pages, :commits, :commit
+  
+  def fetch_repo repo
+    remote = repo.clone_url.sub('github.com', 'fbi_gh')
+    
+    Dir.chdir File.dirname(@repo) do
+      `git clone --bare #{remote} #{@project.slug}`
+    end
+    
+    Dir.chdir @repo do
+      `git remote add origin #{remote}`
+    end
+  end
+  
+  def create_repo
+    repo = Repository.create :name => @project.slug
+    remote = repo.clone_url.sub('github.com', 'fbi_gh')
+    
+    system 'mkdir', @repo
+    
+    Dir.chdir @repo do
+      `git init --bare`
+      
+      IO.popen('git hash-object -w --path index.md --stdin', 'w+') do |io|
+        io.puts "This is the wiki for #{@project.title}."
+        io.close_write
+        $blob = io.gets.chomp
+      end
+      
+      IO.popen('git hash-object -w --path README --stdin', 'w+') do |io|
+        io.puts "This is the FBI wiki repo for #{@project.title}."
+        io.puts
+        io.puts "This repo is used to allow flexible editing of the wiki."
+        io.close_write
+        $blob2 = io.gets.chomp
+      end
+      
+      IO.popen('git mktree', 'w+') do |io|
+        io.puts "100644 blob #{$blob}	index.md"
+        io.puts "100644 blob #{$blob2}	README"
+        io.close_write
+        $tree = io.gets.chomp
+      end
+      
+      IO.popen("git commit-tree #{$tree}", 'w+') do |io|
+        io.puts "Initial commit"
+        io.close_write
+        $commit = io.gets.chomp
+      end
+      
+      `git update-ref refs/heads/master #{$commit}`
+      
+      `git remote add origin #{remote}`
+      `git push origin master`
+    end
+  end
+  
+  def pull
+    Dir.chdir @repo do
+      `git fetch origin master:refs/heads/master`
+    end
+  end
   
   def setup project
     @pages = []
@@ -7,31 +73,19 @@ class WikiController < Mustache
     @project = Project.from_slug project
     @repo = File.join(File.dirname(__FILE__), '..', 'wikis', @project.slug)
     
-    unless File.directory? @repo
-      system 'mkdir', @repo
-      
-      Dir.chdir @repo do
-        `git init --bare`
-        
-        IO.popen('git hash-object -w --path index.md --stdin', 'w+') do |io|
-          io.puts "This is the wiki for #{@project.title}."
-          io.close_write
-          $blob = io.gets.chomp
+    return unless @project.slug
+    
+    if File.directory? @repo
+      pull
+    else
+      config = File.open('github_auth.yaml') { |yf| YAML::load(yf) }
+      config.each_pair {|key, val| config[key.to_sym] = val }
+      authenticated_with config do
+        begin
+          fetch_repo Repository.find(:name => @project.slug, :user => Api.api.login)
+        rescue Octopi::APIError
+          create_repo
         end
-        
-        IO.popen('git mktree', 'w+') do |io|
-          io.puts "100644 blob #{$blob}	index.md"
-          io.close_write
-          $tree = io.gets.chomp
-        end
-        
-        IO.popen("git commit-tree #{$tree}", 'w+') do |io|
-          io.puts "Initial commit"
-          io.close_write
-          $commit = io.gets.chomp
-        end
-        
-        puts `git update-ref refs/heads/master #{$commit}`
       end
     end
     
@@ -73,6 +127,7 @@ class WikiController < Mustache
     path = "#{captures[1]}.md"
     
     Dir.chdir @repo do
+      # pull
       
       IO.popen("git hash-object -w --path #{path} --stdin", 'w+') do |io|
         io.puts contents
@@ -92,13 +147,14 @@ class WikiController < Mustache
       previous = `git show --format=format:%H`
       previous = previous[0, previous.index("\n")]
       
-      IO.popen("export GIT_AUTHOR_NAME=#{env['REMOTE_ADDR']}; git commit-tree #{$tree} -p #{previous}", 'w+') do |io|
+      IO.popen("export GIT_AUTHOR_NAME=#{env['REMOTE_ADDR']}; export GIT_AUTHOR_EMAIL=www@fbi.danopia.net; export GIT_COMMITTER_EMAIL=wikis@fbi.danopia.net; export GIT_COMMITTER_NAME=FBI; git commit-tree #{$tree} -p #{previous}", 'w+') do |io|
         io.puts message
         io.close_write
         $commit = io.gets.chomp
       end
       
       `git update-ref refs/heads/master #{$commit} #{previous}`
+      `git push origin master`
     end
     
     @viewing = true
@@ -143,11 +199,28 @@ class WikiController < Mustache
   def commits captures, params, env
     setup captures.first
 
-    @viewing = true
-    @page = Page.new
-    @page.title = "Commit #{captures[1]}"
     Dir.chdir @repo do
-      @page.contents = `git show #{captures[1]}`
+      contents = `git show #{captures[1]}`
+      
+      @commit = {}
+      @commit[:hash] = captures[1]
+      
+      author = contents.match(/^Author: ([0-9.]+) \<(.+)\>$/).captures
+      @commit[:author] = {:name => author[0], :mail => author[1]}
+      
+      date = contents.match(/^Date:\W+(.+)$/).captures.first
+      @commit[:date] = Time.parse(date).utc.strftime('%B %d, %Y')
+      
+      message_start = contents.index("\n\n") + 2
+      message_end = contents.index("\n\n", message_start) - 1
+      @commit[:message] = contents[message_start..message_end]
+      
+      @commit[:files] = contents.split("\ndiff")
+      @commit[:files].shift
+      @commit[:files].map! do |raw|
+        file = raw.match(/^\+\+\+ b\/(.+)$/).captures.first
+        {:path => file, :diff => raw[raw.index('@@')..-1]}
+      end
     end
   end
 end

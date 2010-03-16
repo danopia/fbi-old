@@ -1,4 +1,4 @@
-<h2>{{# project }}<a href="/projects/{{ slug }}">{{ title }}</a> / {{/ project }}{{# page }}{{ title }}{{/ page }}</h2>
+<h2>{{# project }}<a href="/projects/{{ slug }}">{{ title }}</a> / {{/ project }}Commit {{# commit }}{{ hash }}{{/ commit }}</h2>
 
 <hr />
 
@@ -11,8 +11,20 @@
   </ul>
 </div>
 
-{{# page }}
-  {{{ render }}}
-{{/ page }}
+{{# commit }}
+  {{# author }}
+  <p>Author: {{ name }}</p>
+  {{/ author }}
+  
+  <p>Date: {{ date }}</p>
+  
+  <pre>{{ message }}</pre>
+  
+  {{# files }}
+    <hr />
+    <h3>{{ path }}</h3>
+    <pre>{{ diff }}</pre>
+  {{/ files }}
+{{/ commit }}
 
 <br clear="all" />
