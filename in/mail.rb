@@ -260,7 +260,7 @@ EventMachine::next_tick do
       end
       
       return unless project
-      FBI::Client.publish 'mailinglist', [{
+      fbi.publish 'mailinglist', [{
         :list => list,
         :author => author,
         :subject => subject,
