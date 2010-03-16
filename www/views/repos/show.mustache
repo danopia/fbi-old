@@ -4,6 +4,23 @@
 
 <p>{{ short_name }} is a code repository which belongs to the {{# project }}{{ title }} {{/ project }}project.</p>
 
+<pre>{{ debug }}</pre>
+
+<table class="fixedwidth">
+  <tr>
+    <th>file</th>
+    <th>type</th>
+    <th>hash</th>
+  </tr>
+{{# files }}
+  <tr>
+    <td><a href="/projects/{{# project }}{{ slug }}{{/ project }}/repos/{{ id }}/{{ type }}/{{ path }}">{{ path }}</td>
+    <td>{{ type }}</td>
+    <td>{{ hash }}</td>
+  </tr>
+{{/ files }}
+</table>
+
 <p>The code exists on <a href="http://github.com/">GitHub</a>. You can download the source from the repo's <a href="{{ url }}">GitHub page</a>.</p>
 
 <hr />

@@ -52,7 +52,9 @@ Rackup = Rack::Builder.new do
     routing.add_route /^\/projects\/([^\/]+)\/?$/, 'projects', 'show'
     
     routing.add_route /^\/projects\/([^\/]+)\/repos\/?$/, 'repos', 'list'
-    routing.add_route /^\/projects\/([^\/]+)\/repos\/([^\/]+)\/?$/, 'repos', 'show'
+    routing.add_route /^\/projects\/([^\/]+)\/repos\/([^\/]+)\/?$/, 'repos', 'tree'
+    routing.add_route /^\/projects\/([^\/]+)\/repos\/([^\/]+)\/tree\/(.+)$/, 'repos', 'tree'
+    routing.add_route /^\/projects\/([^\/]+)\/repos\/([^\/]+)\/blob\/(.+)$/, 'repos', 'blob'
     
     routing.add_route /^\/projects\/([^\/]+)\/commits\/?$/, 'commits', 'list', :mode => 'project'
     routing.add_route /^\/projects\/([^\/]+)\/commits\/authors\/([^\/]+)\/?$/, 'commits', 'list', :mode => 'author'
