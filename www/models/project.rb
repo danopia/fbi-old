@@ -49,4 +49,21 @@ class Project
     repos = self.repos.map {|repo| repo.id }
     Commits.filter(:repo_id => repos).reverse_order(:committed_at).first(5).map {|c| Commit.new c }
   end
+  
+  
+  def owner_id; @data[:owner_id]; end
+  def owner_id= new; @data[:owner_id] = new; end
+  
+  def owner; @owner ||= User.find(:id => @data[:owner_id]); end
+  def owner= new; @owner = new; @data[:owner_id] = new.id; end
+  
+  def save
+    if @id
+      @data[:modified_at] = Time.now
+      Projects.where(:id => @id).update @data
+    else
+      @data[:created_at] = Time.now
+      @id = Projects << @data
+    end
+  end
 end

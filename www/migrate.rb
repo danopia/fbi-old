@@ -64,6 +64,7 @@ DB.create_table :repos do
   
   String :name
   String :url
+  String :slug
   foreign_key :project_id, :projects
   
   Time :created_at, :null => false
@@ -73,6 +74,7 @@ end
 DB.create_table :projects do
   primary_key :id
   
+  foreign_key :owner_id, :users
   String :title, :null => false
   String :slug, :unique => true, :null => false
   

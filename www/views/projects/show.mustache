@@ -14,6 +14,10 @@
 <p>This is a project page for {{ title }}.</p>
 <p>Stuff goes here.</p>
 
+{{# owner }}
+<p>This project's administrative contact is <a href="/users/{{ username }}" title="{{ display_name }}'s Profile">{{ display_name }}</a>.</p>
+{{/ owner }}
+
 <hr />
 
 <h3>recent commits</h3>
