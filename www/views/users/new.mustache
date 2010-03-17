@@ -1,0 +1,43 @@
+<h2>Registration</h2>
+<hr />
+
+<p>Registering on FBI's web site lets you maintain projects, repos,
+wikis, issues, timelines, profiles, etc. The process is
+<strike>painful</strike> painless and fast, and you don't even need to
+verify your email address [yet].</p>
+
+<style>
+table { margin: 0 auto; }
+th { text-align: right; }
+td, th { width: 50%; }
+</style>
+
+<p>{{ message }}</p>
+
+{{# register }}
+{{# user }}
+<form action="/users/new" method="post" name="register">
+  <table>
+    <tr>
+      <th>Username:</th>
+      <td><input type="text" name="username" value="{{ username }}" /></td>
+    </tr>
+    <tr>
+      <th>Password:</th>
+      <td><input type="password" name="password" /></td>
+    </tr>
+    <tr>
+      <th>Password (again):</th>
+      <td><input type="password" name="password_confirm" /></td>
+    </tr>
+    <tr>
+      <th>E-mail address:</th>
+      <td><input type="text" name="email" value="{{ email }}" /></td>
+    </tr>
+    <tr>
+      <td colspan="2" align="center"><input type="submit" value="Register" /></td>
+    </tr>
+  </table>
+</form>
+{{/ user }}
+{{/ register }}

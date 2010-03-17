@@ -16,6 +16,25 @@ Commits = DB[:commits]
 Repos = DB[:repos]
 Projects = DB[:projects]
 Pages = DB[:pages]
+Users = DB[:users]
+
+#DB.drop_table :users
+DB.create_table :users do
+  primary_key :id
+  
+  String :username, :unique => true, :null => false
+  String :name
+  String :email, :null => false
+  String :website
+  String :company
+  String :location
+  String :password_hash, :null => false
+  
+  String :cookie_token, :unique => true
+  
+  Time :created_at, :null => false
+  Time :modified_at
+end
 
 DB.create_table :commits do
   primary_key :id

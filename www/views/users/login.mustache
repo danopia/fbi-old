@@ -1,0 +1,28 @@
+<h2>Login</h2>
+<hr />
+
+<style>
+table { margin: 0 auto; }
+th { text-align: right; }
+td, th { width: 50%; }
+</style>
+
+<p>{{ message }}</p>
+
+{{# login2 }}
+<form action="/login" method="post" name="login">
+  <table>
+    <tr>
+      <th>Username:</th>
+      <td><input type="text" name="username" /></td>
+    </tr>
+    <tr>
+      <th>Password:</th>
+      <td><input type="password" name="password" /></td>
+    </tr>
+    <tr>
+      <td colspan="2" align="center"><input type="submit" value="Login" /></td>
+    </tr>
+  </table>
+</form>
+{{/ login2 }}
