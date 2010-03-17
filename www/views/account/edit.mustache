@@ -1,0 +1,48 @@
+<h2>Edit your Profile</h2>
+<hr />
+
+<style>
+table { margin: 0 auto; }
+th { text-align: right; }
+td, th { width: 50%; }
+</style>
+
+<p>{{ message }}</p>
+
+{{# user }}
+<form action="/account/edit" method="post" name="edit_profile">
+  <table>
+    <tr>
+      <th>Name</th>
+      <td><input type="text" name="name" value="{{ name }}" /></td>
+    </tr>
+    <tr>
+      <th>Website</th>
+      <td><input type="text" name="website" value="{{ website }}" /></td>
+    </tr>
+    <tr>
+      <th>E-mail address</th>
+      <td><input type="text" name="email" value="{{ email }}" /></td>
+    </tr>
+    <tr>
+      <th>Company</th>
+      <td><input type="text" name="company" value="{{ company }}" /></td>
+    </tr>
+    <tr>
+      <th>Location</th>
+      <td><input type="text" name="location" value="{{ location }}" /></td>
+    </tr>
+    <!--<tr>
+      <th>Password:</th>
+      <td><input type="password" name="password" /></td>
+    </tr>
+    <tr>
+      <th>Password (again):</th>
+      <td><input type="password" name="password_confirm" /></td>
+    </tr>-->
+    <tr>
+      <td colspan="2" align="center"><input type="submit" value="Save" /></td>
+    </tr>
+  </table>
+</form>
+{{/ user }}

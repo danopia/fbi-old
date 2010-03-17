@@ -2,7 +2,20 @@ class AccountController < Controller
   attr_reader :user, :message
   
   def edit captures, params, env
-    render :text => 'hi'
+    @user = env[:user]
+    
+    if env['REQUEST_METHOD'] == 'POST'
+      data = CGI.parse env['rack.input'].read
+
+      @user.name = data['name'].first
+      @user.website = data['website'].first
+      @user.email = data['email'].first
+      @user.company = data['company'].first
+      @user.location = data['location'].first
+      @user.save
+      
+      render :text => 'Your profile has been updated.'
+    end
   end
   
   def new captures, params, env
