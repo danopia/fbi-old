@@ -29,6 +29,7 @@ class UsersController < Controller
       
       $headers['Set-Cookie'] = @cookie.to_s
       
+      @env[:user] = @user
       @message = 'Your account has been registered.'
     else
       @register = true
@@ -38,7 +39,7 @@ class UsersController < Controller
   def login captures, params, env
     if env['REQUEST_METHOD'] == 'POST'
       data = CGI.parse env['rack.input'].read
-      @user = User.find :username => data['username'].first
+      env[:user] = @user = User.find(:username => data['username'].first)
       
       if @user.password_hash == User.hash(data['password'].first)
         @user.cookie_token = User.random_token
@@ -60,8 +61,9 @@ class UsersController < Controller
   end
   
   def logout captures, params, env
-    @user = User.load env
-    return unless @user
+    return unless @env[:user]
+    @user = env[:user]
+    env[:user] = nil
     
     cookie = CGI::Cookie.new 'fbi_session', ''
     cookie.expires = Time.at(0)
