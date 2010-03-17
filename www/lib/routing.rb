@@ -71,6 +71,7 @@ class Route
     
     controller = alloc_controller
     controller.action = @method
+    controller.env = env
     controller.__send__ @method, match.captures, @params, env
     controller.render
   end

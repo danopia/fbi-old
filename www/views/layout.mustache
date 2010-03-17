@@ -60,6 +60,10 @@
     <div id="headerdiv">
       <h1>FBI</h1>
       <h2>bringing projects together</h2>
+      <p style="float: right;">
+        {{# user }}Hey, {{ username }}! <a href="/logout">Log out</a>{{/ user }}
+        {{# loggedout }}<a href="/login">Log in</a> | <a href="/users/new">Register</a>{{/ loggedout }}
+      </p>
     </div>
   </div>
 

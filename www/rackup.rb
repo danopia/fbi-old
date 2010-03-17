@@ -91,6 +91,7 @@ Rackup = Rack::Builder.new do
     route = routing.find env['PATH_INFO']
     if route
       $headers = {'Content-Type' => 'text/html'}
+      env[:user] = User.load env
       [200, $headers, route.handle(env['PATH_INFO'], env)]
     #~ else
       #~ [404, {'Content-Type' => 'text/plain'}, "404: Page not found."]

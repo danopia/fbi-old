@@ -8,11 +8,13 @@ class User
   end
   
   def self.from_username username
-    self.new Users.filter(:username => username).first
+    u = Users.filter(:username => username).first
+    u && self.new(u)
   end
   
   def self.find filters
-    self.new Users.filter(filters).first
+    u = Users.filter(filters).first
+    u && self.new(u)
   end
   
   def self.where filters
