@@ -62,6 +62,7 @@ class UserSession
     @data[:cookie_token] ||= UserSession.random_token
     cookie = CGI::Cookie.new 'fbi_session', @data[:cookie_token]
     cookie.expires = Time.now + (60*60*24*30*3)
+    cookie.path = '/'
     cookie
   end
   

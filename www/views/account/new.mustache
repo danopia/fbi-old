@@ -14,9 +14,8 @@ td, th { width: 50%; }
 
 <p>{{ message }}</p>
 
-{{# register }}
 {{# user }}
-<form action="/users/new" method="post" name="register">
+<form action="/account/new" method="post" name="register">
   <table>
     <tr>
       <th>Username:</th>
@@ -40,4 +39,3 @@ td, th { width: 50%; }
   </table>
 </form>
 {{/ user }}
-{{/ register }}
