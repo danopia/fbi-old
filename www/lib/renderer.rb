@@ -13,6 +13,6 @@ class Renderer < Mustache
     content = super @template, object
     
     layout = "#{Mustache.template_path}/layout.#{self.class.template_extension}"
-    super File.read(layout), {:yield => content, :user => @env[:user], :loggedout => !@env[:user]}
+    super File.read(layout), {:yield => content, :user => @env[:user], :session => @env[:session], :loggedout => !@env[:user]}
   end
 end

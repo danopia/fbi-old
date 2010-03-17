@@ -13,6 +13,7 @@ Repos = DB[:repos]
 Projects = DB[:projects]
 Pages = DB[:pages]
 Users = DB[:users]
+UserSessions = DB[:user_sessions]
 
 Mustache.template_path = File.dirname(__FILE__) + '/views'
 
@@ -43,6 +44,7 @@ Rackup = Rack::Builder.new do
     require 'models/commit'
     require 'models/page'
     require 'models/user'
+    require 'models/user_session'
     
     parts = env['PATH_INFO'][1..-1].split('/')
     
@@ -92,7 +94,10 @@ Rackup = Rack::Builder.new do
     route = routing.find env['PATH_INFO']
     if route
       $headers = {'Content-Type' => 'text/html'}
-      env[:user] = User.load env
+      
+      env[:session] = UserSession.load env
+      env[:user] = env[:session] && env[:session].user
+      
       [200, $headers, route.handle(env['PATH_INFO'], env)]
     #~ else
       #~ [404, {'Content-Type' => 'text/plain'}, "404: Page not found."]

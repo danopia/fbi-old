@@ -17,6 +17,7 @@ Repos = DB[:repos]
 Projects = DB[:projects]
 Pages = DB[:pages]
 Users = DB[:users]
+UserSessions = DB[:user_sessions]
 
 #DB.drop_table :users
 DB.create_table :users do
@@ -28,7 +29,19 @@ DB.create_table :users do
   String :website
   String :company
   String :location
+  
   String :password_hash, :null => false
+  String :salt, :unique => true, :null => false
+  
+  Time :created_at, :null => false
+  Time :modified_at
+end
+
+DB.create_table :user_sessions do
+  primary_key :id
+  
+  foreign_key :user_id, :users
+  String :ip_address
   
   String :cookie_token, :unique => true
   

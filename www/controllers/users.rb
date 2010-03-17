@@ -22,15 +22,11 @@ class UsersController < Controller
       @user.password = data['password'].first
       return unless data['password'] == data['password_confirm']
       
-      @user.cookie_token = User.random_token
-      @cookie = CGI::Cookie.new 'fbi_session', @user.cookie_token
-      @cookie.expires = Time.now + (60*60*24*30*3)
-      
       @user.save
       
-      $headers['Set-Cookie'] = @cookie.to_s
-      
       @env[:user] = @user
+      @env[:session] = @user.create_session env['REMOTE_ADDR']
+      
       @message = 'Your account has been registered.'
     else
       @register = true
@@ -42,14 +38,9 @@ class UsersController < Controller
       data = CGI.parse env['rack.input'].read
       env[:user] = @user = User.find(:username => data['username'].first)
       
-      if @user.password_hash == User.hash(data['password'].first)
-        @user.cookie_token = User.random_token
-        @cookie = CGI::Cookie.new 'fbi_session', @user.cookie_token
-        @cookie.expires = Time.now + (60*60*24*30*3)
-        
-        @user.save
-        
-        $headers['Set-Cookie'] = @cookie.to_s
+      if @user.password_hash == User.hash(@user.username.downcase, @user.salt, data['password'].first)
+        env[:session] = @user.create_session env['REMOTE_ADDR']
+        env[:user] = @user
         
         @message = 'You have logged in.'
       else
@@ -62,12 +53,15 @@ class UsersController < Controller
   end
   
   def logout captures, params, env
-    return unless @env[:user]
-    @user = env[:user]
-    env[:user] = nil
+    return unless env[:session]
     
     cookie = CGI::Cookie.new 'fbi_session', ''
     cookie.expires = Time.at(0)
     $headers['Set-Cookie'] = cookie.to_s
+    
+    env[:session].destroy!
+    
+    env[:user] = nil
+    env[:session] = nil
   end
 end
