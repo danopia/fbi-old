@@ -59,24 +59,12 @@ class UsersController < Controller
     end
   end
   
-  
-  def self.load
-    user = nil
+  def logout captures, params, env
+    @user = User.load env
+    return unless @user
     
-    cookies = CGI::Cookie.parse env['HTTP_COOKIE']
-    cookie = cookies['fbi_session']
-    
-    if cookie && (user = User.find(:cookie_token => cookie.value.first))
-      user.cookie_token = User.random_token
-      cookie.value = user.cookie_token
-      cookie.expires = Time.now + (60*60*24*30*3)
-      $headers['Set-Cookie'] = cookie.to_s
-      
-      user.save
-    else
-      cookie = nil
-    end
-    
-    user
+    cookie = CGI::Cookie.new 'fbi_session', ''
+    cookie.expires = Time.at(0)
+    $headers['Set-Cookie'] = cookie.to_s
   end
 end

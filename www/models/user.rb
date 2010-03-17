@@ -78,4 +78,28 @@ class User
   def random_token length=256
     self.cookie_token = User.random_token(length)
   end
+  
+  
+  
+  
+  
+  def self.load env
+    user = nil
+    
+    cookies = CGI::Cookie.parse env['HTTP_COOKIE']
+    cookie = cookies['fbi_session']
+    
+    if cookie && cookie.any? && (user = User.find(:cookie_token => cookie.first))
+      user.cookie_token = User.random_token
+      cookie.value = user.cookie_token
+      cookie.expires = Time.now + (60*60*24*30*3)
+      $headers['Set-Cookie'] = cookie.to_s
+      
+      user.save
+    else
+      cookie = nil
+    end
+    
+    user
+  end
 end
