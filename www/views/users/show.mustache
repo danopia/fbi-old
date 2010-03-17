@@ -2,7 +2,7 @@
 {{# is_self }}
 <p style="float: right; margin: 0;">This is you! (<a href="/account/edit">edit profile</a>)</p>
 {{/ is_self }}
-<h2>{{ username }} {{# name }}(<span style="color: gray;">{{ name }}</span>){{/ name }}</h2>
+<h2 style="color: #495961;">{{ username }} {{# name }}{{# any? }}<span style="color: #99A7AF;">({{ name }})</span>{{/ any? }}{{/ name }}</h2>
 <hr/>
 
 <style>
