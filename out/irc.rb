@@ -66,6 +66,10 @@ manager.on :command do |e|
 			message = args[2..-1].join(' ')
 			message = "\001ACTION #{$1}\001" if message =~ /^\/me (.+)$/i
 			manager.networks[args[0].to_i].route_to args[1], message
+
+		when 'route_for'
+			message = args[1..-1].join(' ')
+			route args[0], message
 			
 		when 'list'
 			server = Server.find e.network.id
@@ -198,7 +202,7 @@ def route project, message
 	end
 end
 
-fbi.on :published do |channel, data|
+fbi.on :publish do |channel, data|
 	if channel == 'commits'
 		commits = data
 		commits = commits[-3..-1] if commits.size > 3
