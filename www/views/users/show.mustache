@@ -1,3 +1,7 @@
+{{# user }}
+{{# is_self }}
+<p style="float: right; margin: 0;">This is you! (<a href="/account/edit">edit profile</a>)</p>
+{{/ is_self }}
 <h2>{{ username }}{{# name }} ({{ name }}){{/ name }}</h2>
 <hr/>
 
@@ -31,3 +35,4 @@ table.profile th { text-align: left; color: #666; font-weight: normal; }
     <td>{{ created_at }}</td>
   </tr>
 </table>
+{{/ user }}

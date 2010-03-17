@@ -1,7 +1,7 @@
 require 'digest/sha2'
 
 class User
-  attr_reader :id
+  attr_reader :id, :data
   
   def self.from_id id
     self.new Users.filter(:id => id).first
@@ -73,7 +73,7 @@ class User
   # Username.downcase, salt, password
   def self.hash *args
     hash = args.join '-'
-    # make bruteforcing much harder
+    # make bruteforcing much slower
     2.times { hash = Digest::SHA512.hexdigest hash }
     hash
   end
@@ -81,6 +81,11 @@ class User
   
   def self.random_token length=256
     (1..length).map {|i| rand(16).to_s(16) }.join('')
+  end
+  
+  
+  def == other
+    other.class == self.class && other.data == self.data
   end
   
   

@@ -82,13 +82,18 @@ Rackup = Rack::Builder.new do
       
       sub_route '/users' do
         connect '/?$', 'users', 'list'
-        connect '/new$', 'users', 'new'
         connect '/([^/]+)/?$', 'users', 'show'
       end
       
-      connect '/login$', 'users', 'login'
-      connect '/logout$', 'users', 'logout'
-      connect '/account$', 'users', 'account'
+      sub_route '/account' do
+        connect '/?$', 'users', 'show', :self => true
+        connect '/new$', 'account', 'new'
+        connect '/edit$', 'account', 'edit'
+        connect '/save$', 'account', 'save'
+      end
+      
+      connect '/login$', 'account', 'login'
+      connect '/logout$', 'account', 'logout'
     end
     
     route = routing.find env['PATH_INFO']
@@ -96,6 +101,7 @@ Rackup = Rack::Builder.new do
       $headers = {'Content-Type' => 'text/html'}
       
       env[:session] = UserSession.load env
+      #puts env[:session].inspect[0, 100]
       env[:user] = env[:session] && env[:session].user
       
       [200, $headers, route.handle(env['PATH_INFO'], env)]
