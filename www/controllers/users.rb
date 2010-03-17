@@ -6,7 +6,8 @@ class UsersController < Controller
   end
   
   def show captures, params, env
-    @user = User.from_username captures.first
+    @user = User.find :username => captures.first
+    render :context => @user
   end
   
   def new captures, params, env

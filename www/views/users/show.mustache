@@ -1,0 +1,33 @@
+<h2>{{ username }}{{# name }} ({{ name }}){{/ name }}</h2>
+<hr/>
+
+<style>
+table.profile th { text-align: left; color: #666; font-weight: normal; }
+</style>
+
+<table class="profile">
+  <tr>
+    <th>Username</th>
+    <td>{{ username }}</td>
+  </tr>
+  <tr>
+    <th>Name</th>
+    <td>{{ name }}</td>
+  </tr>
+  <tr>
+    <th>Website</th>
+    <td>{{ website }}</td>
+  </tr>
+  <tr>
+    <th>Company</th>
+    <td>{{ company }}</td>
+  </tr>
+  <tr>
+    <th>Location</th>
+    <td>{{ location }}</td>
+  </tr>
+  <tr>
+    <th>Member Since</th>
+    <td>{{ created_at }}</td>
+  </tr>
+</table>

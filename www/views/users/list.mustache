@@ -1,4 +1,8 @@
-<h3>User list</h3>
+<h2>User list</h2>
+<hr/>
+
+<ul>
 {{# users }}
-<p>{{ username }}</p>
+  <li><a><a href="/users/{{ username }}" title="{{ name }}'s Profile">{{ username }}</a></li>
 {{/ users }}
+</ul>

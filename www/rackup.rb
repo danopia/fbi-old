@@ -86,6 +86,7 @@ Rackup = Rack::Builder.new do
       
       connect '/login$', 'users', 'login'
       connect '/logout$', 'users', 'logout'
+      connect '/account$', 'users', 'account'
     end
     
     route = routing.find env['PATH_INFO']
