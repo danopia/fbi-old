@@ -14,22 +14,38 @@ table.profile th { text-align: left; color: #666; font-weight: normal; }
     <th>Username</th>
     <td>{{ username }}</td>
   </tr>
+{{# name }}
+{{# any? }}
   <tr>
     <th>Name</th>
     <td>{{ name }}</td>
   </tr>
+{{/ any? }}
+{{/ name }}
+{{# website }}
+{{# any? }}
   <tr>
     <th>Website</th>
-    <td>{{ website }}</td>
+    <td><a href="{{ website }}" title="{{ display_name }}'s personal website">{{ website }}</a></td>
   </tr>
+{{/ any? }}
+{{/ website }}
+{{# company }}
+{{# any? }}
   <tr>
     <th>Company</th>
     <td>{{ company }}</td>
   </tr>
+{{/ any? }}
+{{/ company }}
+{{# location }}
+{{# any? }}
   <tr>
     <th>Location</th>
     <td>{{ location }}</td>
   </tr>
+{{/ any? }}
+{{/ location }}
   <tr>
     <th>Member Since</th>
     <td>{{ created_at }}</td>
