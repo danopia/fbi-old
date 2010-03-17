@@ -53,6 +53,8 @@ class User
   def created_at; @data[:created_at]; end
   def modified_at; @data[:modified_at]; end
   
+  def display_name; name || username; end
+  
   def save
     if @id
       @data[:modified_at] = Time.now
