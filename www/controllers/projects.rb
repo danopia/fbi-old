@@ -6,7 +6,7 @@ class ProjectsController < Controller
   end
   
   def show captures, params, env
-    @project = Project.from_slug captures.first
+    @project = Project.find :slug => captures.first
     @mine = @project.owner == env[:user]
   end
 end

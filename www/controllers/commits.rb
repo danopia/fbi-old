@@ -2,7 +2,7 @@ class CommitsController < Controller
   attr_reader :project, :repo, :author, :repos, :commits
   
   def list captures, params, env
-    @project = Project.from_slug captures.first
+    @project = Project.find :slug => captures.first
     
     if params[:mode] == 'repo'
       @repo = @project.repo_by_id captures[1].to_i

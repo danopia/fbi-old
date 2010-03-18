@@ -14,7 +14,7 @@ class Commit
   end
   
   def repo
-    Repo.from_id @data[:repo_id]
+    Repo.find @data[:repo_id]
   end
   
   def committed_date

@@ -2,12 +2,12 @@ class ReposController < Controller
   attr_reader :project, :repo, :repos, :commits, :pages, :debug, :files, :filename, :parent
   
   def list captures, params, env
-    @project = Project.from_slug captures.first
+    @project = Project.find :slug => captures.first
     @repos = @project.repos
   end
   
   def tree captures, params, env
-    @project = Project.from_slug captures.first
+    @project = Project.find :slug => captures.first
     @repo = @project.repo_by_id captures[1].to_i
 		@repo_path = File.join(File.dirname(__FILE__), '..', 'repos', @repo.id.to_s)
     
@@ -22,7 +22,7 @@ class ReposController < Controller
   end
   
   def blob captures, params, env
-    @project = Project.from_slug captures.first
+    @project = Project.find :slug => captures.first
     @repo = @project.repo_by_id captures[1].to_i
 		@repo_path = File.join(File.dirname(__FILE__), '..', 'repos', @repo.id.to_s)
     

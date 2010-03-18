@@ -38,6 +38,11 @@ Rackup = Rack::Builder.new do
         @target
       end
     end
+    
+    require 'lib/routing'
+    require 'lib/renderer'
+    require 'lib/controller'
+    require 'lib/model'
 
     require 'models/project'
     require 'models/repo'
@@ -47,10 +52,6 @@ Rackup = Rack::Builder.new do
     require 'models/user_session'
     
     parts = env['PATH_INFO'][1..-1].split('/')
-    
-    require 'lib/routing'
-    require 'lib/renderer'
-    require 'lib/controller'
     
     routing = Routing.new
     
