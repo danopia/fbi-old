@@ -1,5 +1,5 @@
 {{# project }}
-<h2>Recent commits to <a href="/projects/{{ slug }}">{{ title }}</a>{{# repo }}&nbsp;/ <a href="/projects/{{ slug }}/repos/{{ id }}">{{ short_name }}</a>{{/ repo }}</h2>
+<h2>Recent commits to <a href="/projects/{{ slug }}">{{ title }}</a> / <a href="/projects/{{ slug }}/repos/{{# repo }}{{ id }}{{/ repo }}">{{# repo }}{{ short_name }}{{/ repo }}</a></h2>
 
 <hr />
 {{/ project }}

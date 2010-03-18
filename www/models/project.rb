@@ -12,14 +12,15 @@ class Project < Model
   def owner= new; @owner = new; @data[:owner_id] = new.id; end
   
   def repos
-    Repos.filter(:project_id => @id).all.map {|r| Repo.new r}
+    Repo.where :project_id => @id
   end
   def pages
-    Pages.filter(:project_id => @id).all.map {|p| Page.new p}
+    Page.where :project_id => @id
   end
   
-  def repo_by_id id
-    Repo.new Repos.filter(:project_id => @id, :id => id).first
+  def repo_by filters
+    filters[:project_id] = @id
+    Repo.find filters
   end
   def page_by_slug slug
     Page.new Pages.filter(:project_id => @id, :slug => slug).first

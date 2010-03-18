@@ -43,13 +43,10 @@ class User < Model
   
   
   def create_session ip=nil
-    save unless @id # so we have an ID
+    save if new_record? # so we have an ID
     
-    session = UserSession.new :ip_address => ip, :user_id => @id
-    session.save
-    
+    session = UserSession.create :ip_address => ip, :user_id => @id
     $headers['Set-Cookie'] = session.create_cookie.to_s # TODO: Nicer cookie codez
-    
     session
   end
 end

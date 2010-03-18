@@ -5,7 +5,7 @@ class CommitsController < Controller
     @project = Project.find :slug => captures.first
     
     if params[:mode] == 'repo'
-      @repo = @project.repo_by_id captures[1].to_i
+      @repo = @project.repo_by :id => captures[1].to_i
       @repos = [@repo]
     else
       @repos = @project.repos

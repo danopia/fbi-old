@@ -1,5 +1,5 @@
 class Model
-  attr_reader :id
+  attr_reader :id, :data
   
   
   def self.table_name= name
@@ -36,6 +36,12 @@ class Model
     table.all.map {|us| self.new us }
   end
   
+  
+  def self.create data={}
+    record = self.new data
+    record.save
+    record
+  end
   
   
   def initialize data={}

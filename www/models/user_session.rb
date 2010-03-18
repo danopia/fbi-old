@@ -1,25 +1,4 @@
-class UserSession
-  attr_reader :id
-  
-  def self.find filters
-    us = UserSessions.filter(filters).first
-    us && self.new(us)
-  end
-  
-  def self.where filters
-    UserSessions.filter(filters).map {|us| self.new us }
-  end
-  
-  def self.all
-    UserSessions.all.map {|us| self.new us }
-  end
-  
-  
-  def initialize data={}
-    @data = data
-    @id = @data[:id]
-    @data.delete :id
-  end
+class UserSession < Model
   
   def user_id; @data[:user_id]; end
   def ip_address; @data[:ip_address]; end
@@ -28,21 +7,12 @@ class UserSession
   def ip_address= new; @data[:ip_address] = new; end
   def cookie_token= new; @data[:cookie_token] = new; end
   
-  def created_at; @data[:created_at]; end
-  def modified_at; @data[:modified_at]; end
-  
   def user; @user ||= User.find(:id => @data[:user_id]); end
   def user= new; @user = new; @data[:user_id] = new.id; end
   
   def save
-    if @id
-      @data[:modified_at] = Time.now
-      UserSessions.where(:id => @id).update @data
-    else
-      @data[:created_at] = Time.now
-      @data[:cookie_token] ||= UserSession.random_token
-      @id = UserSessions << @data
-    end
+    @data[:cookie_token] ||= UserSession.random_token if new_record?
+    super
   end
   
   def self.random_token length=256
@@ -50,11 +20,6 @@ class UserSession
   end
   def new_token length=256
     @data[:cookie_token] = UserSession.random_token(length)
-  end
-  
-  
-  def destroy!
-    UserSessions.where(:id => @id).delete
   end
   
   

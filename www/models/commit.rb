@@ -1,15 +1,8 @@
-class Commit
-  attr_accessor :id, :json
+class Commit < Model
+  attr_accessor :json
   
-  def self.from_id id
-    self.new Commits.filter(:id => id).first
-  end
-  
-  
-  def initialize data=nil
-    data ||= {}
-    @data = data
-    @id = data[:id]
+  def initialize data={}
+    super
     @json = JSON.parse @data[:json] if @data.has_key? :json
   end
   
