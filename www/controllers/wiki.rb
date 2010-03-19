@@ -70,7 +70,7 @@ class WikiController < Controller
   def setup project
     @pages = []
     
-    @project = Project.from_slug project
+    @project = Project.find :slug => project
     @repo = File.join(File.dirname(__FILE__), '..', 'wikis', @project.slug)
     
     return unless @project.slug

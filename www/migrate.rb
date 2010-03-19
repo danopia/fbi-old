@@ -1,23 +1,17 @@
-require 'yaml'
-require 'open-uri'
-
 require 'time'
 
-def load_api *args
-	YAML.load open("http://github.com/api/v2/yaml/#{args.join '/'}").read
-end
+#~ require 'yaml'
+#~ require 'open-uri'
+
+#~ def load_api *args
+	#~ YAML.load open("http://github.com/api/v2/yaml/#{args.join '/'}").read
+#~ end
 
 require 'rubygems'
 require 'sequel'
 require 'json'
 
-DB = Sequel.sqlite('www.db')
-Commits = DB[:commits]
-Repos = DB[:repos]
-Projects = DB[:projects]
-Pages = DB[:pages]
-Users = DB[:users]
-UserSessions = DB[:user_sessions]
+DB = Sequel.sqlite 'www.db'
 
 #DB.drop_table :users
 DB.create_table :users do
@@ -62,6 +56,8 @@ end
 DB.create_table :repos do
   primary_key :id
   
+  String :title
+  String :service
   String :name
   String :url
   String :slug

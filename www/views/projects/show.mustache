@@ -11,6 +11,9 @@
   {{# repos }}
     <li><a href="/projects/ooc/repos/{{ id }}">{{ short_name }}</a></li>
   {{/ repos }}
+  {{# mine }}
+    <li><a href="/projects/{{ slug }}/repos/new" style="color: gray;">add repo</a></li>
+  {{/ mine }}
   </ul>
 </div>
 

@@ -18,6 +18,7 @@ class ProjectsController < Controller
       
       @project.title = data['title'].first
       @project.slug = data['slug'].first
+      @project.owner = env[:user]
       
       @project.save
       
