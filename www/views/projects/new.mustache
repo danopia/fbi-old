@@ -1,0 +1,36 @@
+<h2>New Project</h2>
+<hr />
+
+<p>Creating a new project on the web site lets you create a central
+location for all of the different services your project may use, such
+as code repositories, wikis, mailing lists, and issue trackers.</p>
+
+<p>Projects also have the option of enabling services on the FBI web
+site which are entirely self-hosted. We currently offer a wiki solution,
+with a GitHub-powered mirror.</p>
+
+<style>
+table { margin: 0 auto; }
+th { text-align: right; }
+td, th { width: 50%; }
+</style>
+
+<p>{{ message }}</p>
+
+{{# project }}
+<form action="/projects/new" method="post" name="new_project">
+  <table>
+    <tr>
+      <th>Title:</th>
+      <td><input type="text" name="title" value="{{ title }}" /></td>
+    </tr>
+    <tr>
+      <th>Slug:</th>
+      <td><input type="text" name="slug" value="{{ slug }}" /> (for use in URLs)</td>
+    </tr>
+    <tr>
+      <td colspan="2" align="center"><input type="submit" value="Create" /></td>
+    </tr>
+  </table>
+</form>
+{{/ project }}

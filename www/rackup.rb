@@ -51,7 +51,9 @@ Rackup = Rack::Builder.new do
     
     routing.setup do
       connect '/projects/?$', 'projects', 'main'
+      connect '/projects/new$', 'projects', 'new'
       connect '/projects/([^/]+)/?$', 'projects', 'show'
+      connect '/projects/([^/]+)/edit$', 'projects', 'edit'
       
       sub_route '/projects/([^/]+)/repos' do
         connect '/?$', 'repos', 'list'
