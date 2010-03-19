@@ -3,6 +3,7 @@ class ReposController < Controller
   
   def new captures, params, env
     @project = Project.find :slug => captures.first
+    return unless @project.owner == env[:user]
     @repo = @project.new_repo
     
     if env['REQUEST_METHOD'] == 'POST'
@@ -23,6 +24,7 @@ class ReposController < Controller
   
   def edit captures, params, env
     @project = Project.find :slug => captures[0]
+    return unless @project.owner == env[:user]
     @repo = @project.repo_by :slug => captures[1]
     
     if env['REQUEST_METHOD'] == 'POST'

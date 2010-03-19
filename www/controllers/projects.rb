@@ -28,4 +28,22 @@ class ProjectsController < Controller
       render :path => 'projects/show'
     end
   end
+  
+  def edit captures, params, env
+    @project = Project.find :slug => captures[0]
+    return unless @project.owner == env[:user]
+    
+    if env['REQUEST_METHOD'] == 'POST'
+      data = CGI.parse env['rack.input'].read
+      
+      @project.title = data['title'].first
+      @project.slug = data['slug'].first
+      
+      @project.save
+      
+      #render :text => 'The project has been updated.'
+      @mine = true
+      render :path => 'projects/show'
+    end
+  end
 end

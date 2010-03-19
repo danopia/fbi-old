@@ -50,5 +50,5 @@ class User < Model
     session
   end
   
-  def profile_path; "/users/#{slug}"; end
+  def profile_path; "/users/#{username}"; end
 end
