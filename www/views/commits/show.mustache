@@ -1,5 +1,5 @@
 {{# project }}
-<h2>Recent commits to <a href="/projects/{{ slug }}">{{ title }}</a>{{# repo }}&nbsp;/ <a href="/projects/{{ slug }}/repos/{{ id }}">{{ short_name }}</a>{{/ repo }}</h2>
+<h2>Recent commits to <a href="{{ show_path }}">{{ title }}</a> {{# repo }}/ <a href="{{ show_path }}">{{ title }}</a>{{/ repo }}</h2>
 
 <hr />
 {{/ project }}
@@ -12,7 +12,7 @@
   </tr>
 {{# commits }}
   <tr>
-    <td>{{#repo}}<a href="/projects/ooc/commits/repos/{{id}}">{{short_name}}</a>{{/repo}}</td>
+    <td>{{#repo}}<a href="/projects/ooc/commits/repos/{{slug}}">{{title}}</a>{{/repo}}</td>
     <td>{{ committed_date }}</td>
     <td>{{ short_message }} [<a href="/projects/ooc/commits/authors/{{author}}">{{author}}</a>]</td>
   </tr>

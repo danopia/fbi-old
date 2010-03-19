@@ -28,4 +28,8 @@ class Repo < Model
   def commits_5
     DB[:commits].filter(:repo_id => @id).reverse_order(:committed_at).first(5).map {|c| Commit.new c}
   end
+  
+  def project_path; "/projects/#{project.slug}"; end
+  def show_path;    "/projects/#{project.slug}/repos/#{slug}"; end
+  def edit_path;    "#{show_path}/edit"; end
 end

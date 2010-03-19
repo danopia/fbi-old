@@ -4,12 +4,12 @@
 
 <hr />
 
-<h3><a href="/projects/{{ slug }}">{{ title }}</a></h3>
+<h3><a href="{{ show_path }}">{{ title }}</a></h3>
 
 <h4>Repos</h4>
 <ul>
 {{# repos }}
-  <li><a href="/projects/ooc/repos/{{ id }}">{{ name }}</a> [<a href="{{ url }}">details</a>] [<a href="/projects/ooc/commits/repos/{{ id }}">commits</a>]</li>
+  <li><a href="{{ show_path }}">{{ title }}</a> [<a href="{{ url }}">details</a>] [<a href="{{ repo_path }}/commits/repos/{{ slug }}">commits</a>]</li>
 {{/ repos }}
 </ul>
 

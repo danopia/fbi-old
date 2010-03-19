@@ -1,4 +1,4 @@
-<h2>{{# project }}<a href="/projects/{{ slug }}">{{ title }}</a>{{/ project }} / new repository</h2>
+<h2>{{# project }}<a href="{{ show_path }}">{{ title }}</a>{{/ project }} / new repository</h2>
 <hr />
 
 <style>
@@ -10,7 +10,7 @@ td, th { width: 50%; }
 <p>{{ message }}</p>
 
 {{# repo }}
-<form action="/projects/{{# project }}{{ slug }}{{/ project }}/repos/new" method="post" name="new_repo">
+<form action="{{ project_path }}/repos/new" method="post" name="new_repo">
   <table>
     <tr>
       <th>Title:</th>

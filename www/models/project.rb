@@ -51,4 +51,8 @@ class Project < Model
     repos = self.repos.map {|repo| repo.id }
     DB[:commits].filter(:repo_id => repos).reverse_order(:committed_at).first(5).map {|c| Commit.new c }
   end
+  
+  def show_path; "/projects/#{slug}"; end
+  def edit_path; "#{show_path}/edit"; end
+  def wiki_path; "#{show_path}/wiki"; end
 end

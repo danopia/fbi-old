@@ -1,5 +1,5 @@
 {{# repo }}
-<h2>Editing {{# project }}<a href="/projects/{{ slug }}">{{ title }}</a> / <a href="/projects/{{ slug }}{{/ project }}/repos/{{ slug }}">{{ title }}</a></h2>
+<h2>Editing {{# project }}<a href="{{ show_path }}">{{ title }}</a>{{/ project }} / <a href="{{ show_path }}">{{ title }}</a></h2>
 <hr />
 
 <style>
@@ -10,7 +10,7 @@ td, th { width: 50%; }
 
 <p>{{ message }}</p>
 
-<form action="/projects/{{# project }}{{ slug }}{{/ project }}/repos/{{ slug }}/edit" method="post" name="edit_repo">
+<form action="{{ edit_path }}" method="post" name="edit_repo">
   <table>
     <tr>
       <th>Title:</th>

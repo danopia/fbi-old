@@ -49,4 +49,6 @@ class User < Model
     $headers['Set-Cookie'] = session.create_cookie.to_s # TODO: Nicer cookie codez
     session
   end
+  
+  def profile_path; "/users/#{slug}"; end
 end

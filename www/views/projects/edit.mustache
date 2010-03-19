@@ -1,4 +1,5 @@
-<h2>Edit your Profile</h2>
+{{# project }}
+<h2>Editing <a href="{{ show_path }}">{{ title }}</a></h2>
 <hr />
 
 <style>
@@ -9,8 +10,7 @@ td, th { width: 50%; }
 
 <p>{{ message }}</p>
 
-{{# project }}
-<form action="/projects/{{ slug }}/edit" method="post" name="edit_project">
+<form action="{{ edit_path }}" method="post" name="edit_project">
   <table>
     <tr>
       <th>Title:</th>
