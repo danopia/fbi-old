@@ -29,6 +29,15 @@ class Project < Model
     Page.find filters
   end
   
+  def new_repo fields={}
+    fields[:project_id] = @id
+    Repo.new fields
+  end
+  def create_repo fields={}
+    fields[:project_id] = @id
+    Repo.create fields
+  end
+  
   def created_at_short
     created_at.utc.strftime('%B %d, %Y')
   end

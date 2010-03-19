@@ -12,13 +12,13 @@ class ProjectsController < Controller
   
   def new captures, params, env
     @project = Project.new
+    @project.owner = env[:user]
     
     if env['REQUEST_METHOD'] == 'POST'
       data = CGI.parse env['rack.input'].read
       
       @project.title = data['title'].first
       @project.slug = data['slug'].first
-      @project.owner = env[:user]
       
       @project.save
       

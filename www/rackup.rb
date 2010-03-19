@@ -57,7 +57,9 @@ Rackup = Rack::Builder.new do
       
       sub_route '/projects/([^/]+)/repos' do
         connect '/?$', 'repos', 'list'
-        connect '/([^/]+)/?$', 'repos', 'tree'
+        connect '/new$', 'repos', 'new'
+        connect '/([^/]+)/?$', 'repos', 'show'
+        connect '/([^/]+)/edit$', 'repos', 'edit'
         connect '/([^/]+)/tree/(.*)$', 'repos', 'tree'
         connect '/([^/]+)/blob/(.+)$', 'repos', 'blob'
       end

@@ -1,6 +1,51 @@
 class ReposController < Controller
   attr_reader :project, :repo, :repos, :commits, :pages, :debug, :files, :filename, :parent
   
+  def new captures, params, env
+    @project = Project.find :slug => captures.first
+    @repo = @project.new_repo
+    
+    if env['REQUEST_METHOD'] == 'POST'
+      data = CGI.parse env['rack.input'].read
+      
+      @repo.title = data['title'].first
+      @repo.slug = data['slug'].first
+      @repo.service = data['service'].first
+      @repo.name = data['name'].first
+      @repo.url = data['url'].first
+      
+      @repo.save
+      
+      #render :text => 'The repository has been added.'
+      render :path => 'repos/show'
+    end
+  end
+  
+  def edit captures, params, env
+    @project = Project.find :slug => captures[0]
+    @repo = @project.repo_by :slug => captures[1]
+    
+    if env['REQUEST_METHOD'] == 'POST'
+      data = CGI.parse env['rack.input'].read
+      
+      @repo.title = data['title'].first
+      @repo.slug = data['slug'].first
+      @repo.service = data['service'].first
+      @repo.name = data['name'].first
+      @repo.url = data['url'].first
+      
+      @repo.save
+      
+      #render :text => 'The repository has been updated.'
+      render :path => 'repos/show'
+    end
+  end
+  
+  def show captures, params, env
+    @project = Project.find :slug => captures[0]
+    @repo = @project.repo_by :slug => captures[1]
+  end
+  
   def list captures, params, env
     @project = Project.find :slug => captures.first
     @repos = @project.repos
