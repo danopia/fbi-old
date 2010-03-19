@@ -18,10 +18,10 @@ class Repo < Model
   end
   
   def commits
-    Commits.filter(:repo_id => @id).reverse_order(:committed_at).all.map {|c| Commit.new c}
+    DB[:commits].filter(:repo_id => @id).reverse_order(:committed_at).all.map {|c| Commit.new c}
   end
   
   def commits_5
-    Commits.filter(:repo_id => @id).reverse_order(:committed_at).first(5).map {|c| Commit.new c}
+    DB[:commits].filter(:repo_id => @id).reverse_order(:committed_at).first(5).map {|c| Commit.new c}
   end
 end

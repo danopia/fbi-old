@@ -11,19 +11,22 @@ class Project < Model
   def owner; @owner ||= User.find(:id => @data[:owner_id]); end
   def owner= new; @owner = new; @data[:owner_id] = new.id; end
   
-  def repos
-    Repo.where :project_id => @id
+  def repos filters={}
+    filters[:project_id] = @id
+    Repo.where filters
   end
-  def pages
-    Page.where :project_id => @id
+  def pages filters={}
+    filters[:project_id] = @id
+    Page.where filters
   end
   
   def repo_by filters
     filters[:project_id] = @id
     Repo.find filters
   end
-  def page_by_slug slug
-    Page.new Pages.filter(:project_id => @id, :slug => slug).first
+  def page_by filters
+    filters[:project_id] = @id
+    Page.find filters
   end
   
   def created_at_short
@@ -32,11 +35,11 @@ class Project < Model
   
   def commits
     repos = self.repos.map {|repo| repo.id }
-    Commits.filter(:repo_id => repos).reverse_order(:committed_at).all.map {|c| Commit.new c }
+    DB[:commits].filter(:repo_id => repos).reverse_order(:committed_at).all.map {|c| Commit.new c }
   end
   
   def commits_5
     repos = self.repos.map {|repo| repo.id }
-    Commits.filter(:repo_id => repos).reverse_order(:committed_at).first(5).map {|c| Commit.new c }
+    DB[:commits].filter(:repo_id => repos).reverse_order(:committed_at).first(5).map {|c| Commit.new c }
   end
 end

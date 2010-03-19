@@ -94,21 +94,21 @@ DB.create_table :pages do
   Time :modified_at
 end
 
-Projects << {:title => 'ooc', :slug => 'ooc', :created_at => Time.now}
-Projects << {:title => 'FBI', :slug => 'fbi', :created_at => Time.now}
-
-['nddrylliog/ooc', 'nddrylliog/nagaqueen', 'nddrylliog/rock', 'danopia/remora', 'danopia/fbi', 'nddrylliog/greg', 'nddrylliog/yajit', 'nddrylliog/ooc-curl'].each do |project|
-  proj = project.include?('ndd') ? 1 : (project == 'danopia/fbi' ? 2 : nil)
-  Repos << {:project_id => proj, :name => project, :url => "http://github.com/#{project}", :created_at => Time.now}
-  repo = Repos.filter(:name => project).first[:id]
-  
-  load_api('commits', 'list', project, 'master')['commits'].each do |data|
-    Commits << {
-      :author => data['author']['name'],
-      :repo_id => repo,
-      :hash => data['id'],
-      :committed_at => Time.parse(data['committed_date']),
-      :json => data.to_json,
-    }
-  end
-end
+#~ Projects << {:title => 'ooc', :slug => 'ooc', :created_at => Time.now}
+#~ Projects << {:title => 'FBI', :slug => 'fbi', :created_at => Time.now}
+#~ 
+#~ ['nddrylliog/ooc', 'nddrylliog/nagaqueen', 'nddrylliog/rock', 'danopia/remora', 'danopia/fbi', 'nddrylliog/greg', 'nddrylliog/yajit', 'nddrylliog/ooc-curl'].each do |project|
+  #~ proj = project.include?('ndd') ? 1 : (project == 'danopia/fbi' ? 2 : nil)
+  #~ Repos << {:project_id => proj, :name => project, :url => "http://github.com/#{project}", :created_at => Time.now}
+  #~ repo = Repos.filter(:name => project).first[:id]
+  #~ 
+  #~ load_api('commits', 'list', project, 'master')['commits'].each do |data|
+    #~ Commits << {
+      #~ :author => data['author']['name'],
+      #~ :repo_id => repo,
+      #~ :hash => data['id'],
+      #~ :committed_at => Time.parse(data['committed_date']),
+      #~ :json => data.to_json,
+    #~ }
+  #~ end
+#~ end

@@ -7,13 +7,7 @@ require 'sequel'
 require 'json'
 require 'mustache'
 
-DB = Sequel.sqlite('www.db')
-Commits = DB[:commits]
-Repos = DB[:repos]
-Projects = DB[:projects]
-Pages = DB[:pages]
-Users = DB[:users]
-UserSessions = DB[:user_sessions]
+DB = Sequel.sqlite 'www.db'
 
 Mustache.template_path = File.dirname(__FILE__) + '/views'
 
