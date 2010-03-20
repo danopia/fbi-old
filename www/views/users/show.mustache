@@ -9,6 +9,18 @@
 table.profile th { text-align: left; color: #666; font-weight: normal; }
 </style>
 
+<div style="float: right; border-left: 1px solid #999; padding-left: 1em;">
+  <h3>projects</h3>
+  <ul style="list-style: none; padding: 0 0 0 1em; margin: 0;" class="fixedwidth">
+  {{# projects }}
+    <li><a href="{{ show_path }}">{{ title }}</a></li>
+  {{/ projects }}
+  {{# is_self }}
+    <li><a href="/projects/new" style="color: gray;">create project</a></li>
+  {{/ is_self }}
+  </ul>
+</div>
+
 <table class="profile">
   <tr>
     <th>Username</th>
@@ -51,4 +63,5 @@ table.profile th { text-align: left; color: #666; font-weight: normal; }
     <td>{{ created_at }}</td>
   </tr>
 </table>
+
 {{/ user }}

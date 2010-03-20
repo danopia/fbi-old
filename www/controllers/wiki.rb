@@ -76,7 +76,7 @@ class WikiController < Controller
     return unless @project.slug
     
     if File.directory? @repo
-      pull
+      #pull
     else
       config = File.open('github_auth.yaml') { |yf| YAML::load(yf) }
       config.each_pair {|key, val| config[key.to_sym] = val }
@@ -115,6 +115,7 @@ class WikiController < Controller
     return edit(captures, params, env) unless env['REQUEST_METHOD'] == 'POST'
     
     setup captures.first
+    pull
     
     @editing = true
     @page = Page.new

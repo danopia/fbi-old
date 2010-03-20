@@ -50,5 +50,10 @@ class User < Model
     session
   end
   
+  def projects filters={}
+    filters[:owner_id] = @id
+    Project.where filters
+  end
+  
   def profile_path; "/users/#{username}"; end
 end
