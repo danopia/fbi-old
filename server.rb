@@ -8,6 +8,7 @@ class Server
   def initialize config={}
     @config = config
     @clients = []
+    @components = {}
     
     @channels = Hash.new do |hash, key|
       hash[key] = Channel.new key
@@ -22,13 +23,12 @@ class Server
   end
 
   def auth client, user, pass
-    true
-  end
-
-  def for_client name, &blck
-    client = @clients.find {|conn| conn.username == name}
-    client && blck.call(client)
-    client
+    if @components.has_key? user.downcase
+      false
+    else
+      @components[user.downcase] = client
+      true
+    end
   end
 end
 
@@ -41,14 +41,21 @@ class Channel
   end
   
   def << client
+    send_to_all 'subscribe', 'origin' => client.username, 'target' => @name
     @clients << client
   end
+  
   def delete client
     @clients.delete client
+    send_to_all 'unsubscribe', 'origin' => client.username, 'target' => @name
   end
 
   def for_each &blck
     @clients.each {|conn| blck.call conn }
+  end
+  
+  def send_to_all action, data
+    @clients.each {|client| client.send_object action, data }
   end
   
   def to_s
@@ -80,7 +87,8 @@ class ServerConnection < Connection
   end
 
   def on_auth data
-    if @server.auth self, data['user'], data['secret']
+    if authed?
+    elsif @server.auth self, data['user'], data['secret']
       @username = data['user']
       @secret = data['secret']
       puts "#{@ip}:#{@port} authed as #{@username}:#{@secret}"
@@ -111,6 +119,24 @@ class ServerConnection < Connection
     send_object 'subscribe', data
   end
 
+  def on_unsubscribe data
+    left = []
+    
+    data['channels'].uniq.each do |name|
+      channel = @server.channels[name.downcase]
+      if @channels.include? channel
+        left << channel
+        channel.delete self
+      end
+    end
+      
+    @channels -= new
+    puts "#{@username} unsubscribed from #{left.join ', '}"
+    
+    data['channels'] = left
+    send_object 'unsubscribe', data
+  end
+
   def on_publish data
     FBI.shorten_urls_if_present data['data']
 
@@ -118,13 +144,10 @@ class ServerConnection < Connection
     data['origin'] = @username
 
     if data['target'][0,1] == '#'
-      @server.channels[data['target'].downcase].for_each do |client|
-        client.send_object 'publish', data
-      end
+      @server.channels[data['target'].downcase].send_to_all 'publish', data
     else
-      @server.for_client data['target'] do |client|
-        client.send_object 'private', data
-      end
+      target = @server.components[data['target'].downcase]
+      target && target.send_object 'publish', data
     end
   end
 end
