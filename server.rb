@@ -20,6 +20,7 @@ class Server
       EventMachine::start_server bind['host'], bind['port'].to_i, ServerConnection, self
     end
   end
+  
   def start_loop
     EventMachine::run { serve }
   end

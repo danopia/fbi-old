@@ -18,5 +18,10 @@ module FBI
     def receive_object action, data
       @master.receive_object action, data
     end
+    
+    def unbind
+      super
+      @master.reconnect
+    end
   end
 end

@@ -10,7 +10,7 @@ client = FBI::Client.new 'cli', 'hil0l'
 #~ STDOUT.flush
 #~ client.secret = gets.chomp
 
-Thread.new { client.start_loop }
+Thread.new { begin; client.start_loop; rescue => ex; puts ex,ex.message,ex.backtrace; end }
 
 while true
   action = gets.chomp

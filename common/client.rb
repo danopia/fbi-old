@@ -78,5 +78,12 @@ module FBI
 		rescue => ex
 			p ex, ex.message, ex.backtrace
 		end
+		
+		def reconnect delay=3
+			@drone.close_connection
+			@drone = nil
+			puts "Router dropped connection, reconnecting to the router in #{delay} seconds..."
+			EM.add_timer(delay) { connect }
+		end
 	end
 end

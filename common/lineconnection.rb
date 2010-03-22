@@ -14,8 +14,9 @@ class LineConnection < EventMachine::Connection
   end
 	
   def post_init
-    sleep 0.25
-    @port, @ip = Socket.unpack_sockaddr_in get_peername
+    peername = get_peername
+    @port, @ip = Socket.unpack_sockaddr_in peername if peername
+    
     puts "Connected to #{@ip}:#{@port}"
   end
 		
