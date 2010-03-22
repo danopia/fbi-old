@@ -165,6 +165,7 @@ class ServerConnection < Connection
   
   def on_disconnect data
     send_object 'disconnect', {}
+    close_connection
   end
   
   def unbind

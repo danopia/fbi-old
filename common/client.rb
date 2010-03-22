@@ -25,15 +25,9 @@ module FBI
 			EventMachine::run { connect *args }
 		end
 		
-		def private target, data
-			@drone.send_object 'private', {
-				'to'		=> target,
-				'data'	=> data
-			}
-		end
-		def publish channel, data
+		def send target, data
 			@drone.send_object 'publish', {
-				'channel'	=> channel,
+				'target'	=> target,
 				'data'		=> data
 			}
 		end
@@ -45,7 +39,9 @@ module FBI
 			}
 		end
 		
-		def send_object *args; @drone.send_object *args; end
+		def send_object *args
+			@drone.send_object *args
+		end
   
 		def startup drone
 			@drone = drone
@@ -68,16 +64,16 @@ module FBI
 			p data
 			case action
 				when 'auth'
-					puts "logged in"
-					handle :auth, data
+					puts "logged in as #{data['user']}"
+					handle :authed, data
+					
+				when 'subscribe'
+					puts "subscribed to #{data['channels'].join ', '}"
+					handle :subscribed, data['channels']
 				
-				when 'private'
-					puts "got private packet from #{data['from']}"
-					handle :private, data['from'], data['data']
-			
 				when 'publish'
-					puts "got public packet from #{data['from']} via #{data['channel']}"
-					handle :publish, data['channel'], data['data']
+					puts "packet from #{data['origin']} to #{data['target']}"
+					handle :publish, data['origin'], data['target'], data['target'] == @name, data['data']
 			end
 		rescue => ex
 			p ex, ex.message, ex.backtrace
