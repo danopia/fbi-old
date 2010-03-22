@@ -41,13 +41,13 @@ class Channel
   end
   
   def << client
-    send_to_all 'subscribe', 'origin' => client.username, 'target' => @name
+    send_to_all 'subscribe', 'origin' => client.username, 'target' => @name if client.authed?
     @clients << client
   end
   
   def delete client
     @clients.delete client
-    send_to_all 'unsubscribe', 'origin' => client.username, 'target' => @name
+    send_to_all 'unsubscribe', 'origin' => client.username, 'target' => @name if client.authed?
   end
 
   def for_each &blck
@@ -99,6 +99,18 @@ class ServerConnection < Connection
     end
   end
 
+  def on_subscriptions data
+    send_object 'subscriptions', :channels => @channels.map {|chan| chan.name }
+  end
+
+  def on_components data
+    send_object 'components', :components => @server.components.keys
+  end
+  
+  def on_channels data
+    send_object 'channels', :channels => @server.channels.keys
+  end
+
   def on_subscribe data
     new = []
     
@@ -147,8 +159,19 @@ class ServerConnection < Connection
       @server.channels[data['target'].downcase].send_to_all 'publish', data
     else
       target = @server.components[data['target'].downcase]
-      target && target.send_object 'publish', data
+      target && target.send_object('publish', data)
     end
+  end
+  
+  def on_disconnect data
+    send_object 'disconnect', {}
+  end
+  
+  def unbind
+    super
+    @channels.each_value {|chan| chan.delete self }
+    @server.components.delete @username.downcase if authed?
+    @server.clients.delete self
   end
 end
 end
