@@ -32,6 +32,8 @@ end
 client = FBI::SilentClient.new 'luckui', 'hil0l'
 client.subscribe_to '#debug'
 
+$components = []
+
 client.on :auth do |data|
   display.panes[:main].controls[:history].data << "Logged in as #{data['user']}"
   display.dirty! :main
@@ -51,6 +53,13 @@ client.on :subscribe do |data|
 end
 
 client.on :components do |data|
+  (data['components'] - $components).each do |new|
+    #display.panes[:main].controls[:history].data << "New component: #{new}"
+    #display.dirty! :main
+    client.send new, {:method => 'introspect'}
+  end
+  $components = data['components']
+  
   display.panes[:left].controls[:comps].data = data['components']
   display.dirty! :left
 end
@@ -75,7 +84,7 @@ begin
     control :chans, Luck::ListBox, 2, 1, -2, -1
   end
 
-  display.pane :main, 20, 1, -20, -1, 'Debug' do
+  display.pane :main, 20, 1, -1, -1, 'Debug' do
     control :history, Luck::ListBox, 2, 1, -2, -2
     display.active_control = control :input, Luck::TextBox, 2, -1, -2, -1 do
       #self.label = 'danopia'
@@ -83,9 +92,9 @@ begin
     end
   end
 
-  display.pane :right, -20, 1, -1, -1, 'Nicks' do
-    control :nicks, Luck::ListBox, 2, 1, -2, -1
-  end
+  #~ display.pane :right, -20, 1, -1, -1, 'Nicks' do
+    #~ control :nicks, Luck::ListBox, 2, 1, -2, -1
+  #~ end
   
   display.panes[:main].controls[:input].on_submit do |message|
     #~ if !(message =~ /^\/([^ ]+) ?(.+)$/)
