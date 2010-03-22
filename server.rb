@@ -16,7 +16,9 @@ class Server
   end
   
   def serve
-    EventMachine::start_server "0.0.0.0", 5348, ServerConnection, self
+    @config['binds'].each do |bind|
+      EventMachine::start_server bind['host'], bind['port'].to_i, ServerConnection, self
+    end
   end
   def start_loop
     EventMachine::run { serve }
@@ -29,6 +31,10 @@ class Server
       @components[user.downcase] = client
       true
     end
+  end
+  
+  def name
+    '$' + @config['hostname']
   end
 end
 
@@ -72,6 +78,8 @@ class ServerConnection < Connection
     @channels = []
     @server = server
     @server.clients << self
+    
+    send_object 'welcome', :origin => @server.name, :name => @server.config['label']
   end
 
   def receive_object action, data
@@ -93,6 +101,7 @@ class ServerConnection < Connection
       @secret = data['secret']
       puts "#{@ip}:#{@port} authed as #{@username}:#{@secret}"
       data.delete 'secret'
+      data[:origin] = @username
       send_object 'auth', data
     else
       puts "Invalid credentials from #{@ip}:#{@port}"
@@ -128,6 +137,7 @@ class ServerConnection < Connection
     puts "#{@username} subscribed to #{new.join ', '}"
     
     data['channels'] = new
+    data[:origin] = @username
     send_object 'subscribe', data
   end
 
@@ -142,10 +152,11 @@ class ServerConnection < Connection
       end
     end
       
-    @channels -= new
+    @channels -= left
     puts "#{@username} unsubscribed from #{left.join ', '}"
     
     data['channels'] = left
+    data[:origin] = @username
     send_object 'unsubscribe', data
   end
 
@@ -164,7 +175,7 @@ class ServerConnection < Connection
   end
   
   def on_disconnect data
-    send_object 'disconnect', {}
+    send_object 'disconnect', :origin => @username
     close_connection
   end
   
@@ -177,8 +188,15 @@ class ServerConnection < Connection
 end
 end
 
+config_path = File.join(File.dirname(__FILE__), 'server.yaml')
+config_path << '.dist' unless File.exist? config_path
+
+require 'yaml'
+config = YAML.load File.read(config_path)
+
+server = FBI::Server.new config
+
 EM.run do
-  server = FBI::Server.new
   server.serve
   puts "Server started"
 end

@@ -17,11 +17,17 @@ while true
   next unless action.any?
   
   case action
-    when 'subscribe', 'join'
+    when 'subscribe', 'join', 'sub'
       client.send_object 'subscribe', :channels => gets.chomp.split
+      
+    when 'unsubscribe', 'leave', 'part', 'unsub'
+      client.send_object 'unsubscribe', :channels => gets.chomp.split
       
     when 'publish', 'send'
       client.send_object 'publish', :target => gets.chomp, :data => JSON.parse(gets)
+    
+    when 'disconnect', 'channels', 'subscriptions', 'components'
+      client.send_object action, {}
     
     else
       print "JSON for #{action} (or nothing): "
