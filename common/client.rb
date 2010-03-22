@@ -44,6 +44,8 @@ module FBI
 				'secret'	=> @secret
 			}
 		end
+		
+		def send_object *args; @drone.send_object *args; end
   
 		def startup drone
 			@drone = drone

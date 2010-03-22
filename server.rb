@@ -3,7 +3,7 @@ require File.join(File.dirname(__FILE__), 'common', 'tinyurl')
 
 module FBI
 class Server
-  attr_accessor :clients, :channels, :config
+  attr_accessor :clients, :channels, :components, :config
 
   def initialize config={}
     @config = config
@@ -169,7 +169,7 @@ class ServerConnection < Connection
   
   def unbind
     super
-    @channels.each_value {|chan| chan.delete self }
+    @channels.each {|chan| chan.delete self }
     @server.components.delete @username.downcase if authed?
     @server.clients.delete self
   end
