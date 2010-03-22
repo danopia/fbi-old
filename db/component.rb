@@ -18,7 +18,24 @@ end
 
 client.on :publish do |origin, target, private, data|
   #puts "got packet"
-  client.send origin, {:tables => db.sequel.tables}
+  case data['method']
+    when 'introspect'
+      client.send origin, :tables => db.sequel.tables, :method => 'introspect', :response => true
+    
+    when 'tables'
+      client.send origin, :tables => db.sequel.tables, :method => 'tables', :response => true
+    
+    when 'select'
+      criteria = data['criteria'] || {}
+      results = db[data['table'].to_sym]
+      results = results.filter(criteria) if criteria.any?
+      client.send origin, :records => results.all, :method => 'select', :response => true
+    
+    when 'insert'
+      record = data['record']
+      table = db[data['table'].to_sym]
+      client.send origin, :id => table.insert(record), :method => 'insert', :response => true
+  end
 end
 
 client.start_loop

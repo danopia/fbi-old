@@ -29,6 +29,13 @@ while true
     when 'disconnect', 'channels', 'subscriptions', 'components'
       client.send_object action, {}
     
+    when 'dblist'
+      client.send '#db', :method => 'select', :table => 'users'
+      
+    when 'dbins'
+      client.send '#db', :method => 'insert', :table => 'users', :record => 
+        {:username => 'danopia', :email => 'test@danopia.net', :password_hash => '', :salt => '', :created_at => Time.now}
+    
     else
       print "JSON for #{action} (or nothing): "
       STDOUT.flush

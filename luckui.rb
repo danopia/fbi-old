@@ -32,7 +32,7 @@ end
 client = FBI::SilentClient.new 'luckui', 'hil0l'
 client.subscribe_to '#debug'
 
-$components = []
+$components = ['luckui']
 
 client.on :auth do |data|
   display.panes[:main].controls[:history].data << "Logged in as #{data['user']}"
@@ -56,7 +56,7 @@ client.on :components do |data|
   (data['components'] - $components).each do |new|
     #display.panes[:main].controls[:history].data << "New component: #{new}"
     #display.dirty! :main
-    client.send new, {:method => 'introspect'}
+    client.send new, :method => 'select', :table => 'users'
   end
   $components = data['components']
   

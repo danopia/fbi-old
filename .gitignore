@@ -7,3 +7,4 @@ www/tmp/
 
 server.yaml
 www/wikis
+db/*.db
