@@ -7,9 +7,9 @@ class CommandProvider < FBI::Client
 		super
 		
 		@commands = {}
-		subscribe_to 'irc'
+		subscribe_to '#irc'
 		
-		on :publish do |channel, data|
+		on :publish do |origin, target, private, data|
 			command = data['command'].to_sym
 			data['args_str'] = data['args']
 			data['args'] = (data['args'] || '').split
@@ -24,8 +24,7 @@ class CommandProvider < FBI::Client
 	end
 	
 	def send_to server, channel, message
-		private 'irc', {
-			'id' => nil,
+		publish '#irc', {
 			'server' => server,
 			'channel' => channel,
 			'message' => message

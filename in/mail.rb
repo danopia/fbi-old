@@ -229,7 +229,7 @@ EventMachine::next_tick do
       end_index = message.body.index("\n\nModified Paths:") - 1
       log = message.body[index..end_index]
       
-      fbi.publish 'commits', [{
+      fbi.publish '#commits', [{
         :project => project,
         :owner => nil,
         :fork => false,
@@ -260,7 +260,7 @@ EventMachine::next_tick do
       end
       
       return unless project
-      fbi.publish 'mailinglist', [{
+      fbi.publish '#mailinglist', [{
         :list => list,
         :author => author,
         :subject => subject,

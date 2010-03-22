@@ -18,7 +18,7 @@ class GithubHook
         :url => commit['url']
       }
     end
-    fbi.publish 'commits', output
-    fbi.publish 'github', data
+    fbi.publish '#commits', output
+    fbi.publish '#github', data
   end
 end

@@ -197,7 +197,9 @@ config = YAML.load File.read(config_path)
 
 server = FBI::Server.new config
 
-EM.run do
+EM.next_tick do
   server.serve
   puts "Server started"
 end
+
+EventMachine.run {} if $0 == __FILE__

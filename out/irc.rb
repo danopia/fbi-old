@@ -162,7 +162,7 @@ manager.on :command do |e|
 			puts "Unknown command #{command}; broadcasting a packet"
 			server = Server.find e.network.id
 			channel = server.channels.find_by_name e.target
-			$fbi.publish 'irc', {
+			$fbi.publish '#irc', {
 				:server => e.network.id,
 				:channel => e.target,
 				:sender => e.origin,
@@ -202,8 +202,8 @@ def route project, message
 	end
 end
 
-fbi.on :publish do |channel, data|
-	if channel == 'commits'
+fbi.on :publish do |origin, target, private, data|
+	if target == '#commits'
 		commits = data
 		commits = commits[-3..-1] if commits.size > 3
 		commits.each do |commit|
@@ -218,19 +218,18 @@ fbi.on :publish do |channel, data|
 			route commit['project'], message
 		end
 		
-	elsif channel == 'mailinglist'
+	elsif target == '#mailinglist'
 		data.each do |post|
 			message = "\002#{post['project']} mailing list:\017 \00303#{post['author']['name']}\017 : #{post['subject'].gsub("\n", ' ')} \00302<\002\002#{post['shorturl']}>"
 
 			route post['project'], message
 		end
+		
+	elsif private
+		$manager.route_to data['server'], data['channel'], data['message']
 	end
 end
 
-fbi.on :private do |from, data|
-	$manager.route_to data['server'], data['channel'], data['message']
-end
-
-fbi.subscribe_to 'commits', 'mailinglist'
+fbi.subscribe_to '#commits', '#mailinglist'
 fbi.connect
 EventMachine.run {} if $0 == __FILE__

@@ -12,7 +12,7 @@ DB = Sequel.sqlite 'www.db'
 Mustache.template_path = File.dirname(__FILE__) + '/views'
 
 $www_fbi = FBI::Client.new 'www', 'hil0l'
-EventMachine.next_tick { $www_fbi.connect }
+$www_fbi.connect
 
 Rackup = Rack::Builder.new do
   fbi = $www_fbi
