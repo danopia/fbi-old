@@ -21,7 +21,7 @@ class Connection < LineConnection
   end
 	
   def post_init
-    login if @username
+    login if @username && respond_to?(:login)
     startup *@args if respond_to? :startup
     
     super # grab IP
