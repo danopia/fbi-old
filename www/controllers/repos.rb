@@ -1,9 +1,9 @@
 class ReposController < Controller
-  attr_reader :project, :repo, :repos, :commits, :pages, :debug, :files, :filename, :parent
+  attr_reader :project, :repo, :repos, :commits, :pages, :debug, :files, :filename, :parent, :services
   
   def new captures, params, env
     @project = Project.find :slug => captures.first
-    return unless @project.owner == env[:user]
+    return unless @project.owner? env[:user]
     @repo = @project.new_repo
     
     if env['REQUEST_METHOD'] == 'POST'
@@ -19,6 +19,8 @@ class ReposController < Controller
       
       #render :text => 'The repository has been added.'
       render :path => 'repos/show'
+    else
+      @services = Service.all
     end
   end
   

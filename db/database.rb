@@ -32,8 +32,8 @@ class Database
       basename = file.match(/^[0-9]+_(.+)\.rb$/).captures.first
       next if migrated.include? basename
       
-      classname = basename.gsub(/_[a-z]/) {|m| m[1,1].upcase }
-      classname = "#{classname.capitalize}Migration"
+      classname = basename.capitalize.gsub(/_[a-z]/) {|m| m[1,1].upcase }
+      classname = "#{classname}Migration"
       klass = Class.const_get(classname)
       
       print "Migrating #{basename}... "

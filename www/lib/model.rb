@@ -1,11 +1,30 @@
+class Hash
+  def symbolify!
+    self.each_pair do |key, val|
+      next if key.is_a? Symbol
+      
+      self[key.to_sym] = val
+      self.delete key
+    end
+  end
+end
+
 class Model
   attr_reader :id, :data
   
+  def self.fbi_packet args={}
+    $fbi_sock.puts({:action => 'publish', :target => '#db', :data => args}.to_json)
+    data = JSON.parse $fbi_sock.gets
+    p data['data']
+    data['data']
+  end
+  def fbi_packet args={}; self.class.fbi_packet args; end
   
-  def self.table_name= name
+  
+  def self.table= name
     @table = name
   end
-  def self.table_name name=nil
+  def self.table name=nil
     return @table = name if name
     return @table if @table
     
@@ -14,26 +33,25 @@ class Model
     @table.gsub!(/[A-Z]/) { |s| "_#{s.downcase}"}
     @table = "#{@table}s"
   end
-  def table_name; self.class.table_name; end
-  
-  def self.table
-    DB[table_name.to_sym]
-  end
   def table; self.class.table; end
   
   
   def self.find filters
     filters = {:id => filters} if filters.is_a? Fixnum
-    us = table.filter(filters).first
-    us && self.new(us)
+    rec = fbi_packet({:method => 'first', :table => table, :criteria => filters})['record']
+    rec && rec.symbolify!
+    rec && self.new(rec)
   end
   
   def self.where filters
-    table.filter(filters).map {|us| self.new us }
+    filters = {:id => filters} if filters.is_a? Fixnum
+    recs = fbi_packet({:method => 'select', :table => table, :criteria => filters})['records']
+    recs.map {|rec| rec.symbolify!; self.new rec }
   end
   
   def self.all
-    table.all.map {|us| self.new us }
+    recs = fbi_packet({:method => 'select', :table => table})['records']
+    recs.map {|rec| rec.symbolify!; self.new rec }
   end
   
   
@@ -60,15 +78,15 @@ class Model
   def save
     if new_record?
       @data[:created_at] = Time.now
-      @id = table << @data
+      @id = fbi_packet({:method => 'insert', :table => table, :record => @data})['id']
     else
       @data[:modified_at] = Time.now
-      table.where(:id => @id).update @data
+      fbi_packet({:method => 'update', :table => table, :criteria => {:id => @id}, :record => @data})
     end
   end
   
   def destroy!
-    table.where(:id => @id).delete
+    fbi_packet({:method => 'delete', :table => table, :criteria => {:id => @id}})
   end
   
   

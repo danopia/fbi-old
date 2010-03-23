@@ -2,14 +2,16 @@ class Project < Model
 
   def title; @data[:title]; end
   def slug; @data[:slug]; end
-  def owner_id; @data[:owner_id]; end
   
   def title= new; @data[:title] = new; end
   def slug= new; @data[:slug] = new; end
-  def owner_id= new; @data[:owner_id] = new; end
 
-  def owner; @owner ||= User.find(:id => @data[:owner_id]); end
-  def owner= new; @owner = new; @data[:owner_id] = new.id; end
+  def member? user
+    ProjectMember.find :user_id => user.id, :project_id => @id
+  end
+  def owner? user
+    member?(user).owner
+  end
   
   def repos filters={}
     filters[:project_id] = @id

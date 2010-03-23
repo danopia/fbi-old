@@ -14,6 +14,11 @@ Mustache.template_path = File.dirname(__FILE__) + '/views'
 $www_fbi = FBI::Client.new 'www', 'hil0l'
 $www_fbi.connect
 
+# Hacky hacky hacky...
+$fbi_sock = TCPSocket.new 'localhost', 5348
+$fbi_sock.puts({:action => 'auth', :user => 'www_worker-' + rand.to_s, :secret => 'hil0l'}.to_json)
+2.times { $fbi_sock.gets }
+
 Rackup = Rack::Builder.new do
   fbi = $www_fbi
   
@@ -44,6 +49,8 @@ Rackup = Rack::Builder.new do
     require 'models/page'
     require 'models/user'
     require 'models/user_session'
+    require 'models/project_member'
+    require 'models/service'
     
     parts = env['PATH_INFO'][1..-1].split('/')
     

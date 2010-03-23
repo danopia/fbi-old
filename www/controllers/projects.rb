@@ -7,12 +7,11 @@ class ProjectsController < Controller
   
   def show captures, params, env
     @project = Project.find :slug => captures.first
-    @mine = @project.owner == env[:user]
+    @mine = @project.owner? env[:user] if env[:user]
   end
   
   def new captures, params, env
     @project = Project.new
-    @project.owner = env[:user]
     
     if env['REQUEST_METHOD'] == 'POST'
       data = CGI.parse env['rack.input'].read
@@ -22,6 +21,8 @@ class ProjectsController < Controller
       
       @project.save
       
+      project_member = ProjectMember.create :user_id => env[:user].id, :project_id => @project.id, :owner => true
+
       #render :text => 'The project has been registered.'
       
       @mine = true
@@ -31,7 +32,7 @@ class ProjectsController < Controller
   
   def edit captures, params, env
     @project = Project.find :slug => captures[0]
-    return unless @project.owner == env[:user]
+    return unless @project.owner? env[:user]
     
     if env['REQUEST_METHOD'] == 'POST'
       data = CGI.parse env['rack.input'].read
