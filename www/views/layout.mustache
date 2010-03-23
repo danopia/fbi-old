@@ -61,7 +61,7 @@
       <h1><a href="/" style="color: inherit;">FBI</a></h1>
       <h2>bringing projects together</h2>
       <p style="float: right;">
-        {{# user }}Hey, <a href="{{ profile_path }}">{{ display_name }}</a>! <a href="/logout">Log out</a>{{/ user }}
+        {{# user }}Hey, {{{ profile_link }}}! <a href="/logout">Log out</a>{{/ user }}
         {{# loggedout }}<a href="/login">Log in</a> | <a href="/account/new">Register</a>{{/ loggedout }}
       </p>
     </div>

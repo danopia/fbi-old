@@ -48,13 +48,13 @@ class Channel
   end
   
   def << client
-    send_to_all 'subscribe', 'origin' => client.username, 'target' => @name if client.authed?
+    send_to_all 'subscribe', 'origin' => client.username, 'channels' => [@name] if client.authed?
     @clients << client
   end
   
   def delete client
     @clients.delete client
-    send_to_all 'unsubscribe', 'origin' => client.username, 'target' => @name if client.authed?
+    send_to_all 'unsubscribe', 'origin' => client.username, 'channels' => [@name] if client.authed?
   end
 
   def for_each &blck
