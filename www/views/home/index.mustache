@@ -1,0 +1,40 @@
+{{# loggedout }}
+<p>Hey there! You need an account to experiance FBI's website to its fullest.
+Please <a href="/account/new">register</a> or <a href="/login">login</a>.</p>
+{{/ loggedout }}
+{{# user }}
+<p>Hey there, {{{ profile_link }}}! Welcome to FBI's website.</p>
+{{/ user }}
+
+<h3>Recent commits</h3>
+<hr/>
+<ul>
+  <li>coming soon</li>
+{{# commits }}
+  <li>{{{ show_link }}}</li>
+{{/ commits }}
+</ul>
+
+<h3>Recent projects</h3>
+<hr/>
+<ul>
+{{# projects }}
+  <li>{{{ show_link }}}</li>
+{{/ projects }}
+</ul>
+
+<h3>New users</h3>
+<hr/>
+<ul>
+{{# users }}
+  <li>{{{ profile_link }}}</li>
+{{/ users }}
+</ul>
+
+<h3>Recent repositories</h3>
+<hr/>
+<ul>
+{{# repos }}
+  <li>{{{ full_link }}}</li>
+{{/ repos }}
+</ul>

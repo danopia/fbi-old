@@ -53,6 +53,8 @@ Rackup = Rack::Builder.new do
     routing = Routing.new
     
     routing.setup do
+      connect '/?$', 'home', 'index'
+      
       connect '/projects/?$', 'projects', 'main'
       connect '/projects/new$', 'projects', 'new'
       connect '/projects/([^/]+)/?$', 'projects', 'show'

@@ -78,7 +78,11 @@ class ProjectsController < Controller
   
   def join captures, params, env
     @project = Project.find :slug => captures[0]
-    return unless @project && env[:user]
+    unless @project && env[:user]    
+      @unjoined = true
+      render :path => 'projects/show'
+      return
+    end
     
     ProjectMember.create :project_id => @project.id,
                          :user_id => env[:user].id
