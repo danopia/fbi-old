@@ -162,7 +162,7 @@ manager.on :command do |e|
 			puts "Unknown command #{command}; broadcasting a packet"
 			server = Server.find e.network.id
 			channel = server.channels.find_by_name e.target
-			$fbi.publish '#irc', {
+			$fbi.send '#irc', {
 				:server => e.network.id,
 				:channel => e.target,
 				:sender => e.origin,
