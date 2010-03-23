@@ -18,7 +18,7 @@ class BitbucketHook
         :url => "http://bitbucket.org/#{data['repository']['owner']}/#{data['repository']['slug']}/changeset/#{commit['node']}"
       }
     end
-    fbi.publish '#commits', output
-    fbi.publish '#bitbucket', data
+    fbi.send '#commits', output
+    fbi.send '#bitbucket', data
   end
 end
