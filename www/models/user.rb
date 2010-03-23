@@ -60,4 +60,6 @@ class User < Model
   end
   
   def profile_path; "/users/#{username}"; end
+  
+  def profile_link; "<a href=\"#{profile_path}\" title=\"#{display_name}'s Profile\">#{display_name}</a>"; end
 end

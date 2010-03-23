@@ -124,8 +124,6 @@ class WikiController < Controller
     path = "#{@title}.md"
     
     Dir.chdir @repo do
-      # pull
-      
       IO.popen("git hash-object -w --path #{path} --stdin", 'w+') do |io|
         io.puts contents
         io.close_write
@@ -156,6 +154,7 @@ class WikiController < Controller
     
     @title = path.sub('.md', '')
     @contents = BlueCloth.new(contents).to_html
+    @pages << {:title => @title}
     
     render :path => 'wiki/show'
   end

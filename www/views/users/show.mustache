@@ -13,7 +13,7 @@ table.profile th { text-align: left; color: #666; font-weight: normal; }
   <h3>projects</h3>
   <ul style="list-style: none; padding: 0 0 0 1em; margin: 0;" class="fixedwidth">
   {{# projects }}
-    <li><a href="{{ show_path }}">{{ title }}</a></li>
+    <li>{{{ show_link }}}</li>
   {{/ projects }}
   {{# is_self }}
     <li><a href="/projects/new" style="color: gray;">create project</a></li>

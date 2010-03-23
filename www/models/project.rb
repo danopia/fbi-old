@@ -57,4 +57,7 @@ class Project < Model
   def show_path; "/projects/#{slug}"; end
   def edit_path; "#{show_path}/edit"; end
   def wiki_path; "#{show_path}/wiki"; end
+  
+  def show_link; "<a href=\"#{show_path}\">#{title}</a>"; end
+  def wiki_link; "<a href=\"#{wiki_path}\">wiki</a>"; end
 end

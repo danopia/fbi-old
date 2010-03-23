@@ -1,6 +1,12 @@
 {{# repo }}
-<h2>{{# project }}<a href="{{ show_path }}">{{ title }}</a> / {{/ project }}<a href="{{ show_path }}">{{ title }}</a></h2>
+<h2>{{{ full_link }}}</h2>
 <hr />
+
+<p>{{ title }} is a code repository which belongs to the {{{ project_link }}} project.</p>
+
+{{# service }}
+<p>The code exists on {{{ show_path }}}. You can download the source from the repo's <a href="{{ url_format }}">{{ title }} page</a>.</p>
+{{/ service }}
 
 <br/>
 title: {{ title }}

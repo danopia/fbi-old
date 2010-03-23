@@ -2,14 +2,14 @@
 {{# mine }}
 <p style="float: right; margin: 0;">This is your project! (<a href="{{ edit_path }}">edit project</a>)</p>
 {{/ mine }}
-<h2><a href="{{ show_path }}">{{ title }}</a></h2>
+<h2>{{{ show_link }}}</h2>
 <hr />
 
 <div style="float: right; border-left: 1px solid #999; padding-left: 1em;">
   <h3>code repositories</h3>
   <ul style="list-style: none; padding: 0 0 0 1em; margin: 0;" class="fixedwidth">
   {{# repos }}
-    <li><a href="{{ show_path }}">{{ title }}</a></li>
+    <li>{{{ show_link }}}</li>
   {{/ repos }}
   {{# mine }}
     <li><a href="{{ show_path }}/repos/new" style="color: gray;">add repo</a></li>
@@ -21,7 +21,7 @@
 <p>Stuff goes here.</p>
 
 {{# owner }}
-<p>This project's administrative contact is <a href="{{ profile_path }}" title="{{ display_name }}'s Profile">{{ display_name }}</a>.</p>
+<p>This project's administrative contact is {{{ profile_link }}}.</p>
 {{/ owner }}
 
 <hr />
@@ -29,7 +29,7 @@
 <h3>recent commits</h3>
 <ul style="margin: 0;" class="fixedwidth">
 {{# commits_5 }}
-  <li>{{#repo}}<a href="{{ show_path }}">{{ title }}</a>: {{/repo}}{{ short_message }} [<a href="{{ show_path }}/commits/authors/{{author}}">{{author}}</a>]</li>
+  <li>{{#repo}}{{{ show_link }}}: {{/repo}}{{ short_message }} [<a href="{{ show_path }}/commits/authors/{{author}}">{{author}}</a>]</li>
 {{/ commits_5 }}
   <li><a href="{{ show_path }}/commits">more...</a></li>
 </ul>

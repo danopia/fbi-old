@@ -2,7 +2,7 @@
 {{# mine }}
 <p style="float: right; margin: 0;"><a href="{{ edit_path }}">edit service</a></p>
 {{/ mine }}
-<h2><a href="{{ show_path }}">{{ title }}</a> Service</h2>
+<h2>{{{ show_link }}} Service</h2>
 <hr />
 
 <!--
@@ -28,7 +28,7 @@
 <h3>Repositories using {{ title }}</h3>
 <ul style="margin: 0;">
 {{# repos }}
-  <li>{{# project }}<a href="{{ show_path }}">{{ title }}</a> {{/ project }} / <a href="{{ show_path }}">{{ title }}</a></li>
+  <li>{{{ full_link }}}</li>
 {{/ repos }}
 </ul>
 

@@ -1,11 +1,12 @@
 {{# repo }}
-<h2>{{# project }}<a href="{{ show_path }}">{{ title }}</a>{{/ project }} / <a href="{{ show_path }}/">{{ title }}</a></h2>
+<h2>{{{ full_link }}}</h2>
 <hr />
 
-<p>{{ title }} is a code repository which belongs to the {{# project }}{{ title }} {{/ project }}project.</p>
+<p>{{ title }} is a code repository which belongs to the {{{ project_link }}} project.</p>
 
-<p>The code exists on <a href="http://github.com/">GitHub</a>. You can download the source from the repo's <a href="{{ url }}">GitHub page</a>.</p>
-{{/ repo }}
+{{# service }}
+<p>The code exists on <a href="{{ url }}">{{ title }}</a>. You can download the source from the repo's <a href="{{ url }}">{{ title }} page</a>.</p>
+{{/ service }}
 
 <table class="fixedwidth">
   <tr>
@@ -15,16 +16,18 @@
   </tr>
 {{# parent }}
   <tr>
-    <td><a href="/projects/{{# project }}{{ slug }}{{/ project }}/repos/{{# repo }}{{ id }}{{/ repo }}/tree/{{ parent }}">..</td>
+    <td><a href="{{ show_url }}/tree/{{ parent }}">..</td>
     <td>tree</td>
     <td></td>
   </tr>
 {{/ parent }}
 {{# files }}
   <tr>
-    <td><a href="/projects/{{# project }}{{ slug }}{{/ project }}/repos/{{# repo }}{{ id }}{{/ repo }}/{{ type }}/{{ path }}">{{ name }}</td>
+    <td><a href="{{ show_url }}/{{ type }}/{{ path }}">{{ name }}</td>
     <td>{{ type }}</td>
     <td>{{ hash }}</td>
   </tr>
 {{/ files }}
 </table>
+
+{{/ repo }}

@@ -24,4 +24,6 @@ class Service < Model
   
   def show_path; "/services/#{slug}"; end
   def edit_path; "#{show_path}/edit"; end
+  
+  def show_link; "<a href=\"#{show_path}\">#{title}</a>"; end
 end

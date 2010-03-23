@@ -25,7 +25,7 @@ class ReposController < Controller
   
   def edit captures, params, env
     @project = Project.find :slug => captures[0]
-    return unless @project.owner == env[:user]
+    return unless @project.owner? env[:user]
     @repo = @project.repo_by :slug => captures[1]
     
     if env['REQUEST_METHOD'] == 'POST'

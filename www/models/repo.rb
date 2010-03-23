@@ -35,4 +35,8 @@ class Repo < Model
   def project_path; "/projects/#{project.slug}"; end
   def show_path;    "#{project_path}/repos/#{slug}"; end
   def edit_path;    "#{show_path}/edit"; end
+  
+  def project_link; project.show_link; end
+  def show_link;    "<a href=\"#{show_path}\">#{title}</a>"; end
+  def full_link;    [project_link, show_link].join ' / '; end
 end
