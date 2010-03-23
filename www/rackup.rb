@@ -8,11 +8,11 @@ require 'mustache'
 
 Mustache.template_path = File.dirname(__FILE__) + '/views'
 
-$www_fbi = FBI::Client.new 'www', 'hil0l'
+$www_fbi = FBI::Client.new 'www-' + rand.to_s, 'hil0l'
 $www_fbi.connect
 
 # Hacky hacky hacky...
-$fbi_sock = TCPSocket.new 'localhost', 5348
+$fbi_sock = TCPSocket.new 'danopia.net', 5348
 $fbi_sock.puts({:action => 'auth', :user => 'www_worker-' + rand.to_s, :secret => 'hil0l'}.to_json)
 2.times { $fbi_sock.gets }
 
