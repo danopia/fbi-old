@@ -3,11 +3,8 @@ require 'cgi'
 require 'time'
 
 require 'rubygems'
-require 'sequel'
 require 'json'
 require 'mustache'
-
-DB = Sequel.sqlite 'www.db'
 
 Mustache.template_path = File.dirname(__FILE__) + '/views'
 

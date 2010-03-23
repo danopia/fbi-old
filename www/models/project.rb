@@ -15,7 +15,7 @@ class Project < Model
   
   def repos filters={}
     filters[:project_id] = @id
-    Repo.where(filters).map {|repo| repo.project = self }
+    Repo.where(filters).each {|repo| repo.project = self }
   end
   def pages filters={}
     filters[:project_id] = @id
@@ -44,15 +44,15 @@ class Project < Model
     created_at.utc.strftime('%B %d, %Y')
   end
   
-  def commits
-    repos = self.repos.map {|repo| repo.id }
-    DB[:commits].filter(:repo_id => repos).reverse_order(:committed_at).all.map {|c| Commit.new c }
-  end
-  
-  def commits_5
-    repos = self.repos.map {|repo| repo.id }
-    DB[:commits].filter(:repo_id => repos).reverse_order(:committed_at).first(5).map {|c| Commit.new c }
-  end
+  #~ def commits
+    #~ repos = self.repos.map {|repo| repo.id }
+    #~ DB[:commits].filter(:repo_id => repos).reverse_order(:committed_at).all.map {|c| Commit.new c }
+  #~ end
+  #~ 
+  #~ def commits_5
+    #~ repos = self.repos.map {|repo| repo.id }
+    #~ DB[:commits].filter(:repo_id => repos).reverse_order(:committed_at).first(5).map {|c| Commit.new c }
+  #~ end
   
   def show_path; "/projects/#{slug}"; end
   def edit_path; "#{show_path}/edit"; end

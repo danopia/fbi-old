@@ -51,8 +51,12 @@ class User < Model
   end
   
   def projects filters={}
-    filters[:owner_id] = @id
+    filters[:id] = member_of.map {|mo| mo.project_id }
     Project.where filters
+  end
+  
+  def member_of
+    ProjectMember.where :user_id => @id
   end
   
   def profile_path; "/users/#{username}"; end

@@ -24,13 +24,13 @@ class Repo < Model
     [service.slug, name].join ':'
   end
   
-  def commits
-    DB[:commits].filter(:repo_id => @id).reverse_order(:committed_at).all.map {|c| Commit.new c}
-  end
-  
-  def commits_5
-    DB[:commits].filter(:repo_id => @id).reverse_order(:committed_at).first(5).map {|c| Commit.new c}
-  end
+  #~ def commits
+    #~ DB[:commits].filter(:repo_id => @id).reverse_order(:committed_at).all.map {|c| Commit.new c}
+  #~ end
+  #~ 
+  #~ def commits_5
+    #~ DB[:commits].filter(:repo_id => @id).reverse_order(:committed_at).first(5).map {|c| Commit.new c}
+  #~ end
   
   def project_path; "/projects/#{project.slug}"; end
   def show_path;    "#{project_path}/repos/#{slug}"; end
