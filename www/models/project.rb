@@ -10,7 +10,7 @@ class Project < Model
     ProjectMember.find :user_id => user.id, :project_id => @id
   end
   def owner? user
-    member?(user).owner
+    ProjectMember.find :user_id => user.id, :project_id => @id, :owner => true
   end
   
   def repos filters={}

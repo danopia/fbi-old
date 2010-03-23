@@ -1,5 +1,5 @@
 class ProjectsController < Controller
-  attr_reader :project, :projects, :mine, :users
+  attr_reader :project, :projects, :mine, :users, :joined, :unjoined
   
   def main captures, params, env
     @projects = Project.all
@@ -7,7 +7,9 @@ class ProjectsController < Controller
   
   def show captures, params, env
     @project = Project.find :slug => captures.first
-    @mine = @project.owner? env[:user] if env[:user]
+    @joined = @project.member? env[:user] if env[:user]
+    @mine = @joined.owner? if @joined
+    @unjoined = !@joined
   end
   
   def new captures, params, env
@@ -25,7 +27,7 @@ class ProjectsController < Controller
 
       #render :text => 'The project has been registered.'
       
-      @mine = true
+      @joined = @mine = true
       render :path => 'projects/show'
     end
   end
@@ -43,7 +45,7 @@ class ProjectsController < Controller
       @project.save
       
       #render :text => 'The project has been updated.'
-      @mine = true
+      @joined = @mine = true
       render :path => 'projects/show'
     end
   end
@@ -65,12 +67,25 @@ class ProjectsController < Controller
 
       #render :text => 'The member has been added.'
       
-      @mine = true
+      @joined = @mine = true
       render :path => 'projects/show'
     else
       @users = User.all
       existing = @project.members.map &:user_id
       @users.reject! {|user| existing.include? user.id }
     end
+  end
+  
+  def join captures, params, env
+    @project = Project.find :slug => captures[0]
+    return unless @project && env[:user]
+    
+    ProjectMember.create :project_id => @project.id,
+                         :user_id => env[:user].id
+    
+    #render :text => 'You have joined the project.'
+    
+    @joined = true
+    render :path => 'projects/show'
   end
 end
