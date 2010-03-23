@@ -17,20 +17,10 @@ class Project < Model
     filters[:project_id] = @id
     Repo.where(filters).each {|repo| repo.project = self }
   end
-  def pages filters={}
-    filters[:project_id] = @id
-    Page.where filters
-  end
-  
   def repo_by filters
     filters[:project_id] = @id
     Repo.find filters
   end
-  def page_by filters
-    filters[:project_id] = @id
-    Page.find filters
-  end
-  
   def new_repo fields={}
     fields[:project_id] = @id
     Repo.new fields
@@ -42,6 +32,13 @@ class Project < Model
   
   def created_at_short
     created_at.utc.strftime('%B %d, %Y')
+  end
+  
+  def members
+    ProjectMember.where :project_id => @id
+  end
+  def owners
+    ProjectMember.where :project_id => @id, :owner => true
   end
   
   #~ def commits

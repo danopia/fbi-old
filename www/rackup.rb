@@ -58,6 +58,8 @@ Rackup = Rack::Builder.new do
       connect '/projects/([^/]+)/?$', 'projects', 'show'
       connect '/projects/([^/]+)/edit$', 'projects', 'edit'
       
+      connect '/projects/([^/]+)/members/add$', 'projects', 'add_member'
+      
       sub_route '/projects/([^/]+)/repos' do
         connect '/?$', 'repos', 'list'
         connect '/new$', 'repos', 'new'

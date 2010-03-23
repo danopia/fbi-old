@@ -26,6 +26,18 @@
 
 <hr />
 
+<h3>members</h3>
+<ul style="margin: 0;">
+{{# members }}
+  <li>{{{ user_link }}} {{# owner? }}(owner){{/ owner? }}</li>
+{{/ members }}
+{{# mine }}
+  <li><a href="{{ show_path }}/members/add" style="color: gray;">add member</a></li>
+{{/ mine }}
+</ul>
+
+<hr />
+
 <h3>recent commits</h3>
 <ul style="margin: 0;" class="fixedwidth">
 {{# commits_5 }}

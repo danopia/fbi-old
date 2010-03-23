@@ -1,0 +1,32 @@
+{{# project }}
+<h2>Add member to {{{ show_link }}}</h2>
+<hr />
+
+<style>
+table { margin: 0 auto; }
+th { text-align: right; }
+td, th { width: 50%; }
+</style>
+
+<form action="{{ show_path }}/members/add" method="post" name="add_member">
+  <table>
+    <tr>
+      <th>User:</th>
+      <td>
+        <select name="username">
+{{# users }}
+          <option value="{{ username }}">{{ display_name }}</option>
+{{/ users }}
+        </select>
+      </td>
+    </tr>
+    <tr>
+      <th>Owner:</th>
+      <td><input type="checkbox" name="owner" /></td>
+    </tr>
+    <tr>
+      <td colspan="2" align="center"><input type="submit" value="Add to {{ title }}" /></td>
+    </tr>
+  </table>
+</form>
+{{/ project }}
