@@ -51,11 +51,11 @@ class User < Model
   end
   
   def projects filters={}
-    filters[:id] = member_of.map {|mo| mo.project_id }
+    filters[:id] = memberships.map {|mo| mo.project_id }
     Project.where filters
   end
   
-  def member_of
+  def memberships
     ProjectMember.where :user_id => @id
   end
   

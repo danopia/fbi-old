@@ -12,9 +12,9 @@ table.profile th { text-align: left; color: #666; font-weight: normal; }
 <div style="float: right; border-left: 1px solid #999; padding-left: 1em;">
   <h3>projects</h3>
   <ul style="list-style: none; padding: 0 0 0 1em; margin: 0;" class="fixedwidth">
-  {{# projects }}
-    <li>{{{ show_link }}}</li>
-  {{/ projects }}
+  {{# memberships }}
+    <li>{{{ project_link }}} {{# owner? }}(owner){{/ owner? }}</li>
+  {{/ memberships }}
   {{# is_self }}
     <li><a href="/projects/new" style="color: gray;">create project</a></li>
   {{/ is_self }}
