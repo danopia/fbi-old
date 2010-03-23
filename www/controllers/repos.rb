@@ -11,9 +11,8 @@ class ReposController < Controller
       
       @repo.title = data['title'].first
       @repo.slug = data['slug'].first
-      @repo.service = data['service'].first
+      @repo.service_id = data['service_id'].first.to_i
       @repo.name = data['name'].first
-      @repo.url = data['url'].first
       
       @repo.save
       
@@ -34,9 +33,8 @@ class ReposController < Controller
       
       @repo.title = data['title'].first
       @repo.slug = data['slug'].first
-      @repo.service = data['service'].first
+      @repo.service_id = data['service_id'].first.to_i
       @repo.name = data['name'].first
-      @repo.url = data['url'].first
       
       @repo.save
       

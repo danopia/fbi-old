@@ -15,7 +15,7 @@ class Project < Model
   
   def repos filters={}
     filters[:project_id] = @id
-    Repo.where filters
+    Repo.where(filters).map {|repo| repo.project = self }
   end
   def pages filters={}
     filters[:project_id] = @id
