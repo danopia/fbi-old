@@ -1,16 +1,7 @@
 <h2>{{# project }}<a href="{{ show_path }}">{{ title }}</a> / <a href="{{ wiki_path }}{{/ project }}/show/{{ title }}">{{ title }}</a> [<a href="{{# project }}{{ wiki_path }}{{/ project }}/edit/{{ title }}" style="font-size: small;">edit</a>] [<a href="{{# project }}{{ wiki_path }}{{/ project }}/history/{{ title }}" style="font-size: small;">history</a>]</h2>
-
 <hr />
 
-<div style="float: right; border-left: 1px solid #999; padding-left: 1em;">
-  <h3>pages</h3>
-  <ul style="list-style: none; padding: 0 0 0 1em; margin: 0;" class="fixedwidth">
-  {{# pages }}
-    <li><a href="{{# project }}{{ wiki_path }}{{/ project }}/show/{{ title }}">{{ title }}</a></li>
-  {{/ pages }}
-    <li><a href="{{# project }}{{ wiki_path }}{{/ project }}/new" style="color: gray;">new page</a></li>
-  </ul>
-</div>
+{{> views/wiki/_sidebar }}
 
 {{{ contents }}}
 

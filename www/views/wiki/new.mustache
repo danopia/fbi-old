@@ -1,16 +1,7 @@
 <h2>{{# project }}<a href="{{ show_path }}">{{ title }}</a> / <a href="{{ wiki_path }}">wiki</a> / {{/ project }}new page</h2>
-
 <hr />
 
-<div style="float: right; border-left: 1px solid #999; padding-left: 1em;">
-  <h3>pages</h3>
-  <ul style="list-style: none; padding: 0 0 0 1em; margin: 0;" class="fixedwidth">
-  {{# pages }}
-    <li><a href="{{# project }}{{ wiki_path }}{{/ project }}/show/{{ title }}">{{ title }}</a></li>
-  {{/ pages }}
-    <li><a href="{{# project }}{{ wiki_path }}{{/ project }}/new" style="color: gray;">new page</a></li>
-  </ul>
-</div>
+{{> views/wiki/_sidebar }}
 
 <form method="post" action="{{# project }}{{ wiki_path }}{{/ project }}/new">
   Filename: <input type="text" value="new_page" name="title" size="100" />
