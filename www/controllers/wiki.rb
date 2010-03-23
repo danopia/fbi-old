@@ -1,10 +1,12 @@
 require 'time'
 
+require 'bluecloth'
+
 require 'octopi'
 include Octopi
 
 class WikiController < Controller
-  attr_reader :project, :page, :pages, :commits, :commit
+  attr_reader :project, :title, :contents, :pages, :commits, :commit
   
   def fetch_repo repo
     remote = repo.clone_url.sub('github.com', 'fbi_gh')
@@ -93,9 +95,7 @@ class WikiController < Controller
       `git ls-tree master`.each_line do |line|
         line.chomp!
         
-        page = Page.new
-        page.title = line.split.last.sub('.md', '')
-        @pages << page
+        @pages << {:title => line.split.last.sub('.md', '')} if line.include? '.md'
       end
     end
   end
@@ -103,11 +103,9 @@ class WikiController < Controller
   def edit captures, params, env
     setup captures.first
     
-    @editing = true
-    @page = Page.new
-    @page.title = captures[1]
+    @title = captures[1]
     Dir.chdir @repo do
-      @page.contents = `git show master:#{captures[1]}.md`
+      @contents = `git show master:#{captures[1]}.md`
     end
   end
   
@@ -117,9 +115,7 @@ class WikiController < Controller
     setup captures.first
     pull
     
-    @editing = true
-    @page = Page.new
-    @page.title = captures[1]
+    @title = captures[1]
     
     data = CGI.parse(env['rack.input'].read)
     contents = data['contents'].first
@@ -158,12 +154,15 @@ class WikiController < Controller
       `git push origin master`
     end
     
-    @viewing = true
     @page = Page.new
     @page.title = path.sub('.md', '')
+    
     Dir.chdir @repo do
-      @page.contents = `git show master:#{path}`
+      @contents = `git show master:#{path}`
+      @contents = BlueCloth.new(@contents).to_html
     end
+    
+    render :path => 'wiki/show'
   end
   
   def index captures, params, env
@@ -174,27 +173,27 @@ class WikiController < Controller
   def show captures, params, env
     setup captures.first
     
-    @viewing = true
-    @page = Page.new
-    @page.title = captures[1]
+    @title = captures[1]
+    
     Dir.chdir @repo do
-      @page.contents = `git show master:#{captures[1]}.md`
+      @contents = `git show master:#{captures[1]}.md`
+      @contents = BlueCloth.new(@contents).to_html
     end
+    
   end
   
   def history captures, params, env
     setup captures.first
     
-    @viewing = true
-    @page = Page.new
-    @page.title = captures[1] + ' history'
-    @page.contents = ''
+    @title = captures[1]
+    @contents = ''
     Dir.chdir @repo do
       `git log --oneline -- #{captures[1]}.md`.each_line do |line|
         id, message = line.split(' ', 2)
-        @page.contents << "  * [#{message}](../commits/#{id})\n"
+        @contents << "  * [#{message}](../commits/#{id})\n"
       end
     end
+    @contents = BlueCloth.new(@contents).to_html
   end
   
   def commits captures, params, env
@@ -220,7 +219,7 @@ class WikiController < Controller
       @commit[:files].shift
       @commit[:files].map! do |raw|
         file = raw.match(/^\+\+\+ b\/(.+)$/).captures.first
-        {:path => file, :diff => raw[raw.index('@@')..-1]}
+        {:path => file.sub('.md', ''), :diff => raw[raw.index('@@')..-1]}
       end
     end
   end

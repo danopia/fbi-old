@@ -1,4 +1,4 @@
-<h2>{{# project }}<a href="/projects/{{ slug }}">{{ title }}</a> / {{/ project }}{{# page }}{{ title }} {{/ page }}[<a href="/projects/{{# project }}{{ slug }}{{/ project }}/wiki/edit/{{# page }}{{ title }}{{/ page }}" style="font-size: small;">edit</a>] [<a href="/projects/{{# project }}{{ slug }}{{/ project }}/wiki/history/{{# page }}{{ title }}{{/ page }}" style="font-size: small;">history</a>]</h2>
+<h2>{{# project }}<a href="{{ show_path }}">{{ title }}</a> / <a href="{{ show_path }}{{/ project }}/wiki/show/{{ title }}">{{ title }}</a> [<a href="{{# project }}{{ show_path }}{{/ project }}/wiki/edit/{{ title }}" style="font-size: small;">edit</a>] [<a href="{{# project }}{{ show_path }}{{/ project }}/wiki/history/{{ title }}" style="font-size: small;">history</a>]</h2>
 
 <hr />
 
@@ -6,13 +6,11 @@
   <h3>pages</h3>
   <ul style="list-style: none; padding: 0 0 0 1em; margin: 0;" class="fixedwidth">
   {{# pages }}
-    <li><a href="/projects/ooc/wiki/show/{{ title }}">{{ title }}</a></li>
+    <li><a href="{{# project }}{{ show_path }}{{/ project }}/wiki/show/{{ title }}">{{ title }}</a></li>
   {{/ pages }}
   </ul>
 </div>
 
-{{# page }}
-  {{{ render }}}
-{{/ page }}
+{{{ contents }}}
 
 <br clear="all" />

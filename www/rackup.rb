@@ -43,7 +43,6 @@ Rackup = Rack::Builder.new do
     require 'models/project'
     require 'models/repo'
     require 'models/commit'
-    require 'models/page'
     require 'models/user'
     require 'models/user_session'
     require 'models/project_member'
