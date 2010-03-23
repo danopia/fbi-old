@@ -1,0 +1,44 @@
+{{# service }}
+<h2>Editing <a href="{{ show_path }}">{{ title }}</a></h2>
+<hr />
+
+<style>
+table { margin: 0 auto; }
+th { text-align: right; }
+td, th { width: 50%; }
+</style>
+
+<p>{{ message }}</p>
+
+<form action="{{ edit_path }}" method="post" name="edit_service">
+  <table>
+    <tr>
+      <th>Title:</th>
+      <td><input type="text" name="title" value="{{ title }}" /></td>
+    </tr>
+    <tr>
+      <th>Slug:</th>
+      <td><input type="text" name="slug" value="{{ slug }}" /> (for use in URLs)</td>
+    </tr>
+    <tr>
+      <th>URL Format:</th>
+      <td><input type="text" name="url_format" value="{{ url_format }}" /></td>
+    </tr>
+    <tr>
+      <th>Website:</th>
+      <td><input type="text" name="website" value="{{ website }}" /></td>
+    </tr>
+    <tr>
+      <th>Mirrorable:</th>
+      <td><input type="checkbox" name="mirrorable" checked="{{ mirrorable? }}" /></td>
+    </tr>
+    <tr>
+      <th>Explorable:</th>
+      <td><input type="checkbox" name="explorable" checked="{{ explorable? }}" /></td>
+    </tr>
+    <tr>
+      <td colspan="2" align="center"><input type="submit" value="Update" /></td>
+    </tr>
+  </table>
+</form>
+{{/ service }}

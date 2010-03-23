@@ -98,6 +98,13 @@ Rackup = Rack::Builder.new do
         connect '/save$', 'account', 'save'
       end
       
+      sub_route '/services' do
+        connect '/?$', 'services', 'list'
+        connect '/new$', 'services', 'new'
+        connect '/([^/]+)/?$', 'services', 'show'
+        connect '/([^/]+)/edit$', 'services', 'edit'
+      end
+      
       connect '/login$', 'account', 'login'
       connect '/logout$', 'account', 'logout'
     end

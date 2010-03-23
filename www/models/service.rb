@@ -16,4 +16,12 @@ class Service < Model
   
   def mirrorable= new; @data[:mirrorable] = new; end
   def explorable= new; @data[:explorable] = new; end
+  
+  
+  def repos
+    Repo.where :service_id => @id
+  end
+  
+  def show_path; "/services/#{slug}"; end
+  def edit_path; "#{show_path}/edit"; end
 end

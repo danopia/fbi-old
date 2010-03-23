@@ -1,0 +1,37 @@
+{{# service }}
+{{# mine }}
+<p style="float: right; margin: 0;"><a href="{{ edit_path }}">edit service</a></p>
+{{/ mine }}
+<h2><a href="{{ show_path }}">{{ title }}</a> Service</h2>
+<hr />
+
+<!--
+<div style="float: right; border-left: 1px solid #999; padding-left: 1em;">
+  <h3>code repositories</h3>
+  <ul style="list-style: none; padding: 0 0 0 1em; margin: 0;" class="fixedwidth">
+  {{!# repos }}
+    <li><a href="{{! show_path }}">{{! title }}</a></li>
+  {{!/ repos }}
+  {{!# mine }}
+    <li><a href="{{! show_path }}/repos/new" style="color: gray;">add repo</a></li>
+  {{!/ mine }}
+  </ul>
+</div>
+-->
+
+<p>{{ title }} is a service on FBI.</p>
+<p>This page is awfully descriptive.</p>
+<p><a href="{{ url }}">{{ title }}'s web site</a></p>
+
+<hr />
+
+<h3>Repos using {{ title }}</h3>
+<ul style="margin: 0;" class="fixedwidth">
+{{# repos }}
+  <li>{{# project }}<a href="{{ show_path }}">{{ title }}</a> {{/ project }} / <a href="{{ show_path }}">{{ title }}</a></li>
+{{/ repos }}
+</ul>
+
+<br clear="all" />
+
+{{/ service }}
