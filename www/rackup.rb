@@ -76,6 +76,7 @@ Rackup = Rack::Builder.new do
       sub_route '/projects/([^/]+)/wiki' do
         connect '/?$', 'wiki', 'index'
         connect '/show/([^/]+)$', 'wiki', 'show'
+        connect '/new/?', 'wiki', 'new'
         connect '/edit/([^/]+)$', 'wiki', 'edit'
         connect '/save/([^/]+)$', 'wiki', 'save'
         connect '/history/([^/]+)$', 'wiki', 'history'

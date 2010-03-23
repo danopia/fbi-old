@@ -1,4 +1,4 @@
-<h2>{{# project }}<a href="{{ show_path }}">{{ title }}</a> / {{/ project }}commit {{# commit }}{{ hash }}{{/ commit }}</h2>
+<h2>{{# project }}<a href="{{ show_path }}">{{ title }}</a> / <a href="{{ show_path }}/wiki">wiki</a> / {{/ project }}commit {{# commit }}{{ hash }}{{/ commit }}</h2>
 
 <hr />
 
@@ -6,8 +6,9 @@
   <h3>pages</h3>
   <ul style="list-style: none; padding: 0 0 0 1em; margin: 0;" class="fixedwidth">
   {{# pages }}
-    <li><a href="/projects/ooc/wiki/show/{{ title }}">{{ title }}</a></li>
+    <li><a href="{{# project }}{{ show_path }}{{/ project }}/wiki/show/{{ title }}">{{ title }}</a></li>
   {{/ pages }}
+    <li><a href="{{# project }}{{ show_path }}{{/ project }}/wiki/new" style="color: gray;">new page</a></li>
   </ul>
 </div>
 

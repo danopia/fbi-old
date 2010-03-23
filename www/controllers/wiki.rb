@@ -109,6 +109,57 @@ class WikiController < Controller
     end
   end
   
+  def new captures, params, env
+    setup captures.first
+    
+    return if env['REQUEST_METHOD'] != 'POST'
+    
+    pull
+    
+    data = CGI.parse(env['rack.input'].read)
+    contents = data['contents'].first
+    message = data['message'].first
+    @title = data['title'].first
+    
+    path = "#{@title}.md"
+    
+    Dir.chdir @repo do
+      # pull
+      
+      IO.popen("git hash-object -w --path #{path} --stdin", 'w+') do |io|
+        io.puts contents
+        io.close_write
+        $blob = io.gets.chomp
+      end
+      
+      IO.popen('git mktree', 'w+') do |io|
+        `git ls-tree master`.each_line do |line|
+          io.puts line unless line =~ /#{path}$/
+        end
+        io.puts "100644 blob #{$blob}	#{path}"
+        io.close_write
+        $tree = io.gets.chomp
+      end
+      
+      previous = `git show --format=format:%H`
+      previous = previous[0, previous.index("\n")]
+      
+      IO.popen("export GIT_AUTHOR_NAME=#{env['REMOTE_ADDR']}; export GIT_AUTHOR_EMAIL=www@fbi.danopia.net; export GIT_COMMITTER_EMAIL=wikis@fbi.danopia.net; export GIT_COMMITTER_NAME=FBI; git commit-tree #{$tree} -p #{previous}", 'w+') do |io|
+        io.puts message
+        io.close_write
+        $commit = io.gets.chomp
+      end
+      
+      `git update-ref refs/heads/master #{$commit} #{previous}`
+      `git push origin master`
+    end
+    
+    @title = path.sub('.md', '')
+    @contents = BlueCloth.new(contents).to_html
+    
+    render :path => 'wiki/show'
+  end
+  
   def save captures, params, env
     return edit(captures, params, env) unless env['REQUEST_METHOD'] == 'POST'
     
@@ -154,13 +205,8 @@ class WikiController < Controller
       `git push origin master`
     end
     
-    @page = Page.new
-    @page.title = path.sub('.md', '')
-    
-    Dir.chdir @repo do
-      @contents = `git show master:#{path}`
-      @contents = BlueCloth.new(@contents).to_html
-    end
+    @title = path.sub('.md', '')
+    @contents = BlueCloth.new(contents).to_html
     
     render :path => 'wiki/show'
   end
@@ -205,7 +251,7 @@ class WikiController < Controller
       @commit = {}
       @commit[:hash] = captures[1]
       
-      author = contents.match(/^Author: ([0-9.]+) \<(.+)\>$/).captures
+      author = contents.match(/^Author: (.+) \<(.+)\>$/).captures
       @commit[:author] = {:name => author[0], :mail => author[1]}
       
       date = contents.match(/^Date:\W+(.+)$/).captures.first
