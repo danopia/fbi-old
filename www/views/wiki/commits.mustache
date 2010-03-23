@@ -1,4 +1,4 @@
-<h2>{{# project }}<a href="{{ show_path }}">{{ title }}</a> / <a href="{{ show_path }}/wiki">wiki</a> / {{/ project }}commit {{# commit }}{{ hash }}{{/ commit }}</h2>
+<h2>{{# project }}<a href="{{ show_path }}">{{ title }}</a> / <a href="{{ wiki_path }}">wiki</a> / {{/ project }}commit {{# commit }}{{ hash }}{{/ commit }}</h2>
 
 <hr />
 
@@ -6,9 +6,9 @@
   <h3>pages</h3>
   <ul style="list-style: none; padding: 0 0 0 1em; margin: 0;" class="fixedwidth">
   {{# pages }}
-    <li><a href="{{# project }}{{ show_path }}{{/ project }}/wiki/show/{{ title }}">{{ title }}</a></li>
+    <li><a href="{{# project }}{{ wiki_path }}{{/ project }}/show/{{ title }}">{{ title }}</a></li>
   {{/ pages }}
-    <li><a href="{{# project }}{{ show_path }}{{/ project }}/wiki/new" style="color: gray;">new page</a></li>
+    <li><a href="{{# project }}{{ wiki_path }}{{/ project }}/new" style="color: gray;">new page</a></li>
   </ul>
 </div>
 
@@ -23,7 +23,7 @@
   
   {{# files }}
     <hr />
-    <h3><a href="{{# project }}{{ show_path }}{{/ project }}/wiki/show/{{ path }}">{{ path }}</a></h3>
+    <h3><a href="{{# project }}{{ wiki_path }}{{/ project }}/show/{{ path }}">{{ path }}</a></h3>
     <pre>{{ diff }}</pre>
   {{/ files }}
 {{/ commit }}

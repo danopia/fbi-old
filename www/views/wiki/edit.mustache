@@ -1,4 +1,4 @@
-<h2>editing {{# project }}<a href="{{ show_path }}">{{ title }}</a> / <a href="{{ show_path }}{{/ project }}/wiki/show/{{ title }}">{{ title }}</a></h2>
+<h2>editing {{# project }}<a href="{{ show_path }}">{{ title }}</a> / <a href="{{ wiki_path }}{{/ project }}/show/{{ title }}">{{ title }}</a></h2>
 
 <hr />
 
@@ -6,14 +6,14 @@
   <h3>pages</h3>
   <ul style="list-style: none; padding: 0 0 0 1em; margin: 0;" class="fixedwidth">
   {{# pages }}
-    <li><a href="{{# project }}{{ show_path }}{{/ project }}/wiki/show/{{ title }}">{{ title }}</a></li>
+    <li><a href="{{# project }}{{ wiki_path }}{{/ project }}/show/{{ title }}">{{ title }}</a></li>
   {{/ pages }}
-    <li><a href="{{# project }}{{ show_path }}{{/ project }}/wiki/new" style="color: gray;">new page</a></li>
+    <li><a href="{{# project }}{{ wiki_path }}{{/ project }}/new" style="color: gray;">new page</a></li>
   </ul>
 </div>
 
-<form method="post" action="/projects/{{# project }}{{ slug }}{{/ project }}/wiki/save/{{# page }}{{ title }}{{/ page }}">
-  <textarea name="contents" cols="80" rows="10">{{# page }}{{ contents }}{{/ page }}</textarea>
+<form method="post" action="{{# project }}{{ wiki_path }}{{/ project }}/save/{{ title }}">
+  <textarea name="contents" cols="80" rows="10">{{ contents }}</textarea>
   <br />
   Message: <input type="text" value="Updated via web interface" name="message" size="100" />
   <br />

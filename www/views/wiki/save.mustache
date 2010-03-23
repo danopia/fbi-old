@@ -1,4 +1,4 @@
-<h2>{{# project }}<a href="{{ show_path }}">{{ title }}</a> / <a href="{{ show_path }}{{/ project }}/wiki/show/{{ title }}">{{ title }}</a> [<a href="{{# project }}{{ show_path }}{{/ project }}/wiki/history/{{ title }}" style="font-size: small;">history</a>]</h2>
+<h2>{{# project }}<a href="{{ show_path }}">{{ title }}</a> / <a href="{{ wiki_path }}{{/ project }}/show/{{ title }}">{{ title }}</a> [<a href="{{# project }}{{ wiki_path }}{{/ project }}/history/{{ title }}" style="font-size: small;">history</a>]</h2>
 
 <hr />
 
@@ -6,14 +6,14 @@
   <h3>pages</h3>
   <ul style="list-style: none; padding: 0 0 0 1em; margin: 0;" class="fixedwidth">
   {{# pages }}
-    <li><a href="{{# project }}{{ show_path }}{{/ project }}/wiki/show/{{ title }}">{{ title }}</a></li>
+    <li><a href="{{# project }}{{ wiki_path }}{{/ project }}/show/{{ title }}">{{ title }}</a></li>
   {{/ pages }}
-    <li><a href="{{# project }}{{ show_path }}{{/ project }}/wiki/new" style="color: gray;">new page</a></li>
+    <li><a href="{{# project }}{{ wiki_path }}{{/ project }}/new" style="color: gray;">new page</a></li>
   </ul>
 </div>
 
 <p>Your changes have been saved.</p>
 
-<p>Return to <a href="/projects/{{# project }}{{ slug }}{{/ project }}{{# page }}/wiki/show/{{ title }}">{{ title }}</a>{{/ page }}.</p>
+<p>Return to <a href="{{# project }}{{ wiki_path }}{{/ project }}/show/{{ title }}">{{ title }}</a>.</p>
 
 <br clear="all" />

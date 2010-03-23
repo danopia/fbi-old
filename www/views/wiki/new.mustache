@@ -1,4 +1,4 @@
-<h2>{{# project }}<a href="{{ show_path }}">{{ title }}</a> / <a href="{{ show_path }}/wiki">wiki</a> / {{/ project }}new page</h2>
+<h2>{{# project }}<a href="{{ show_path }}">{{ title }}</a> / <a href="{{ wiki_path }}">wiki</a> / {{/ project }}new page</h2>
 
 <hr />
 
@@ -6,13 +6,13 @@
   <h3>pages</h3>
   <ul style="list-style: none; padding: 0 0 0 1em; margin: 0;" class="fixedwidth">
   {{# pages }}
-    <li><a href="{{# project }}{{ show_path }}{{/ project }}/wiki/show/{{ title }}">{{ title }}</a></li>
+    <li><a href="{{# project }}{{ wiki_path }}{{/ project }}/show/{{ title }}">{{ title }}</a></li>
   {{/ pages }}
-    <li><a href="{{# project }}{{ show_path }}{{/ project }}/wiki/new" style="color: gray;">new page</a></li>
+    <li><a href="{{# project }}{{ wiki_path }}{{/ project }}/new" style="color: gray;">new page</a></li>
   </ul>
 </div>
 
-<form method="post" action="{{# project }}{{ show_path }}{{/ project }}/wiki/new">
+<form method="post" action="{{# project }}{{ wiki_path }}{{/ project }}/new">
   Filename: <input type="text" value="new_page" name="title" size="100" />
   <br />
   <textarea name="contents" cols="80" rows="10">{{ contents }}</textarea>
