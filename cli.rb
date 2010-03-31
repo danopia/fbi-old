@@ -14,7 +14,7 @@ Thread.new { begin; client.start_loop; rescue => ex; puts ex,ex.message,ex.backt
 
 while true
   action = gets.chomp
-  next unless action.any?
+  next if action.size == 0
   
   case action
     when 'subscribe', 'join', 'sub'
