@@ -188,10 +188,7 @@ class MailServer < FBI::LineConnection
   end
   
   def handle_message
-    if @@handler && @@handler.call(@message)
-      @message = nil
-      return
-    end
+    @@handler && @@handler.call(@message)
 
     if @message.remote && @relay
       MailSender.send @message
@@ -229,7 +226,7 @@ EventMachine::next_tick do
       end_index = message.body.index("\n\nModified Paths:") - 1
       log = message.body[index..end_index]
       
-      fbi.publish '#commits', [{
+      fbi.send '#commits', [{
         :project => project,
         :owner => nil,
         :fork => false,
@@ -260,17 +257,23 @@ EventMachine::next_tick do
       end
       
       return unless project
-      fbi.publish '#mailinglist', [{
+      fbi.send '#mailinglist', [{
         :list => list,
         :author => author,
         :subject => subject,
         :url => archive,
         :project => project,
       }]
+      
     else
-      next false
+    
+      fbi.send '#email', {
+        :from => message.from,
+        :to => message.to,
+        :body => message.body,
+      }
+      
     end
-    true
   end
   
   puts "Started mail server"
