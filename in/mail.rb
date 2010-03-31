@@ -228,7 +228,7 @@ class MailServer < FBI::LineConnection
   end
   
   def handle_message
-    @@handler && @@handler.call(@message)
+    @@handler && @@handler.call(@remote_host, @message)
 
     if @message.remote && @relay
       MailSender.send @message
@@ -246,7 +246,7 @@ EventMachine::next_tick do
   submission = EventMachine::start_server '127.0.0.1', 587, MailServer, true
   MailServer.domains << 'fbi.danopia.net' # accept mail to this domain
   
-  MailServer.on_message do |message|
+  MailServer.on_message do |remote_host, message|
     #File.open('mail.txt', 'w') {|f| f.puts @message }
     if message.body.include?('Log Message:') && message.from.include?('sourceforge.net')
       
@@ -312,6 +312,7 @@ EventMachine::next_tick do
       :from => message.from,
       :to => message.to,
       :body => message.body,
+      :remote_host => remote_host,
       :mode => "incoming",
     }
   end
