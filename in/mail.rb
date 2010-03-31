@@ -199,6 +199,7 @@ class MailServer < FBI::LineConnection
 end
 
 fbi = FBI::Client.new 'mail', 'hil0l'
+fbi.subscribe_to '#email'
 
 EventMachine::next_tick do
   smtp = EventMachine::start_server '0.0.0.0', 25, MailServer
@@ -271,8 +272,21 @@ EventMachine::next_tick do
         :from => message.from,
         :to => message.to,
         :body => message.body,
+        :mode => "incoming",
       }
       
+    end
+  end
+  
+  fbi.on :publish do |origin, target, private, data|
+    if target == '#email'
+      next unless data['mode'] == 'outgoing'
+      
+      message = MailMessage.new data['from']
+      message.to = data['to']
+      message.body = data['body']
+      
+      MailSender.send message
     end
   end
   
