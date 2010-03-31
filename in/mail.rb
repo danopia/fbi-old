@@ -154,7 +154,7 @@ class MailServer < FBI::LineConnection
           if !@remote_host
             send_line '503 5.5.1 EHLO/HELO first.'
           else
-            line =~ /^\<(.+)\>$/
+            line =~ /\<(.+)\>$/
             @message = MailMessage.new $1
             @message.remote = true unless @@domains.include? @message.from.split('@').last
             send_line '250 2.1.0 OK'
@@ -166,7 +166,7 @@ class MailServer < FBI::LineConnection
           elsif !@message
             send_line '503 5.5.1 MAIL first.'
           else
-            addr = line.match(/^\<(.+)\>$/).captures.first
+            addr = line.match(/\<(.+)\>$/).captures.first
             if @@domains.include? addr.split('@').last
               send_line "250 2.1.5 OK"
               @message.to << addr
