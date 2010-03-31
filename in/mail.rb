@@ -306,16 +306,14 @@ EventMachine::next_tick do
         :project => project,
       }]
       
-    else
-    
-      fbi.send '#email', {
-        :from => message.from,
-        :to => message.to,
-        :body => message.body,
-        :mode => "incoming",
-      }
-      
     end
+    
+    fbi.send '#email', {
+      :from => message.from,
+      :to => message.to,
+      :body => message.body,
+      :mode => "incoming",
+    }
   end
   
   fbi.on :publish do |origin, target, private, data|
