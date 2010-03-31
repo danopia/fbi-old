@@ -29,13 +29,13 @@ class WikiController < Controller
     Dir.chdir @repo do
       `git init --bare`
       
-      IO.popen('git hash-object -w --path index.md --stdin', 'w+') do |io|
+      IO.popen('git --bare hash-object -w --stdin', 'w+') do |io|
         io.puts "This is the wiki for #{@project.title}."
         io.close_write
         $blob = io.gets.chomp
       end
       
-      IO.popen('git hash-object -w --path README --stdin', 'w+') do |io|
+      IO.popen('git --bare hash-object -w --stdin', 'w+') do |io|
         io.puts "This is the FBI wiki repo for #{@project.title}."
         io.puts
         io.puts "This repo is used to allow flexible editing of the wiki."
@@ -124,7 +124,7 @@ class WikiController < Controller
     path = "#{@title}.md"
     
     Dir.chdir @repo do
-      IO.popen("git hash-object -w --path #{path} --stdin", 'w+') do |io|
+      IO.popen("git --bare hash-object -w --stdin", 'w+') do |io|
         io.puts contents
         io.close_write
         $blob = io.gets.chomp
@@ -139,7 +139,7 @@ class WikiController < Controller
         $tree = io.gets.chomp
       end
       
-      previous = `git show --format=format:%H`
+      previous = `git show --pretty=format:%H`
       previous = previous[0, previous.index("\n")]
       
       IO.popen("export GIT_AUTHOR_NAME=#{env['REMOTE_ADDR']}; export GIT_AUTHOR_EMAIL=www@fbi.danopia.net; export GIT_COMMITTER_EMAIL=wikis@fbi.danopia.net; export GIT_COMMITTER_NAME=FBI; git commit-tree #{$tree} -p #{previous}", 'w+') do |io|
@@ -176,7 +176,7 @@ class WikiController < Controller
     Dir.chdir @repo do
       # pull
       
-      IO.popen("git hash-object -w --path #{path} --stdin", 'w+') do |io|
+      IO.popen("git --bare hash-object -w --stdin", 'w+') do |io|
         io.puts contents
         io.close_write
         $blob = io.gets.chomp
@@ -191,7 +191,7 @@ class WikiController < Controller
         $tree = io.gets.chomp
       end
       
-      previous = `git show --format=format:%H`
+      previous = `git show --pretty=format:%H`
       previous = previous[0, previous.index("\n")]
       
       IO.popen("export GIT_AUTHOR_NAME=#{env['REMOTE_ADDR']}; export GIT_AUTHOR_EMAIL=www@fbi.danopia.net; export GIT_COMMITTER_EMAIL=wikis@fbi.danopia.net; export GIT_COMMITTER_NAME=FBI; git commit-tree #{$tree} -p #{previous}", 'w+') do |io|
