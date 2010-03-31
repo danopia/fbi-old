@@ -139,48 +139,88 @@ class MailServer < FBI::LineConnection
       case args.first.upcase
       
         when 'HELO'
+          @remote_host = args[1]
           send_line "250 #{@@hostname} at your service"
           
         when 'EHLO'
+          @remote_host = args[1]
           send_line "250-#{@@hostname} at your service"
-          send_line "250-SIZE 35651584" # heh? got this from google
-          send_line "250-8BITMIME"
-          send_line "250-ENHANCEDSTATUSCODES"
-          send_line "250 PIPELINING"
+          send_line '250-SIZE 35651584' # heh? got this from google. max body size?
+          send_line '250-8BITMIME'
+          send_line '250-ENHANCEDSTATUSCODES'
+          send_line '250 PIPELINING' # heh?
           
         when 'MAIL'
-          args[1] =~ /^FROM:\<(.+)\>$/i
-          @message = MailMessage.new($1 || args[2][1..-2])
-          @message.remote = true unless @@domains.include? @message.from.split('@').last
-          send_line "250 2.1.0 OK"
+          if !@remote_host
+            send_line '503 5.5.1 EHLO/HELO first.'
+          else
+            line =~ /^\<(.+)\>$/
+            @message = MailMessage.new $1
+            @message.remote = true unless @@domains.include? @message.from.split('@').last
+            send_line '250 2.1.0 OK'
+          end
           
         when 'RCPT'
-          args[1] =~ /^TO:\<(.+)\>$/i
-          addr = $1 || args[2][1..-2]
-          if @@domains.include? addr.split('@').last
-            send_line "250 2.1.5 OK"
-            @message.to << addr
-          elsif @relay
-            send_line "250 2.1.5 OK"
-            @message.to << addr
-            @message.remote ||= true
-          else # don't want to be marked as an open relay
-            send_line "550 5.1.1 The email account that you tried to reach does not exist."
+          if !@remote_host
+            send_line '503 5.5.1 EHLO/HELO first.'
+          elsif !@message
+            send_line '503 5.5.1 MAIL first.'
+          else
+            addr = line.match(/^\<(.+)\>$/).captures.first
+            if @@domains.include? addr.split('@').last
+              send_line "250 2.1.5 OK"
+              @message.to << addr
+            elsif @relay
+              send_line "250 2.1.5 OK"
+              @message.to << addr
+              @message.remote ||= true
+            else # don't want to be marked as an open relay
+              send_line "550 5.1.1 The email account that you tried to reach does not exist."
+            end
           end
         
         when 'DATA'
-          @in_message = true
-          @message.body = ''
-          send_line "354  Go ahead"
+          if !@remote_host
+            send_line '503 5.5.1 EHLO/HELO first.'
+          elsif !@message
+            send_line '503 5.5.1 MAIL first.'
+          elsif @message.to.empty?
+            send_line '503 5.5.1 RCPT first.'
+          else
+            @in_message = true
+            @message.body = ''
+            send_line "354  Go ahead"
+          end
+          
+        when 'RSET'
+          @message = nil
+          send_line '250 2.1.5 Flushed'
+          
+        when 'VRFY'
+          send_line '252 2.1.5 Send some mail, I\'ll try my best'
+          
+        when 'EXPN'
+          send_line '502 5.5.1 Unimplemented command.'
+          
+        when 'NOOP'
+          send_line '250 2.0.0 OK'
+          
+        when 'HELP'
+          send_line '214 2.0.0 http://www.google.com/search?btnI&q=RFC+2821'
           
         when 'QUIT'
           send_line "221 2.0.0 #{@@hostname} closing connection"
-          close_connection
+          close_connection_after_waiting
+        
+        else
+          send_line '502 5.5.1 Unrecognized command.'
       end
+      
     elsif line == '.'
       @in_message = false
       handle_message
       send_line '250 2.0.0 OK'
+      
     else
       line = line[1..-1] if line[0,1] == '.'
       @message.body << line + "\n"
