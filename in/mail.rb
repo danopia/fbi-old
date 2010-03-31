@@ -210,7 +210,7 @@ class MailServer < FBI::LineConnection
           
         when 'QUIT'
           send_line "221 2.0.0 #{@@hostname} closing connection"
-          close_connection_after_waiting
+          close_connection_after_writing
         
         else
           send_line '502 5.5.1 Unrecognized command.'
