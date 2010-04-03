@@ -46,42 +46,43 @@ Rackup = Rack::Builder.new do
       require 'lib/controller'
       require 'lib/model'
       
-      routing = Routing.new
-      
-      routing.setup do
+      routing = Routing.new do
         connect '/?$', 'home', 'index'
         
         connect '/projects/?$', 'projects', 'main'
         connect '/projects/new$', 'projects', 'new'
-        connect '/projects/([^/]+)/?$', 'projects', 'show'
-        connect '/projects/([^/]+)/edit$', 'projects', 'edit'
         
-        connect '/projects/([^/]+)/members/add$', 'projects', 'add_member'
-        connect '/projects/([^/]+)/members/join$', 'projects', 'join'
-        
-        sub_route '/projects/([^/]+)/repos' do
-          connect '/?$', 'repos', 'list'
-          connect '/new$', 'repos', 'new'
-          connect '/([^/]+)/?$', 'repos', 'show'
-          connect '/([^/]+)/edit$', 'repos', 'edit'
-          connect '/([^/]+)/tree/(.*)$', 'repos', 'tree'
-          connect '/([^/]+)/blob/(.+)$', 'repos', 'blob'
-        end
-        
-        sub_route '/projects/([^/]+)/commits' do
-          connect '/?$', 'commits', 'list', :mode => 'project'
-          connect '/authors/([^/]+)/?$', 'commits', 'list', :mode => 'author'
-          connect '/repos/([^/]+)/?$', 'commits', 'list', :mode => 'repo'
-        end
-        
-        sub_route '/projects/([^/]+)/wiki' do
-          connect '/?$', 'wiki', 'index'
-          connect '/show/([^/]+)$', 'wiki', 'show'
-          connect '/new/?', 'wiki', 'new'
-          connect '/edit/([^/]+)$', 'wiki', 'edit'
-          connect '/save/([^/]+)$', 'wiki', 'save'
-          connect '/history/([^/]+)$', 'wiki', 'history'
-          connect '/commits/([^/]+)$', 'wiki', 'commits'
+        sub_route '/projects/([^/]+)' do
+          connect '/?$', 'projects', 'show'
+          connect '/edit$', 'projects', 'edit'
+          
+          connect '/members/add$', 'projects', 'add_member'
+          connect '/members/join$', 'projects', 'join'
+          
+          sub_route '/repos' do
+            connect '/?$', 'repos', 'list'
+            connect '/new$', 'repos', 'new'
+            connect '/([^/]+)/?$', 'repos', 'show'
+            connect '/([^/]+)/edit$', 'repos', 'edit'
+            connect '/([^/]+)/tree/(.*)$', 'repos', 'tree'
+            connect '/([^/]+)/blob/(.+)$', 'repos', 'blob'
+          end
+          
+          sub_route '/commits' do
+            connect '/?$', 'commits', 'list', :mode => 'project'
+            connect '/authors/([^/]+)/?$', 'commits', 'list', :mode => 'author'
+            connect '/repos/([^/]+)/?$', 'commits', 'list', :mode => 'repo'
+          end
+          
+          sub_route '/wiki' do
+            connect '/?$', 'wiki', 'index'
+            connect '/show/([^/]+)$', 'wiki', 'show'
+            connect '/new/?', 'wiki', 'new'
+            connect '/edit/([^/]+)$', 'wiki', 'edit'
+            connect '/save/([^/]+)$', 'wiki', 'save'
+            connect '/history/([^/]+)$', 'wiki', 'history'
+            connect '/commits/([^/]+)$', 'wiki', 'commits'
+          end
         end
         
         sub_route '/users' do
@@ -131,14 +132,17 @@ Rackup = Rack::Builder.new do
       #~ return [ex.code, {'Content-Type' => 'text/plain'}, "404: Page not found."]
     rescue Redirect => ex
       path = "#{env['rack.url_scheme']}://#{env['HTTP_HOST']}#{ex.message}"
+      $headers ||= {}
       $headers['Location'] = path
       return [ex.code, $headers, "You are being redirected to #{path}"]
     rescue HTTPError => ex
+      $headers ||= {}
       $headers['Content-Type'] = 'text/plain'
       return [ex.code, $headers, ex.inspect]
       
     rescue => ex
       puts ex, ex.message, ex.backtrace
+      $headers ||= {}
       $headers['Content-Type'] = 'text/plain'
       return [500, $headers, ex.inspect + "\n" + ex.message + "\n" + ex.backtrace.join("\n")]
     end

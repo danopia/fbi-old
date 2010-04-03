@@ -51,7 +51,6 @@ class ReposController < Controller
   def show captures, params, env
     @project = Project.find :slug => captures.first
     raise FileNotFound unless @project
-    raise PermissionDenied unless @project.owner? env[:user]
     
     @repo = @project.repo_by :slug => captures[1]
     raise FileNotFound unless @repo
