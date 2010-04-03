@@ -67,7 +67,7 @@ class Route
   end
   
   def controller_name
-    @klass.capitalize + 'Controller'
+    @klass.capitalize.gsub(/_./){|c| c[1,1].upcase } + 'Controller'
   end
   
   def controller_class

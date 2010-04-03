@@ -1,7 +1,7 @@
 class IrcNetwork < FBI::Model
 
   def hostname; @data[:hostname]; end
-  def port; @data[:port]; end
+  def port; @data[:port] ||= 6667; end
   def title; @data[:title]; end
   def last_connected; @data[:last_connected]; end
   
@@ -11,11 +11,11 @@ class IrcNetwork < FBI::Model
   def last_connected= new; @data[:last_connected] = new; end
 
   def channels filters={}
-    fields[:network_id] = @id
+    filters[:network_id] = @id
     IrcChannel.where(filters).each {|repo| repo.network = self }
   end
   def channel_by filters={}
-    fields[:network_id] = @id
+    filters[:network_id] = @id
     IrcChannel.find filters
   end
   def new_channel fields={}

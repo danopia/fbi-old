@@ -35,8 +35,6 @@ class ProjectsController < Controller
     
     return unless post?
     
-    data = CGI.parse env['rack.input'].read
-    
     @project.title = form_fields['title']
     @project.slug = form_fields['slug']
     @project.save

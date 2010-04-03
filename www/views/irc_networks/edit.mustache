@@ -1,0 +1,31 @@
+{{# network }}
+<h2>Editing Network: {{{ show_link }}}</h2>
+<hr />
+
+<p>Adding a network to FBI's list allows users of the network to add
+FBI bots to their channels and do cool and fun things with it!</p>
+
+<style>
+table { margin: 0 auto; }
+th { text-align: right; }
+td, th { width: 50%; }
+</style>
+
+<p>{{ message }}</p>
+
+<form action="{{{ edit_link }}}" method="post" name="edit_network">
+  <table>
+    <tr>
+      <th>Hostname:</th>
+      <td><input type="text" name="hostname" value="{{ hostname }}" /></td>
+    </tr>
+    <tr>
+      <th>Port:</th>
+      <td><input type="text" name="port" value="{{ port }}" /></td>
+    </tr>
+    <tr>
+      <td colspan="2" align="center"><input type="submit" value="Update" /></td>
+    </tr>
+  </table>
+</form>
+{{/ network }}

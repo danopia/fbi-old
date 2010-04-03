@@ -3,7 +3,7 @@ class CreateIrcTablesMigration
     db.sequel.create_table :irc_networks do |t|
       primary_key :id
 
-      String :title, :null => false
+      String :title
       String :hostname, :null => false
       integer :port, :default => 6667, :null => false
 

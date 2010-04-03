@@ -88,6 +88,24 @@ Rackup = Rack::Builder.new do
           connect '/([^/]+)/edit$', 'services', 'edit'
         end
         
+        sub_route '/irc' do
+          sub_route '/networks' do
+            connect '/?$', 'irc_networks', 'list'
+            connect '/new$', 'irc_networks', 'new'
+            connect '/([^/]+)/?$', 'irc_networks', 'show'
+            connect '/([^/]+)/edit$', 'irc_networks', 'edit'
+          
+            sub_route '/([^/]+)/channels' do
+              connect '/?$', 'irc_channels', 'list'
+              connect '/new$', 'irc_channels', 'new', :with => :network
+              connect '/([^/]+)/?$', 'irc_channels', 'show'
+              connect '/([^/]+)/edit$', 'irc_channels', 'edit'
+            end
+          end
+          
+          connect '/channels/new$', 'irc_channels', 'new'
+        end
+        
         connect '/login$', 'account', 'login'
         connect '/logout$', 'account', 'logout'
       end
