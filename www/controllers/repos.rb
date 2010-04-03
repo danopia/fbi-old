@@ -3,8 +3,8 @@ class ReposController < Controller
   
   def new captures, params, env
     @project = Project.find :slug => captures.first
-    raise FileNotFound unless @project
-    raise PermissionDenied unless @project.owner? env[:user]
+    raise HTTP::NotFound unless @project
+    raise HTTP::Forbidden unless @project.owner? env[:user]
     
     @repo = @project.new_repo
     
@@ -19,7 +19,7 @@ class ReposController < Controller
       @repo.save
       
       #render :text => 'The repository has been added.'
-      raise Redirect, @repo.show_path
+      raise HTTP::Found, @repo.show_path
     else
       @services = Service.all
     end
@@ -27,11 +27,11 @@ class ReposController < Controller
   
   def edit captures, params, env
     @project = Project.find :slug => captures.first
-    raise FileNotFound unless @project
-    raise PermissionDenied unless @project.owner? env[:user]
+    raise HTTP::NotFound unless @project
+    raise HTTP::Forbidden unless @project.owner? env[:user]
     
     @repo = @project.repo_by :slug => captures[1]
-    raise FileNotFound unless @repo
+    raise HTTP::NotFound unless @repo
     
     if env['REQUEST_METHOD'] == 'POST'
       data = CGI.parse env['rack.input'].read
@@ -44,33 +44,33 @@ class ReposController < Controller
       @repo.save
       
       #render :text => 'The repository has been updated.'
-      raise Redirect, @repo.show_path
+      raise HTTP::Found, @repo.show_path
     end
   end
   
   def show captures, params, env
     @project = Project.find :slug => captures.first
-    raise FileNotFound unless @project
+    raise HTTP::NotFound unless @project
     
     @repo = @project.repo_by :slug => captures[1]
-    raise FileNotFound unless @repo
+    raise HTTP::NotFound unless @repo
   end
   
   def list captures, params, env
     @project = Project.find :slug => captures.first
-    raise FileNotFound unless @project
-    raise PermissionDenied unless @project.owner? env[:user]
+    raise HTTP::NotFound unless @project
+    raise HTTP::Forbidden unless @project.owner? env[:user]
     
     @repos = @project.repos
   end
   
   def tree captures, params, env
     @project = Project.find :slug => captures.first
-    raise FileNotFound unless @project
-    raise PermissionDenied unless @project.owner? env[:user]
+    raise HTTP::NotFound unless @project
+    raise HTTP::Forbidden unless @project.owner? env[:user]
     
     @repo = @project.repo_by :slug => captures[1]
-    raise FileNotFound unless @repo
+    raise HTTP::NotFound unless @repo
     
 		@repo_path = File.join(File.dirname(__FILE__), '..', 'repos', @repo.id.to_s)
     
@@ -86,11 +86,11 @@ class ReposController < Controller
   
   def blob captures, params, env
     @project = Project.find :slug => captures.first
-    raise FileNotFound unless @project
-    raise PermissionDenied unless @project.owner? env[:user]
+    raise HTTP::NotFound unless @project
+    raise HTTP::Forbidden unless @project.owner? env[:user]
     
     @repo = @project.repo_by :slug => captures[1]
-    raise FileNotFound unless @repo
+    raise HTTP::NotFound unless @repo
     
 		@repo_path = File.join(File.dirname(__FILE__), '..', 'repos', @repo.id.to_s)
     

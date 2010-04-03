@@ -15,7 +15,7 @@ class AccountController < Controller
       @user.save
       
       #render :text => 'Your profile has been updated.'
-      raise Redirect, @user.profile_path
+      raise HTTP::Found, @user.profile_path
     end
   end
   
@@ -37,7 +37,7 @@ class AccountController < Controller
       @env[:session] = @user.create_session env['REMOTE_ADDR']
       
       #render :text => 'Your account has been registered.'
-      raise Redirect, @user.profile_path
+      raise HTTP::Found, @user.profile_path
     end
   end
   
@@ -51,7 +51,7 @@ class AccountController < Controller
         env[:user] = @user
         
         #render :text => 'You have logged in.'
-        raise Redirect, @user.profile_path
+        raise HTTP::Found, @user.profile_path
       else
         @message = 'The username or password was incorrect.'
       end
@@ -76,6 +76,6 @@ class AccountController < Controller
     env[:session] = nil
 
     #render :text => 'You have logged out.'
-    raise Redirect, '/'
+    raise HTTP::Found, '/'
   end
 end

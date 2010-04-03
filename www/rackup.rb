@@ -12,14 +12,6 @@ Mustache.template_path = File.dirname(__FILE__) + '/views'
 
 $www_fbi = FBI::Client.new 'www-' + rand.to_s, 'hil0l'
 $www_fbi.connect
-      
-class HTTPError < StandardError; def code; 500; end; end
-class FileNotFound < HTTPError; def code; 404; end; end
-class Redirect < HTTPError; def code; 302; end; end
-class TempRedirect < Redirect; def code; 302; end; end
-class PermRedirect < Redirect; def code; 301; end; end
-class PermissionDenied < HTTPError; def code; 403; end; end
-class ServersideError < HTTPError; def code; 500; end; end
 
 Rackup = Rack::Builder.new do
   fbi = $www_fbi
@@ -45,6 +37,7 @@ Rackup = Rack::Builder.new do
       require 'lib/renderer'
       require 'lib/controller'
       require 'lib/model'
+      require 'lib/errors'
       
       routing = Routing.new do
         connect '/?$', 'home', 'index'
@@ -108,41 +101,35 @@ Rackup = Rack::Builder.new do
         connect '/logout$', 'account', 'logout'
       end
       
+      # This is a hackity hack.
+      $headers = {'Content-Type' => 'text/html'}
       
       # This is a hackity hack.
       parts = env['PATH_INFO'][1..-1].split('/')
       if parts.any? && File.exists?(File.join(File.dirname(__FILE__), 'webhooks', parts[0] + '.rb'))
         require File.join(File.dirname(__FILE__), 'webhooks', parts[0] + '.rb')
         Class.const_get(parts[0].capitalize + 'Hook').new.run env, fbi
-        return [200, {'Content-Type' => 'text/plain'}, "Hook processed."]
+        raise HTTP::OK, "Hook processed."
       end
       
-      
       route = routing.find env['PATH_INFO']
-      raise FileNotFound unless route
-      
-      $headers = {'Content-Type' => 'text/html'}
+      raise HTTP::NotFound unless route
       
       env[:session] = UserSession.load env
       env[:user] = env[:session] && env[:session].user
       
-      return [200, $headers, route.handle(env['PATH_INFO'], env)]
+      raise HTTP::OK, route.handle(env['PATH_INFO'], env)
       
-    #~ rescue FileNotFound => ex
-      #~ return [ex.code, {'Content-Type' => 'text/plain'}, "404: Page not found."]
-    rescue Redirect => ex
-      path = "#{env['rack.url_scheme']}://#{env['HTTP_HOST']}#{ex.message}"
-      $headers ||= {}
+    rescue HTTP::Redirect => ex
+      path = "#{env['rack.url_scheme']}://#{env['HTTP_HOST']}#{ex.path}"
       $headers['Location'] = path
-      return [ex.code, $headers, "You are being redirected to #{path}"]
-    rescue HTTPError => ex
-      $headers ||= {}
-      $headers['Content-Type'] = 'text/plain'
-      return [ex.code, $headers, ex.inspect]
+      return [ex.code, $headers, ex.message]
+      
+    rescue HTTP::Error => ex
+      return [ex.code, $headers, ex.message]
       
     rescue => ex
       puts ex, ex.message, ex.backtrace
-      $headers ||= {}
       $headers['Content-Type'] = 'text/plain'
       return [500, $headers, ex.inspect + "\n" + ex.message + "\n" + ex.backtrace.join("\n")]
     end

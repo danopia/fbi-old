@@ -73,7 +73,7 @@ class WikiController < Controller
     @pages = []
     
     @project = Project.find :slug => project
-    raise FileNotFound unless @project
+    raise HTTP::NotFound unless @project
     
     @repo = File.join(File.dirname(__FILE__), '..', 'wikis', @project.slug)
     
@@ -156,7 +156,7 @@ class WikiController < Controller
     #@contents = BlueCloth.new(contents).to_html
     #@pages << {:title => @title}
     
-    raise Redirect, "#{@project.wiki_path}/show/#{@title}"
+    raise HTTP::Found, "#{@project.wiki_path}/show/#{@title}"
   end
   
   def save captures, params, env
@@ -207,12 +207,12 @@ class WikiController < Controller
     @title = path.sub('.md', '')
     #@contents = BlueCloth.new(contents).to_html
     
-    raise Redirect, "#{@project.wiki_path}/show/#{@title}"
+    raise HTTP::Found, "#{@project.wiki_path}/show/#{@title}"
   end
   
   def index captures, params, env
     setup captures.first
-    raise Redirect, "#{@project.wiki_path}/show/index"
+    raise HTTP::Found, "#{@project.wiki_path}/show/index"
   end
   
   def show captures, params, env

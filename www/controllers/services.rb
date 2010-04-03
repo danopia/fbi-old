@@ -9,11 +9,11 @@ class ServicesController < Controller
   def show captures, params, env
     @mine = env[:user].id == 1
     @service = Service.find :slug => captures.first
-    raise FileNotFound unless @service
+    raise HTTP::NotFound unless @service
   end
   
   def new captures, params, env
-    raise PermissionDenied unless env[:user].id == 1
+    raise HTTP::Forbidden unless env[:user].id == 1
     
     @service = Service.new
     
@@ -30,15 +30,15 @@ class ServicesController < Controller
       @service.save
 
       #render :text => 'The project has been registered.'
-      raise Redirect, @service.show_path
+      raise HTTP::Found, @service.show_path
     end
   end
   
   def edit captures, params, env
-    raise PermissionDenied unless env[:user].id == 1
+    raise HTTP::Forbidden unless env[:user].id == 1
     
     @service = Service.find :slug => captures[0]
-    raise FileNotFound unless @service
+    raise HTTP::NotFound unless @service
     
     if env['REQUEST_METHOD'] == 'POST'
       data = CGI.parse env['rack.input'].read
@@ -53,7 +53,7 @@ class ServicesController < Controller
       @service.save
       
       #render :text => 'The service has been updated.'
-      raise Redirect, @service.show_path
+      raise HTTP::Found, @service.show_path
     end
   end
 end
