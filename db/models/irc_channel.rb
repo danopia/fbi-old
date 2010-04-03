@@ -1,12 +1,12 @@
+require 'cgi'
+
 class IrcChannel < FBI::Model
 
   def name; @data[:name]; end
   def catchall; @data[:catchall]; end
   
-  def hostname= new; @data[:hostname] = new; end
-  def port= new; @data[:port] = new; end
-  def title= new; @data[:title] = new; end
-  def last_connected= new; @data[:last_connected] = new; end
+  def name= new; @data[:name] = new; end
+  def catchall= new; @data[:catchall] = new; end
 
   def subs filters={}
     fields[:channel_id] = @id
@@ -42,12 +42,14 @@ class IrcChannel < FBI::Model
   def project; @project ||= @data[:project_id] && Project.find(:id => @data[:project_id]); end
   def project= new; @project = new; @data[:project_id] = new && new.id; end
   
+  def slug; CGI::escape name; end
+  
   def network_path; network.show_path; end
   def show_path; "#{network.channels_path}/#{slug}"; end
   def edit_path; "#{show_path}/edit"; end
   def projects_path; "#{show_path}/projects"; end
   
   def network_link; network.show_link; end
-  def show_link; "<a href=\"#{show_path}\">#{title}</a>"; end
+  def show_link; "<a href=\"#{show_path}\">#{name}</a>"; end
   def full_link; "#{network_link} / #{show_link}"; end
 end
