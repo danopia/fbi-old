@@ -131,13 +131,16 @@ Rackup = Rack::Builder.new do
       #~ return [ex.code, {'Content-Type' => 'text/plain'}, "404: Page not found."]
     rescue Redirect => ex
       path = "#{env['rack.url_scheme']}://#{env['HTTP_HOST']}#{ex.message}"
-      return [ex.code, {'Content-Type' => 'text/plain', 'Location' => path}, "You are being redirected to #{path}"]
+      $headers['Location'] = path
+      return [ex.code, $headers, "You are being redirected to #{path}"]
     rescue HTTPError => ex
-      return [ex.code, {'Content-Type' => 'text/plain'}, ex.inspect]
+      $headers['Content-Type'] = 'text/plain'
+      return [ex.code, $headers, ex.inspect]
       
     rescue => ex
       puts ex, ex.message, ex.backtrace
-      return [500, {'Content-Type' => 'text/plain'}, ex.inspect + "\n" + ex.message + "\n" + ex.backtrace.join("\n")]
+      $headers['Content-Type'] = 'text/plain'
+      return [500, $headers, ex.inspect + "\n" + ex.message + "\n" + ex.backtrace.join("\n")]
     end
   end
   run app
