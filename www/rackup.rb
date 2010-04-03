@@ -42,6 +42,9 @@ Rackup = Rack::Builder.new do
       routing = Routing.new do
         connect '/?$', 'home', 'index'
         
+        connect '/github$', 'hooks', 'github'
+        connect '/bitbucket$', 'hooks', 'bitbucket'
+        
         connect '/projects/?$', 'projects', 'main'
         connect '/projects/new$', 'projects', 'new'
         
