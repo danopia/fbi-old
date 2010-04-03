@@ -12,7 +12,14 @@ Mustache.template_path = File.dirname(__FILE__) + '/views'
 
 $www_fbi = FBI::Client.new 'www-' + rand.to_s, 'hil0l'
 $www_fbi.connect
-
+      
+class HTTPError < StandardError; def code; 500; end; end
+class FileNotFound < HTTPError; def code; 404; end; end
+class Redirect < HTTPError; def code; 302; end; end
+class TempRedirect < Redirect; def code; 302; end; end
+class PermRedirect < Redirect; def code; 301; end; end
+class PermissionDenied < HTTPError; def code; 403; end; end
+class ServersideError < HTTPError; def code; 500; end; end
 
 Rackup = Rack::Builder.new do
   fbi = $www_fbi
@@ -100,28 +107,37 @@ Rackup = Rack::Builder.new do
         connect '/logout$', 'account', 'logout'
       end
       
-      parts = env['PATH_INFO'][1..-1].split('/')
       
+      # This is a hackity hack.
+      parts = env['PATH_INFO'][1..-1].split('/')
       if parts.any? && File.exists?(File.join(File.dirname(__FILE__), 'webhooks', parts[0] + '.rb'))
         require File.join(File.dirname(__FILE__), 'webhooks', parts[0] + '.rb')
         Class.const_get(parts[0].capitalize + 'Hook').new.run env, fbi
         return [200, {'Content-Type' => 'text/plain'}, "Hook processed."]
       end
       
+      
       route = routing.find env['PATH_INFO']
-      if !route
-        return [404, {'Content-Type' => 'text/plain'}, "404: Page not found."]
-      end
+      raise FileNotFound unless route
       
       $headers = {'Content-Type' => 'text/html'}
       
       env[:session] = UserSession.load env
       env[:user] = env[:session] && env[:session].user
       
-      [200, $headers, route.handle(env['PATH_INFO'], env)]
+      return [200, $headers, route.handle(env['PATH_INFO'], env)]
+      
+    #~ rescue FileNotFound => ex
+      #~ return [ex.code, {'Content-Type' => 'text/plain'}, "404: Page not found."]
+    rescue Redirect => ex
+      path = "#{env['rack.url_scheme']}://#{env['HTTP_HOST']}#{ex.message}"
+      return [ex.code, {'Content-Type' => 'text/plain', 'Location' => path}, "You are being redirected to #{path}"]
+    rescue HTTPError => ex
+      return [ex.code, {'Content-Type' => 'text/plain'}, ex.inspect]
       
     rescue => ex
       puts ex, ex.message, ex.backtrace
+      return [500, {'Content-Type' => 'text/plain'}, ex.inspect + "\n" + ex.message + "\n" + ex.backtrace.join("\n")]
     end
   end
   run app

@@ -10,6 +10,7 @@ class UsersController < Controller
       @user = env[:user]
     else
       @user = User.find :username => captures.first
+      raise FileNotFound unless @user
     end
     
     render :context => {

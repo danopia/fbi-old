@@ -73,9 +73,9 @@ class WikiController < Controller
     @pages = []
     
     @project = Project.find :slug => project
-    @repo = File.join(File.dirname(__FILE__), '..', 'wikis', @project.slug)
+    raise FileNotFound unless @project
     
-    return unless @project.slug
+    @repo = File.join(File.dirname(__FILE__), '..', 'wikis', @project.slug)
     
     if File.directory? @repo
       #pull
@@ -153,10 +153,10 @@ class WikiController < Controller
     end
     
     @title = path.sub('.md', '')
-    @contents = BlueCloth.new(contents).to_html
-    @pages << {:title => @title}
+    #@contents = BlueCloth.new(contents).to_html
+    #@pages << {:title => @title}
     
-    render :path => 'wiki/show'
+    raise Redirect, "#{@project.wiki_path}/show/#{@title}"
   end
   
   def save captures, params, env
@@ -205,14 +205,14 @@ class WikiController < Controller
     end
     
     @title = path.sub('.md', '')
-    @contents = BlueCloth.new(contents).to_html
+    #@contents = BlueCloth.new(contents).to_html
     
-    render :path => 'wiki/show'
+    raise Redirect, "#{@project.wiki_path}/show/#{@title}"
   end
   
   def index captures, params, env
-    captures[1] = 'index'
-    show captures, params, env
+    setup captures.first
+    raise Redirect, "#{@project.wiki_path}/show/index"
   end
   
   def show captures, params, env

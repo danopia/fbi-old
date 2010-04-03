@@ -7,6 +7,8 @@ class ProjectsController < Controller
   
   def show captures, params, env
     @project = Project.find :slug => captures.first
+    raise FileNotFound unless @project
+    
     @joined = @project.member? env[:user] if env[:user]
     @mine = @joined.owner? if @joined
     @unjoined = !@joined
@@ -26,15 +28,14 @@ class ProjectsController < Controller
       project_member = ProjectMember.create :user_id => env[:user].id, :project_id => @project.id, :owner => true
 
       #render :text => 'The project has been registered.'
-      
-      @joined = @mine = true
-      render :path => 'projects/show'
+      raise Redirect, @project.show_path
     end
   end
   
   def edit captures, params, env
     @project = Project.find :slug => captures[0]
-    return unless @project.owner? env[:user]
+    raise FileNotFound unless @project
+    raise PermissionDenied unless @project.owner? env[:user]
     
     if env['REQUEST_METHOD'] == 'POST'
       data = CGI.parse env['rack.input'].read
@@ -45,14 +46,15 @@ class ProjectsController < Controller
       @project.save
       
       #render :text => 'The project has been updated.'
-      @joined = @mine = true
-      render :path => 'projects/show'
+      raise Redirect, @project.show_path
     end
   end
   
   def add_member captures, params, env
     @project = Project.find :slug => captures[0]
-    return unless @project.owner? env[:user]
+    raise FileNotFound unless @project
+    raise PermissionDenied unless @project.owner? env[:user]
+    
     @project_member = ProjectMember.new :project_id => @project.id
     
     if env['REQUEST_METHOD'] == 'POST'
@@ -66,9 +68,7 @@ class ProjectsController < Controller
       @project_member.save
 
       #render :text => 'The member has been added.'
-      
-      @joined = @mine = true
-      render :path => 'projects/show'
+      raise Redirect, @project.show_path
     else
       @users = User.all
       existing = @project.members.map &:user_id
@@ -80,16 +80,13 @@ class ProjectsController < Controller
     @project = Project.find :slug => captures[0]
     unless @project && env[:user]    
       @unjoined = true
-      render :path => 'projects/show'
-      return
+      raise Redirect, @project.show_path
     end
     
     ProjectMember.create :project_id => @project.id,
                          :user_id => env[:user].id
     
     #render :text => 'You have joined the project.'
-    
-    @joined = true
-    render :path => 'projects/show'
+    raise Redirect, @project.show_path
   end
 end

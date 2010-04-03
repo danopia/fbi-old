@@ -1,4 +1,5 @@
 require File.join(File.dirname(__FILE__), '..', 'common', 'client')
+require File.join(File.dirname(__FILE__), '..', 'common', 'models')
 
 require File.join(File.dirname(__FILE__), 'irc_models')
 require File.join(File.dirname(__FILE__), 'irc_lib')

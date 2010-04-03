@@ -3,7 +3,9 @@ class ReposController < Controller
   
   def new captures, params, env
     @project = Project.find :slug => captures.first
-    return unless @project.owner? env[:user]
+    raise FileNotFound unless @project
+    raise PermissionDenied unless @project.owner? env[:user]
+    
     @repo = @project.new_repo
     
     if env['REQUEST_METHOD'] == 'POST'
@@ -17,16 +19,19 @@ class ReposController < Controller
       @repo.save
       
       #render :text => 'The repository has been added.'
-      render :path => 'repos/show'
+      raise Redirect, @repo.show_path
     else
       @services = Service.all
     end
   end
   
   def edit captures, params, env
-    @project = Project.find :slug => captures[0]
-    return unless @project.owner? env[:user]
+    @project = Project.find :slug => captures.first
+    raise FileNotFound unless @project
+    raise PermissionDenied unless @project.owner? env[:user]
+    
     @repo = @project.repo_by :slug => captures[1]
+    raise FileNotFound unless @repo
     
     if env['REQUEST_METHOD'] == 'POST'
       data = CGI.parse env['rack.input'].read
@@ -39,23 +44,35 @@ class ReposController < Controller
       @repo.save
       
       #render :text => 'The repository has been updated.'
-      render :path => 'repos/show'
+      raise Redirect, @repo.show_path
     end
   end
   
   def show captures, params, env
-    @project = Project.find :slug => captures[0]
+    @project = Project.find :slug => captures.first
+    raise FileNotFound unless @project
+    raise PermissionDenied unless @project.owner? env[:user]
+    
     @repo = @project.repo_by :slug => captures[1]
+    raise FileNotFound unless @repo
   end
   
   def list captures, params, env
     @project = Project.find :slug => captures.first
+    raise FileNotFound unless @project
+    raise PermissionDenied unless @project.owner? env[:user]
+    
     @repos = @project.repos
   end
   
   def tree captures, params, env
     @project = Project.find :slug => captures.first
-    @repo = @project.repo_by :id => captures[1].to_i
+    raise FileNotFound unless @project
+    raise PermissionDenied unless @project.owner? env[:user]
+    
+    @repo = @project.repo_by :slug => captures[1]
+    raise FileNotFound unless @repo
+    
 		@repo_path = File.join(File.dirname(__FILE__), '..', 'repos', @repo.id.to_s)
     
     captures += [''] if captures.size == 2
@@ -70,7 +87,12 @@ class ReposController < Controller
   
   def blob captures, params, env
     @project = Project.find :slug => captures.first
-    @repo = @project.repo_by_id captures[1].to_i
+    raise FileNotFound unless @project
+    raise PermissionDenied unless @project.owner? env[:user]
+    
+    @repo = @project.repo_by :slug => captures[1]
+    raise FileNotFound unless @repo
+    
 		@repo_path = File.join(File.dirname(__FILE__), '..', 'repos', @repo.id.to_s)
     
     @filename = captures[2]

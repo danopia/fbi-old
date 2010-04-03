@@ -74,8 +74,6 @@ class Route
     controller.env = env
     controller.__send__ @method, match.captures, @params, env
     controller.render
-  rescue => ex
-    puts ex, ex.message, ex.backtrace
   end
   
   def alloc_controller
