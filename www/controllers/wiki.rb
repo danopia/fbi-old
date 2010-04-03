@@ -100,6 +100,7 @@ class WikiController < Controller
     end
   end
   
+  
   def edit captures, params, env
     setup captures.first
     
@@ -110,16 +111,15 @@ class WikiController < Controller
   end
   
   def new captures, params, env
-    setup captures.first
+    return unless post?
     
-    return if env['REQUEST_METHOD'] != 'POST'
+    setup captures.first
     
     pull
     
-    data = CGI.parse(env['rack.input'].read)
-    contents = data['contents'].first
-    message = data['message'].first
-    @title = data['title'].first
+    contents = form_fields['contents']
+    message = form_fields['message']
+    @title = form_fields['title']
     
     path = "#{@title}.md"
     
@@ -160,16 +160,15 @@ class WikiController < Controller
   end
   
   def save captures, params, env
-    return edit(captures, params, env) unless env['REQUEST_METHOD'] == 'POST'
+    return edit(captures, params, env) unless post?
     
     setup captures.first
     pull
     
     @title = captures[1]
     
-    data = CGI.parse(env['rack.input'].read)
-    contents = data['contents'].first
-    message = data['message'].first
+    contents = form_fields['contents']
+    message = form_fields['message']
     
     path = "#{captures[1]}.md"
     

@@ -16,20 +16,16 @@ class ProjectsController < Controller
   
   def new captures, params, env
     @project = Project.new
+    return unless post?
     
-    if env['REQUEST_METHOD'] == 'POST'
-      data = CGI.parse env['rack.input'].read
-      
-      @project.title = data['title'].first
-      @project.slug = data['slug'].first
-      
-      @project.save
-      
-      project_member = ProjectMember.create :user_id => env[:user].id, :project_id => @project.id, :owner => true
+    @project.title = form_fields['title']
+    @project.slug = form_fields['slug']
+    @project.save
+    
+    ProjectMember.create :user_id => env[:user].id, :project_id => @project.id, :owner => true
 
-      #render :text => 'The project has been registered.'
-      raise HTTP::Found, @project.show_path
-    end
+    #render :text => 'The project has been registered.'
+    raise HTTP::Found, @project.show_path
   end
   
   def edit captures, params, env
@@ -37,17 +33,16 @@ class ProjectsController < Controller
     raise HTTP::NotFound unless @project
     raise HTTP::Forbidden unless @project.owner? env[:user]
     
-    if env['REQUEST_METHOD'] == 'POST'
-      data = CGI.parse env['rack.input'].read
-      
-      @project.title = data['title'].first
-      @project.slug = data['slug'].first
-      
-      @project.save
-      
-      #render :text => 'The project has been updated.'
-      raise HTTP::Found, @project.show_path
-    end
+    return unless post?
+    
+    data = CGI.parse env['rack.input'].read
+    
+    @project.title = form_fields['title']
+    @project.slug = form_fields['slug']
+    @project.save
+    
+    #render :text => 'The project has been updated.'
+    raise HTTP::Found, @project.show_path
   end
   
   def add_member captures, params, env
@@ -57,29 +52,31 @@ class ProjectsController < Controller
     
     @project_member = ProjectMember.new :project_id => @project.id
     
-    if env['REQUEST_METHOD'] == 'POST'
-      data = CGI.parse env['rack.input'].read
-      
-      member = User.find :username => data['username'].first
-      return unless member
-      
-      @project_member.user = member
-      @project_member.owner = data['owner'].any?
-      @project_member.save
-
-      #render :text => 'The member has been added.'
-      raise HTTP::Found, @project.show_path
-    else
+    unless post?
       @users = User.all
       existing = @project.members.map &:user_id
       @users.reject! {|user| existing.include? user.id }
+      
+      return
     end
+    
+    member = User.find :username => form_fields['username']
+    return unless member
+    
+    @project_member.user = member
+    @project_member.owner = form_fields['owner']
+    @project_member.save
+
+    #render :text => 'The member has been added.'
+    raise HTTP::Found, @project.show_path
   end
   
   def join captures, params, env
     @project = Project.find :slug => captures[0]
+    raise HTTP::NotFound unless @project
+    
     unless @project && env[:user]
-      raise HTTP::Found, @project.show_path
+      raise HTTP::Forbidden, 'You need to sign in first.'
     end
     
     ProjectMember.create :project_id => @project.id,

@@ -4,9 +4,8 @@ require 'json'
 class HooksController < Controller
 
   def github captures, params, env
-    data = env['rack.input'].read
-    raise HTTP::OK, 'This is a webhook receiver.' if data.empty?
-    data = JSON.parse CGI::unescape(data[8..-1])
+    raise HTTP::OK, 'This is a webhook receiver.' unless post?
+    data = JSON.parse form_fields['payload']
     
     output = data['commits'].map do |commit|
       {
@@ -27,9 +26,8 @@ class HooksController < Controller
   end
 
   def bitbucket captures, params, env
-    data = env['rack.input'].read
-    raise HTTP::OK, 'This is a webhook receiver.' if data.empty?
-    data = JSON.parse CGI::unescape(data[8..-1])
+    raise HTTP::OK, 'This is a webhook receiver.' unless post?
+    data = JSON.parse form_fields['payload']
     
     output = data['commits'].map do |commit|
       {

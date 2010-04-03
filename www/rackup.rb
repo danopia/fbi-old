@@ -8,37 +8,25 @@ require 'rubygems'
 require 'json'
 require 'mustache'
 
+require 'lib/routing'
+require 'lib/renderer'
+require 'lib/controller'
+require 'lib/model'
+require 'lib/errors'
+
 Mustache.template_path = File.dirname(__FILE__) + '/views'
 
 $www_fbi = FBI::Client.new 'www-' + rand.to_s, 'hil0l'
 $www_fbi.connect
 
 Rackup = Rack::Builder.new do
-  fbi = $www_fbi
-  
   use Rack::Reloader, 0
   use Rack::ContentLength
+  
   app = proc do |env|
-    
     begin
-      class Layout < Mustache
-        self.template_path = File.dirname(__FILE__) + '/views'
-        
-        def initialize target
-          @target = target
-        end
-        
-        def yield
-          @target
-        end
-      end
-      
-      require 'lib/routing'
-      require 'lib/renderer'
-      require 'lib/controller'
-      require 'lib/model'
-      require 'lib/errors'
-      
+      env[:fbi] = $www_fbi
+    
       routing = Routing.new do
         connect '/?$', 'home', 'index'
         
@@ -107,21 +95,13 @@ Rackup = Rack::Builder.new do
       # This is a hackity hack.
       $headers = {'Content-Type' => 'text/html'}
       
-      # This is a hackity hack.
-      parts = env['PATH_INFO'][1..-1].split('/')
-      if parts.any? && File.exists?(File.join(File.dirname(__FILE__), 'webhooks', parts[0] + '.rb'))
-        require File.join(File.dirname(__FILE__), 'webhooks', parts[0] + '.rb')
-        Class.const_get(parts[0].capitalize + 'Hook').new.run env, fbi
-        raise HTTP::OK, "Hook processed."
-      end
-      
       route = routing.find env['PATH_INFO']
       raise HTTP::NotFound unless route
       
       env[:session] = UserSession.load env
       env[:user] = env[:session] && env[:session].user
       
-      raise HTTP::OK, route.handle(env['PATH_INFO'], env)
+      return [200, $headers, route.handle(env['PATH_INFO'], env)]
       
     rescue HTTP::Redirect => ex
       path = "#{env['rack.url_scheme']}://#{env['HTTP_HOST']}#{ex.path}"

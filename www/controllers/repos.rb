@@ -8,21 +8,19 @@ class ReposController < Controller
     
     @repo = @project.new_repo
     
-    if env['REQUEST_METHOD'] == 'POST'
-      data = CGI.parse env['rack.input'].read
-      
-      @repo.title = data['title'].first
-      @repo.slug = data['slug'].first
-      @repo.service_id = data['service_id'].first.to_i
-      @repo.name = data['name'].first
-      
-      @repo.save
-      
-      #render :text => 'The repository has been added.'
-      raise HTTP::Found, @repo.show_path
-    else
+    unless post?
       @services = Service.all
+      return
     end
+    
+    @repo.title = form_fields['title']
+    @repo.slug = form_fields['slug']
+    @repo.service_id = form_fields['service_id'].to_i
+    @repo.name = form_fields['name']
+    @repo.save
+    
+    #render :text => 'The repository has been added.'
+    raise HTTP::Found, @repo.show_path
   end
   
   def edit captures, params, env
@@ -33,19 +31,16 @@ class ReposController < Controller
     @repo = @project.repo_by :slug => captures[1]
     raise HTTP::NotFound unless @repo
     
-    if env['REQUEST_METHOD'] == 'POST'
-      data = CGI.parse env['rack.input'].read
-      
-      @repo.title = data['title'].first
-      @repo.slug = data['slug'].first
-      @repo.service_id = data['service_id'].first.to_i
-      @repo.name = data['name'].first
-      
-      @repo.save
-      
-      #render :text => 'The repository has been updated.'
-      raise HTTP::Found, @repo.show_path
-    end
+    return unless post?
+    
+    @repo.title = form_fields['title']
+    @repo.slug = form_fields['slug']
+    @repo.service_id = form_fields['service_id'].to_i
+    @repo.name = form_fields['name']
+    @repo.save
+    
+    #render :text => 'The repository has been updated.'
+    raise HTTP::Found, @repo.show_path
   end
   
   def show captures, params, env

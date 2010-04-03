@@ -17,21 +17,18 @@ class ServicesController < Controller
     
     @service = Service.new
     
-    if env['REQUEST_METHOD'] == 'POST'
-      data = CGI.parse env['rack.input'].read
-      
-      @service.title = data['title'].first
-      @service.slug = data['slug'].first
-      @service.url_format = data['url_format'].first
-      @service.website = data['website'].first
-      @service.mirrorable = data['mirrorable'].any?
-      @service.explorable = data['explorable'].any?
-      
-      @service.save
+    return unless post?
+    
+    @service.title = form_fields['title']
+    @service.slug = form_fields['slug']
+    @service.url_format = form_fields['url_format']
+    @service.website = form_fields['website']
+    @service.mirrorable = form_fields['mirrorable']
+    @service.explorable = form_fields['explorable']
+    @service.save
 
-      #render :text => 'The project has been registered.'
-      raise HTTP::Found, @service.show_path
-    end
+    #render :text => 'The project has been registered.'
+    raise HTTP::Found, @service.show_path
   end
   
   def edit captures, params, env
@@ -40,20 +37,17 @@ class ServicesController < Controller
     @service = Service.find :slug => captures[0]
     raise HTTP::NotFound unless @service
     
-    if env['REQUEST_METHOD'] == 'POST'
-      data = CGI.parse env['rack.input'].read
-      
-      @service.title = data['title'].first
-      @service.slug = data['slug'].first
-      @service.url_format = data['url_format'].first
-      @service.website = data['website'].first
-      @service.mirrorable = data['mirrorable'].any?
-      @service.explorable = data['explorable'].any?
-      
-      @service.save
-      
-      #render :text => 'The service has been updated.'
-      raise HTTP::Found, @service.show_path
-    end
+    return unless post?
+    
+    @service.title = form_fields['title']
+    @service.slug = form_fields['slug']
+    @service.url_format = form_fields['url_format']
+    @service.website = form_fields['website']
+    @service.mirrorable = form_fields['mirrorable']
+    @service.explorable = form_fields['explorable']
+    @service.save
+    
+    #render :text => 'The service has been updated.'
+    raise HTTP::Found, @service.show_path
   end
 end
