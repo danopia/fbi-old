@@ -286,8 +286,8 @@ class Connection < FBI::LineConnection
 	def join channel
 		send :join, channel.name # channel.key
 		@channels[channel.id] = channel
-		@network.channels[channel] = conn
-		@network.manager.channels[channel.id] = conn
+		@network.channels[channel] = self
+		@network.manager.channels[channel.id] = self
 	end
 	
 	def part channel, msg=nil
@@ -345,7 +345,7 @@ class Connection < FBI::LineConnection
 				flush!
 				handle :connected, origin, *args
 				
-			when /^[0-9]$/
+			when /^[0-9]{3}$/
 				handle command.to_i, origin, args.shift, *args
 				
 			else

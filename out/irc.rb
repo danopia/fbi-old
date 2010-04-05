@@ -51,6 +51,13 @@ manager.on :message do |e|
 	e.respond "It's 'ooc', not 'OOC'!" if e.target == '#ooc-lang' && e.params.join.include?('OOC') && !e.params.join.include?('OOC_')
 end
 
+manager.on 005 do |e|
+	if e.params.find {|cap| cap =~ /^NETWORK=(.+)/ }
+		e.network.record.title = $1
+		e.network.record.save
+	end
+end
+
 manager.on :command do |e|
 	command = e.params[0]
 	args = (e.params[1] || '').split
@@ -257,8 +264,7 @@ fbi.on :publish do |origin, target, private, data|
 					manager.spawn_network channel.network
 				end
 				
-				network = manager.networks[channel.network_id]
-				network.route_to channel, data['message']
+				manager.route_to channel.id, data['message']
 				
 			when 'part'
 				channel = IrcChannel.find :id => data['channel_id']
