@@ -9,20 +9,20 @@ class IrcChannel < FBI::Model
   def catchall= new; @data[:catchall] = new; end
 
   def subs filters={}
-    fields[:channel_id] = @id
+    filters[:channel_id] = @id
     IrcProjectSub.where(filters).each {|repo| repo.channel = self }
   end
   def sub_for project
-    chan = IrcChannel.find :network_id => @id, :project_id => project.id
-    chan.project = project
-    chan.network = self
-    chan
+    sub = IrcProjectSub.find :channel_id => @id, :project_id => project.id
+    sub.project = project
+    sub.network = self
+    sub
   end
   def new_sub project
-    chan = IrcChannel.new
-    chan.project = project
-    chan.network = self
-    chan
+    sub = IrcProjectSub.new
+    sub.project = project
+    sub.channel = self
+    sub
   end
   def create_sub project
     new_sub(project).save

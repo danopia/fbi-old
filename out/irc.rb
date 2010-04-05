@@ -17,16 +17,20 @@ $manager = manager = FBI_IRC::Manager.new('FBI-%i[dev]', 'fbi', 'FBI Version Con
 #	new_irc.join server.channels.map{|chan| chan.name}.join(',')
 #end
 
+#~ manager.on :connected do |e|
+	#~ e.conn.send :protoctl, 'NAMESX'
+#~ end
+
 manager.on :ctcp do |e|
-	case e.params.first
+	case e[0]
     when 'VERSION'
       e.respond 'FBI to_irc module v0.0.1'
      
     when 'PING'
-      e.respond e.params.last.join(' ')
+      e.respond e[1]
      
 		when 'ACTION'
-			message = e.params.last.join ' '
+			message = e[1]
 			
 			e.action "_oø_ #{e.origin[:nick]}" if message.index("sets fire to #{e.conn.nick}") == 0
 			e.action "shoots #{e.origin[:nick]}" if message.index("evades the FBI") == 0
@@ -37,7 +41,7 @@ manager.on :ctcp do |e|
 			e.message "ow" if message.index("kicks #{e.conn.nick}") == 0
 			
 			if message.index("rubs #{e.conn.nick}'s tummy") == 0
-				if rand(2) == 1
+				if rand(2).zero?
 					e.action "bites #{e.origin[:nick]}'s hand"
 				else
 					e.message "*purr*"
@@ -48,7 +52,16 @@ manager.on :ctcp do |e|
 end
 
 manager.on :message do |e|
-	e.respond "It's 'ooc', not 'OOC'!" if e.target == '#ooc-lang' && e.params.join.include?('OOC') && !e.params.join.include?('OOC_')
+	e.respond "It's 'ooc', not 'OOC'!" if e.target == '#ooc-lang' && e.params.first.include?('OOC') && !e.params.first.include?('OOC_')
+	
+	next unless e.target.is_a? FBI_IRC::Channel
+	
+	fbi.send '#irc', {
+		:channel => e.target.id,
+		:sender => e.origin,
+		:message => e[0],
+		:admin => e.admin?,
+	}
 end
 
 manager.on 005 do |e|
@@ -56,11 +69,50 @@ manager.on 005 do |e|
 		e.network.record.title = $1
 		e.network.record.save
 	end
+	
+	e.conn.send :protoctl, 'NAMESX' if e.params.include? 'NAMESX'
 end
 
+
+# User tracking
+
+manager.on :join do |e|
+	e.target.users << e.origin[:nick]
+end
+
+manager.on :part do |e|
+	e.target.users.delete e.origin[:nick]
+end
+
+manager.on :kick do |e|
+	p e.params
+	e.target.users.delete e[2]
+end
+
+manager.on :quit do |e|
+	e.conn.channels.each_value {|chan| chan.users.delete e.origin[:nick] }
+end
+
+manager.on 353 do |e|
+	channel = e.conn.channels[e[1].downcase]
+	
+	channel.users = [] unless channel.in_names
+	channel.in_names = true
+	
+	channel.users += e[2].split
+end
+
+manager.on 366 do |e|
+	channel = e.conn.channels[e[0].downcase]
+	channel.in_names = false
+end
+
+# End user tracking
+
+
 manager.on :command do |e|
-	command = e.params[0]
-	args = (e.params[1] || '').split
+	command = e[0]
+	args = (e[1] || '').split
 	
 	case command.downcase
 		#~ when 'help'
@@ -69,26 +121,67 @@ manager.on :command do |e|
 		when 'test'
 			e.respond 'It worked!'
 		
-		#~ when 'route'
-			#~ message = args[2..-1].join(' ')
-			#~ message = "\001ACTION #{$1}\001" if message =~ /^\/me (.+)$/i
-			#~ manager.networks[args[0].to_i].route_to args[1], message
-#~ 
-		#~ when 'route_for'
-			#~ message = args[1..-1].join(' ')
-			#~ route args[0], message
-			#~ 
-		#~ when 'list'
-			#~ server = Server.find e.network.id
-			#~ channel = server.channels.find_by_name e.target
-			#~ projects = channel.projects.map {|project| project.name }.join(', ')
-			#~ 
-			#~ if channel.catchall
-				#~ e.respond "#{channel.name} is a catchall for all projects."
-			#~ else
-				#~ e.respond "Projects currently announcing to #{channel.name}: #{projects}."
-			#~ end
-			#~ 
+		when 'route'
+			channel = manager.channels[args.shift.to_i]
+			message = args.join(' ')
+			message.sub! /^\/me (.+)$/i, "\001ACTION \1\001"
+			channel.message message
+
+		when 'route_for'
+			route args.shift, args.join(' ')
+			
+		when 'project'
+			case args.shift.downcase
+				projects = e.target.record.projects
+			
+				when 'add'
+					args.map! do |arg|
+						project = Project.find :slug => arg
+						project ||= Project.find :title => arg
+						
+						if !project
+							"#{project.title} doesn't exist"
+						elsif projects.include? project
+							"#{project.title} was already added"
+						else
+							e.target.record.create_sub project
+							"#{project.title} was added"
+						end
+					end
+					
+					e.respond "Results: #{args.join ', '}"
+			
+				when 'remove', 'rm'
+					args.map! do |arg|
+						project = projects.find {|proj| proj.slug == arg || proj.title == arg }
+						
+						if !project
+							"#{project.title} doesn't exist"
+						elsif projects.include? project
+							e.target.record.sub_for(project).destroy!
+							"#{project.title} was removed"
+						else
+							"#{project.title} wasn't added"
+						end
+					end
+					
+					e.respond "Results: #{args.join ', '}"
+				
+				else
+					projects.map! {|project| project.title }
+					#~ if channel.catchall
+						#~ e.respond "#{e.target} is a catchall for all projects."
+					#~ else
+						e.respond "Projects currently announcing to #{e.target}: #{projects.join(', ')}"
+					#~ end
+			
+			end
+			
+		when 'join'
+			channel = e.network.record.channel_by :name => args[0]
+			channel ||= e.network.record.create_channel :name => args[0]
+			e.conn.join channel
+			
 		#~ when 'catchall'
 			#~ next unless e.admin?
 			#~ server = Server.find e.network.id
@@ -150,33 +243,17 @@ manager.on :command do |e|
 					#~ e.respond "There was an error connecting to #{server.hostname}."
 				#~ end
 			#~ end
-		#~ 
-		#~ when 'remove'
-			#~ if args.first == 'for real'
-				#~ server = Server.find e.network.id
-				#~ channel = server.channels.find_by_name e.target
-				#~ channel.subscriptions.each do |subscription|
-					#~ subscription.delete!
-				#~ end
-				#~ channel.delete!
-				#~ e.respond "#{e.target} has been completely removed from FBI."
-				#~ e.network.part channel
-			#~ else
-				#~ e.respond "To confirm completely removing this channel from FBI, please use the 'remove for real' command."
-			#~ end
 		
 		else
 			puts "Unknown command #{command}; broadcasting a packet"
-			server = Server.find e.network.id
-			channel = server.channels.find_by_name e.target
-			$fbi.send '#irc', {
-				:server => e.network.id,
-				:channel => e.target,
+			next unless e.target.is_a? FBI_IRC::Channel
+			
+			fbi.send '#irc', {
+				:channel => e.target.id,
 				:sender => e.origin,
 				:command => command,
-				:args => e.params[1],
+				:args => e[1],
 				:admin => e.admin?,
-				:default_project => channel && channel.default_project,
 			}
 	end
 end
@@ -195,18 +272,21 @@ end
 	#~ Channel.create :name => '#commits', :server => channel.server, :catchall => true
 #~ end
 
-#~ IrcNetwork.all.each do |network|
-	#~ manager.spawn_network network
-#~ end
+EM.next_tick {
+	IrcNetwork.all.each do |network|
+		manager.spawn_network network
+	end
+}
 
+# TODO: This can just get a list of channel IDs without pulling channel objects
 def route project, message
-	channels = Channel.find_all_by_catchall true
+	# channels = Channel.find_all_by_catchall true
 	
-	project = Project.find_by_name project
-	channels |= project.channels if project
+	project = Project.find project
+	channels = project.irc_channels if project
 	
 	channels.each do |channel|
-		$manager.route_to channel.server_id, channel.name, message
+		$manager.route_to channel.id, message
 		#sleep 0.5
 	end
 end
@@ -238,49 +318,41 @@ fbi.on :publish do |origin, target, private, data|
 		case data['mode']
 		
 			when 'connect'
-				network = IrcNetwork.find :id => data['network_id']
-				next if !network
+				next if manager.networks.has_key? data['network_id']
 				
-				unless manager.networks.has_key? network.id
-					manager.spawn_network network
-				end
+				network = IrcNetwork.find data['network_id']
+				manager.spawn_network network if network
 				
 			when 'join'
-				channel = IrcChannel.find :id => data['channel_id']
+				channel = IrcChannel.find data['channel_id']
 				next if !channel
 				
-				unless manager.networks.has_key? channel.network_id
-					manager.spawn_network channel.network
+				if manager.networks.has_key? channel.record.network_id
+					network = manager.networks[channel.record.network_id]
+					network.join channel
+				else
+					manager.spawn_network channel.record.network
 				end
-				
-				network = manager.networks[channel.network_id]
-				network.join channel
 				
 			when 'message'
-				channel = IrcChannel.find :id => data['channel_id']
-				next if !channel
+				channel = manager.channels[data['channel_id']]
+				channel && channel.message(data['message'])
 				
-				unless manager.networks.has_key? channel.network_id
-					manager.spawn_network channel.network
-				end
-				
-				manager.route_to channel.id, data['message']
+			when 'route'
+				route data['project'], data['message']
 				
 			when 'part'
-				channel = IrcChannel.find :id => data['channel_id']
-				next if !channel
-				next if !manager.networks.has_key?(channel.network_id)
-				
-				network = manager.networks[channel.network_id]
-				network.part channel, data['message']
+				channel = manager.channels[data['channel_id']]
+				channel && channel.part(data['message'])
 			
 		end
 		
 	elsif private
-		$manager.route_to data['server'], data['channel'], data['message']
+		manager.route_to data['server'], data['channel'], data['message']
 	end
 end
 
 fbi.subscribe_to '#commits', '#mailinglist', '#irc'
 fbi.connect
+
 EventMachine.run {} if $0 == __FILE__
