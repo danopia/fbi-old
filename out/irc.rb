@@ -130,9 +130,17 @@ manager.on :command do |e|
 		when 'route_for'
 			route args.shift, args.join(' ')
 			
+		when 'projects'
+			projects = e.target.record.projects.map {|project| project.title }
+			#~ if channel.catchall
+				#~ e.respond "#{e.target} is a catchall for all projects."
+			#~ else
+				e.respond "Projects currently announcing to #{e.target}: #{projects.join(', ')}"
+			#~ end
+			
 		when 'project'
-			case args.shift.downcase
-				projects = e.target.record.projects
+			projects = e.target.record.projects
+			case (args.shift||'').downcase
 			
 				when 'add'
 					args.map! do |arg|
@@ -166,15 +174,7 @@ manager.on :command do |e|
 					end
 					
 					e.respond "Results: #{args.join ', '}"
-				
-				else
-					projects.map! {|project| project.title }
-					#~ if channel.catchall
-						#~ e.respond "#{e.target} is a catchall for all projects."
-					#~ else
-						e.respond "Projects currently announcing to #{e.target}: #{projects.join(', ')}"
-					#~ end
-			
+
 			end
 			
 		when 'join'
