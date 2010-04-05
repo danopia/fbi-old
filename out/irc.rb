@@ -1,13 +1,12 @@
 require File.join(File.dirname(__FILE__), '..', 'common', 'client')
 require File.join(File.dirname(__FILE__), '..', 'common', 'models')
 
-require File.join(File.dirname(__FILE__), 'irc_models')
+#~ require File.join(File.dirname(__FILE__), 'irc_models')
 require File.join(File.dirname(__FILE__), 'irc_lib')
 
-$fbi = fbi = FBI::Client.new('irc', 'hil0l')
+$fbi = fbi = FBI::Client.new('irc (dev)', 'hil0l')
 
-manager = FBI_IRC::Manager.new 'FBI-', 'fbi', 'FBI Version Control Informant'
-$manager = manager
+$manager = manager = FBI_IRC::Manager.new('FBI-%i[dev]', 'fbi', 'FBI Version Control Informant')
 
 #manager.on :invite do |e|
 #	e.conn.join e.target if e.channel?
@@ -57,107 +56,107 @@ manager.on :command do |e|
 	args = (e.params[1] || '').split
 	
 	case command.downcase
-		when 'help'
-			e.respond "My commands include help, list, default, set-default, add channel/project/server, and remove. There are some more but lowlings like you don't need to know them."
+		#~ when 'help'
+			#~ e.respond "My commands include help, list, default, set-default, add channel/project/server, and remove. There are some more but lowlings like you don't need to know them."
 			
 		when 'test'
 			e.respond 'It worked!'
 		
-		when 'route'
-			message = args[2..-1].join(' ')
-			message = "\001ACTION #{$1}\001" if message =~ /^\/me (.+)$/i
-			manager.networks[args[0].to_i].route_to args[1], message
-
-		when 'route_for'
-			message = args[1..-1].join(' ')
-			route args[0], message
-			
-		when 'list'
-			server = Server.find e.network.id
-			channel = server.channels.find_by_name e.target
-			projects = channel.projects.map {|project| project.name }.join(', ')
-			
-			if channel.catchall
-				e.respond "#{channel.name} is a catchall for all projects."
-			else
-				e.respond "Projects currently announcing to #{channel.name}: #{projects}."
-			end
-			
-		when 'catchall'
-			next unless e.admin?
-			server = Server.find e.network.id
-			channel = server.channels.find_by_name e.target
-			channel.catchall = !channel.catchall
-			channel.save
-			
-			if channel.catchall
-				e.respond "#{channel.name} has been set to a catchall."
-			else
-				e.respond "#{channel.name} is no longer a catchall."
-			end
-			
-		when 'default'
-			server = Server.find e.network.id
-			channel = server.channels.find_by_name e.target
-			e.respond "The default GitHub project for #{channel.name} is #{channel.default_project}."
-			
-		when 'set-default'
-			server = Server.find e.network.id
-			channel = server.channels.find_by_name e.target
-			channel.default_project = (args.shift.downcase rescue nil)
-			channel.save
-			e.respond "The default GitHub project for #{channel.name} is now #{channel.default_project}."
-			
-		when 'add'
-			subcommand = args.shift.downcase
-			if subcommand == 'project'
-				server = Server.find e.network.id
-				channel = server.channels.find_by_name e.target
-				
-				projects = []
-				already_added = 0
-				args.each do |arg|
-					project = Project.find_by_name arg
-					project = Project.create :name => arg unless project
-					if channel.project_subs.find_by_project_id project.id
-						already_added += 1
-						next
-					end
-					
-					channel.project_subs.create :project => project
-					projects << project.name
-				end
-				
-				e.respond "Added #{projects.join ', '} to this channel." + (already_added > 0 ? " (#{already_added} projects were already added.)" : '')
-				
-			elsif subcommand == 'channel'
-				channel = Channel.create :server_id => e.network.id, :name => args.shift
-				e.network.join channel.name
-				e.respond "Joined #{channel.name}."
-				
-			elsif subcommand == 'server'
-				server = Server.create :hostname => args.shift
-				channel = server.channels.create :name => args.shift
-				if manager.spawn_from_record server
-					e.respond "Connecting to #{server.hostname}, and I'll join #{channel.name} once I'm there."
-				else
-					e.respond "There was an error connecting to #{server.hostname}."
-				end
-			end
-		
-		when 'remove'
-			if args.first == 'for real'
-				server = Server.find e.network.id
-				channel = server.channels.find_by_name e.target
-				channel.subscriptions.each do |subscription|
-					subscription.delete!
-				end
-				channel.delete!
-				e.respond "#{e.target} has been completely removed from FBI."
-				e.network.part channel
-			else
-				e.respond "To confirm completely removing this channel from FBI, please use the 'remove for real' command."
-			end
+		#~ when 'route'
+			#~ message = args[2..-1].join(' ')
+			#~ message = "\001ACTION #{$1}\001" if message =~ /^\/me (.+)$/i
+			#~ manager.networks[args[0].to_i].route_to args[1], message
+#~ 
+		#~ when 'route_for'
+			#~ message = args[1..-1].join(' ')
+			#~ route args[0], message
+			#~ 
+		#~ when 'list'
+			#~ server = Server.find e.network.id
+			#~ channel = server.channels.find_by_name e.target
+			#~ projects = channel.projects.map {|project| project.name }.join(', ')
+			#~ 
+			#~ if channel.catchall
+				#~ e.respond "#{channel.name} is a catchall for all projects."
+			#~ else
+				#~ e.respond "Projects currently announcing to #{channel.name}: #{projects}."
+			#~ end
+			#~ 
+		#~ when 'catchall'
+			#~ next unless e.admin?
+			#~ server = Server.find e.network.id
+			#~ channel = server.channels.find_by_name e.target
+			#~ channel.catchall = !channel.catchall
+			#~ channel.save
+			#~ 
+			#~ if channel.catchall
+				#~ e.respond "#{channel.name} has been set to a catchall."
+			#~ else
+				#~ e.respond "#{channel.name} is no longer a catchall."
+			#~ end
+			#~ 
+		#~ when 'default'
+			#~ server = Server.find e.network.id
+			#~ channel = server.channels.find_by_name e.target
+			#~ e.respond "The default GitHub project for #{channel.name} is #{channel.default_project}."
+			#~ 
+		#~ when 'set-default'
+			#~ server = Server.find e.network.id
+			#~ channel = server.channels.find_by_name e.target
+			#~ channel.default_project = (args.shift.downcase rescue nil)
+			#~ channel.save
+			#~ e.respond "The default GitHub project for #{channel.name} is now #{channel.default_project}."
+			#~ 
+		#~ when 'add'
+			#~ subcommand = args.shift.downcase
+			#~ if subcommand == 'project'
+				#~ server = Server.find e.network.id
+				#~ channel = server.channels.find_by_name e.target
+				#~ 
+				#~ projects = []
+				#~ already_added = 0
+				#~ args.each do |arg|
+					#~ project = Project.find_by_name arg
+					#~ project = Project.create :name => arg unless project
+					#~ if channel.project_subs.find_by_project_id project.id
+						#~ already_added += 1
+						#~ next
+					#~ end
+					#~ 
+					#~ channel.project_subs.create :project => project
+					#~ projects << project.name
+				#~ end
+				#~ 
+				#~ e.respond "Added #{projects.join ', '} to this channel." + (already_added > 0 ? " (#{already_added} projects were already added.)" : '')
+				#~ 
+			#~ elsif subcommand == 'channel'
+				#~ channel = Channel.create :server_id => e.network.id, :name => args.shift
+				#~ e.network.join channel.name
+				#~ e.respond "Joined #{channel.name}."
+				#~ 
+			#~ elsif subcommand == 'server'
+				#~ server = Server.create :hostname => args.shift
+				#~ channel = server.channels.create :name => args.shift
+				#~ if manager.spawn_from_record server
+					#~ e.respond "Connecting to #{server.hostname}, and I'll join #{channel.name} once I'm there."
+				#~ else
+					#~ e.respond "There was an error connecting to #{server.hostname}."
+				#~ end
+			#~ end
+		#~ 
+		#~ when 'remove'
+			#~ if args.first == 'for real'
+				#~ server = Server.find e.network.id
+				#~ channel = server.channels.find_by_name e.target
+				#~ channel.subscriptions.each do |subscription|
+					#~ subscription.delete!
+				#~ end
+				#~ channel.delete!
+				#~ e.respond "#{e.target} has been completely removed from FBI."
+				#~ e.network.part channel
+			#~ else
+				#~ e.respond "To confirm completely removing this channel from FBI, please use the 'remove for real' command."
+			#~ end
 		
 		else
 			puts "Unknown command #{command}; broadcasting a packet"
@@ -175,21 +174,23 @@ manager.on :command do |e|
 	end
 end
 
-if Server.all.size == 0
-	channel = Channel.new :name => '#bots'
-	channel.server = Server.create :hostname => '76.73.53.189'
-	channel.save
-	
-	project = Project.create :name => 'fbi'
-	
-	channel.project_subs.create :project => project
-	
-	Channel.create :name => '#commits', :server => channel.server, :catchall => true
-end
 
-Server.all.each do |server|
-	manager.spawn_from_record server
-end
+
+#~ if Server.all.size == 0
+	#~ channel = Channel.new :name => '#bots'
+	#~ channel.server = Server.create :hostname => '76.73.53.189'
+	#~ channel.save
+	#~ 
+	#~ project = Project.create :name => 'fbi'
+	#~ 
+	#~ channel.project_subs.create :project => project
+	#~ 
+	#~ Channel.create :name => '#commits', :server => channel.server, :catchall => true
+#~ end
+
+#~ IrcNetwork.all.each do |network|
+	#~ manager.spawn_network network
+#~ end
 
 def route project, message
 	channels = Channel.find_all_by_catchall true
@@ -226,11 +227,54 @@ fbi.on :publish do |origin, target, private, data|
 			route post['project'], message
 		end
 		
+	elsif target == '#irc'
+		case data['mode']
+		
+			when 'connect'
+				network = IrcNetwork.find :id => data['network_id']
+				next if !network
+				
+				unless manager.networks.has_key? network.id
+					manager.spawn_network network
+				end
+				
+			when 'join'
+				channel = IrcChannel.find :id => data['channel_id']
+				next if !channel
+				
+				unless manager.networks.has_key? channel.network_id
+					manager.spawn_network channel.network
+				end
+				
+				network = manager.networks[channel.network_id]
+				network.join channel
+				
+			when 'message'
+				channel = IrcChannel.find :id => data['channel_id']
+				next if !channel
+				
+				unless manager.networks.has_key? channel.network_id
+					manager.spawn_network channel.network
+				end
+				
+				network = manager.networks[channel.network_id]
+				network.route_to channel, data['message']
+				
+			when 'part'
+				channel = IrcChannel.find :id => data['channel_id']
+				next if !channel
+				next if !manager.networks.has_key?(channel.network_id)
+				
+				network = manager.networks[channel.network_id]
+				network.part channel, data['message']
+			
+		end
+		
 	elsif private
 		$manager.route_to data['server'], data['channel'], data['message']
 	end
 end
 
-fbi.subscribe_to '#commits', '#mailinglist'
+fbi.subscribe_to '#commits', '#mailinglist', '#irc'
 fbi.connect
 EventMachine.run {} if $0 == __FILE__

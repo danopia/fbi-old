@@ -1,15 +1,16 @@
-require "socket"
+require 'socket'
 
 module FBI_IRC
 
 class Manager
-	attr_accessor :base_nick, :ident, :realname, :networks, :handlers, :admins
+	attr_accessor :nick_format, :ident, :realname, :networks, :channels, :handlers, :admins
 	
-	def initialize(base_nick, ident=nil, realname=nil)
-		@base_nick = base_nick
-		@ident = ident || base_nick
-		@realname = realname || base_nick
+	def initialize nick_format, ident=nil, realname=nil
+		@nick_format = nick_format
+		@ident = ident || nick_format
+		@realname = realname || nick_format
 		
+		@channels = {}
 		@networks = {}
 		@handlers = {}
 		@admins = ['danopia::EighthBit::staff', 'fullcirclemagazine/developer/danopia']
@@ -17,7 +18,7 @@ class Manager
 		# Only two come stock:
 		# :ping (to pong)
 		on :ping do |e|
-			e.conn.force_send 'pong', e.params.first, true
+			e.conn.force_send 'pong', e.params.first
 		end
 		
 		# and :message (to emit :command)
@@ -44,8 +45,8 @@ class Manager
 	end
 	
 	def on event, &blck
-		@handlers[event.to_sym] ||= []
-		@handlers[event.to_sym] << blck
+		@handlers[event.to_sym || event] ||= []
+		@handlers[event.to_sym || event] << blck
 	end
 	
 	def unhook event
@@ -57,30 +58,25 @@ class Manager
 	end
 	
 	def raise_event e
-		puts "Handling #{e.event} from #{e.origin[:nick]} to #{e.target} via #{e.conn.nick} with params #{e.params.join ' '}" if e.origin
-		puts "Handling #{e.event} from <no origin> to #{e.target} via #{e.conn.nick} with params #{e.params.join ' '}" unless e.origin
+		origin = (e.origin && e.origin[:nick]) || '<no origin>'
+		target = e.target || '<no target>'
+		puts "Handling #{e.event} from #{origin} to #{target} via #{e.conn.nick} with params #{e.params.join ' '}"
 		
 		return unless @handlers[e.event]
 		
-		@handlers[e.event].each do |block|
-			block.call e
-		end
+		@handlers[e.event].each {|block| block.call e }
 	end
 	
-	def route_to network, channel, message
-		@networks[network].route_to channel, message
+	def route_to chanid, message
+		conn = @channels[chanid]
+		channel = conn.channels[chanid]
+		conn.message channel.name, message
 	end
 	
-	def spawn_network config
-		network = Network.new self, config
-		@networks[network.id] = network # TODO: Only does one connection/ip (ports anyone?)
+	def spawn_network record
+		network = Network.new self, record
+		@networks[record.id] = network
 	end
-	
-	def spawn_from_record record
-		EM.next_tick do
-			spawn_network :id => record.id, :server => record.hostname, :port => record.port, :channels => record.channels.map{|chan| chan.name}
-		end
-	end	
 end # manager class
 
 class EventContext
@@ -152,64 +148,53 @@ class EventContext
 end # event_context class
 
 class Network
-	attr_reader :manager, :config, :server, :port, :channels, :connections, :next_id, :id
+	attr_reader :manager, :record, :channels, :connections, :next_id, :max_chans
 	
-	def initialize manager, config={}
+	def initialize manager, record={}
 		@manager = manager
-		@config = config
+		@record = record
 		
-		@server = config[:server]
-		@port = config[:port]
 		@connections = []
 		@next_id = 1
-		@id = config[:id] || @server
+		@max_chans = 20
 		
 		@channels = {}
 		
-		return unless config[:channels]
-		config[:channels].each do |channel|
-			join channel
-		end
+		record.channels.each {|channel| join channel }
 	end
 	
-	def route_to channel, message
-		(@channels[channel.downcase] || @channels.values.first).message channel, message
+	def message target, message
+		bot = @channels[target] || @channels.values.first
+		target = target.name if target.is_a? IrcChannel
+		bot.message target, message
 	end
 	
-	def join channel, key=nil
+	def join channel
 		conn = @connections.find do |conn|
-			conn.channels.size < 20
+			conn.channels.size < @max_chans
 		end
 		
-		unless conn
-			conn = spawn_connection
-		end
-		
-		if conn
-			@channels[channel.downcase] = conn
-			conn.join channel, key
-		end
+		conn ||= spawn_connection
+		conn && conn.join(channel)
 	end
 	
-	def part channel, message
-		@channels[channel.downcase].part channel, message
-		@channels.delete channel.downcase
+	def part channel, message=nil
+		@channels[channel].part channel, message
 	end
 	
 	def quit message=nil
-		@connections.each do |conn|
-			conn.quit message
-		end
-		
+		@connections.each {|conn| conn.quit message }
 		@connections.clear
 	end
 	
+	def next_id!
+		(@next_id += 1) - 1
+	end
+	
 	def spawn_connection
-		conn = EventMachine::connect @server, (@port || 6667), Connection, self
-		@next_id += 1
-		conn
+		EventMachine::connect @record.hostname, @record.port, Connection, self
 	rescue EventMachine::ConnectionError => ex
-		puts "Error while connecting to IRC server #{@server}:#{@port||6667}: #{ex.message}"
+		puts "Error while connecting to IRC server #{@record.slug}: #{ex.message}"
 		nil
 	end
 	
@@ -230,12 +215,11 @@ class Connection < FBI::LineConnection
 		network.connections << self
 
 		@network = network
-		@nick = "#{network.manager.base_nick}#{network.next_id}"
-		@channels = []
+		@nick = network.manager.nick_format % network.next_id!
+		@channels = {}
 		
 		send 'nick', @nick
-		send 'user', @network.manager.ident, '0', '0', @network.manager.realname, true
-		#join @channels.join(',')
+		send 'user', @network.manager.ident, '0', '0', @network.manager.realname
 		
 		@pending = true
 		@queue = []
@@ -265,14 +249,10 @@ class Connection < FBI::LineConnection
 		puts "Done flushing queue."
 	end
 	
-	# true as last arg puts a : before the last param
 	def send *params
-		if params.last == true || params.last.include?(' ')
-			params.pop if params.last == true
-			params.push ":#{params.pop}"
-		end
+		params.push ":#{params.pop}" if params.last.include? ' '
 		
-		params[0].upcase!
+		params[0] = params[0].to_s.upcase
 		params[1] = params[1][:nick] if params.size > 0 && params[1].is_a?(Hash)
 		send_line params.join(' ')
 	end
@@ -286,10 +266,10 @@ class Connection < FBI::LineConnection
 	end
 	
 	def message target, message
-		send 'privmsg', target, message, true
+		send :privmsg, target, message
 	end
 	def notice target, message
-		send 'notice', target, message, true
+		send :notice, target, message
 	end
 	
 	def ctcp target, command, args=''
@@ -303,46 +283,49 @@ class Connection < FBI::LineConnection
 		ctcp target, 'action', message
 	end
 	
-	def join channel, key=nil
-		# TODO: keys
-		raise StandardError, "channel keys aren't handled yet" if key
-		
-		send 'join', channel
-		@channels << channel.downcase
+	def join channel
+		send :join, channel.name # channel.key
+		@channels[channel.id] = channel
+		@network.channels[channel] = conn
+		@network.manager.channels[channel.id] = conn
 	end
+	
 	def part channel, msg=nil
-		send 'part', channel, msg || 'Leaving', true
-		@channels.delete channel.downcase
+		send :part, channel.name, msg || 'Leaving'
+		@channels.delete channel.id
+		@network.channels.delete channel
+		@network.manager.channels.delete channel.id
 	end
 	
 	def quit msg=nil
-		send 'quit', msg || 'Leave it to the FBI', true
+		send :quit, msg || 'Leave it to the FBI'
 		@channels.clear
+		@network.manager.channels.delete_if {|key, val| val == self }
 	end
 	
 	def receive_line packet
-		puts packet
+		#puts packet
 		parts = packet.split ' :', 2
-		args = parts[0].split ' '
-		args << parts[1] if parts.size > 1
+		args = parts.shift.split
+		args << parts.first if parts.any?
 		
 		origin = nil
 		
 		if args.first[0,1] == ':'
-			parts = (args.shift)[1..-1].split('!', 2)
-			if parts.size > 1
-				parts[1], parts[2] = parts[1].split('@', 2)
-				origin = {:ident => parts[1], :host => parts[2]}
-			else
-				origin = {:server => true}
-			end
+			parts = args.shift[1..-1].split('!', 2)
 			
-			origin[:nick] = parts[0]
+			origin = {:nick => parts.shift}
+			
+			if parts.any?
+				origin[:ident], origin[:host] = parts[0].split '@', 2
+			else
+				origin[:server] = true
+			end
 		end
 		
-		command = args.shift
+		command = args.shift.downcase
 		
-		case command.downcase
+		case command
 			when 'ping'
 				handle :ping, origin, nil, *args
 			
@@ -362,6 +345,9 @@ class Connection < FBI::LineConnection
 				flush!
 				handle :connected, origin, *args
 				
+			when /^[0-9]$/
+				handle command.to_i, origin, args.shift, *args
+				
 			else
 				handle :unhandled, origin, command, nil, *args
 		end
@@ -369,33 +355,31 @@ class Connection < FBI::LineConnection
 	
 	protected
 	
-	def handle_message type, origin, args
-		if ctcp? args[1]
-			handle_ctcp type, origin, *args
-		else
-			handle type, origin, *args
+		def handle_message type, origin, args
+			if ctcp? args[1]
+				handle_ctcp type, origin, *args
+			else
+				handle type, origin, *args
+			end
 		end
-	end
-	
-	def ctcp? string
-		string[0,1] == "\001" && string[-1,1] == "\001"
-	end
-	
-	def handle_ctcp type, origin, target, message
-		message = message[1..-2]
-		args = message.split ' '
-		command = args.shift.upcase
-		type = (type == :message) ? :ctcp : :ctcp_response
 		
-		handle type, origin, target, command, args
-	end
-	
-	def build_ctcp command, args=''
-		command.upcase!
-		args = args.join ' ' if args.is_a? Array
-		command << " #{args}" if args.any?
-		"\001#{command}\001"
-	end
+		def ctcp? string
+			string[0,1] == "\001" && string[-1,1] == "\001"
+		end
+		
+		def handle_ctcp type, origin, target, message
+			message = message[1..-2]
+			args = message.split ' '
+			command = args.shift.upcase
+			type = (type == :message) ? :ctcp : :ctcp_response
+			
+			handle type, origin, target, command, args
+		end
+		
+		def build_ctcp command, *args
+			args.unshift command.upcase
+			"\001#{args.join ' '}\001"
+		end
 end # connection class
 
 end # module
