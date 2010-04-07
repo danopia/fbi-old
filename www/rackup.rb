@@ -11,7 +11,6 @@ require 'mustache'
 require 'lib/routing'
 require 'lib/renderer'
 require 'lib/controller'
-require 'lib/model'
 require 'lib/errors'
 
 Mustache.template_path = File.dirname(__FILE__) + '/views'
