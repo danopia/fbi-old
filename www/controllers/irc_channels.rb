@@ -27,6 +27,9 @@ class IrcChannelsController < Controller
   def show captures, params, env
     lookup_channel captures
     
+    @users = FBI::Model.fbi_packet {:mode => 'users', :channel_id => @channel.id}, '#irc'
+    p @users
+    
     #~ @joined = @project.member? env[:user] if env[:user]
     #~ @mine = @joined.owner? if @joined
     #~ @unjoined = !@joined

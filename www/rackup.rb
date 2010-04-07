@@ -25,6 +25,7 @@ Rackup = Rack::Builder.new do
   app = proc do |env|
     begin
       env[:fbi] = $www_fbi
+      env[:headers] = {'Content-Type' => 'text/html'}
     
       routing = Routing.new do
         connect '/?$', 'home', 'index'
@@ -109,29 +110,26 @@ Rackup = Rack::Builder.new do
         connect '/logout$', 'account', 'logout'
       end
       
-      # This is a hackity hack.
-      $headers = {'Content-Type' => 'text/html'}
-      
       route = routing.find env['PATH_INFO']
       raise HTTP::NotFound unless route
       
       env[:session] = UserSession.load env
       env[:user] = env[:session] && env[:session].user
       
-      return [200, $headers, route.handle(env['PATH_INFO'], env)]
+      return [200, env[:headers], route.handle(env['PATH_INFO'], env)]
       
     rescue HTTP::Redirect => ex
       path = "#{env['rack.url_scheme']}://#{env['HTTP_HOST']}#{ex.path}"
-      $headers['Location'] = path
-      return [ex.code, $headers, ex.message]
+      env[:headers]['Location'] = path
+      return [ex.code, env[:headers], ex.message]
       
     rescue HTTP::Error => ex
-      return [ex.code, $headers, ex.message]
+      return [ex.code, env[:headers], ex.message]
       
     rescue => ex
       puts ex, ex.message, ex.backtrace
-      $headers['Content-Type'] = 'text/plain'
-      return [500, $headers, ex.inspect + "\n" + ex.message + "\n" + ex.backtrace.join("\n")]
+      env[:headers]['Content-Type'] = 'text/plain'
+      return [500, env[:headers], ex.inspect + "\n" + ex.message + "\n" + ex.backtrace.join("\n")]
     end
   end
   run app

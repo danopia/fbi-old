@@ -59,7 +59,7 @@ class AccountController < Controller
     cookie = CGI::Cookie.new 'fbi_session', ''
     cookie.expires = Time.at(0)
     cookie.path = '/'
-    $headers['Set-Cookie'] = cookie.to_s
+    env[:headers]['Set-Cookie'] = cookie.to_s
     
     env[:session].destroy!
     
