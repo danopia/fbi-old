@@ -1,5 +1,5 @@
 class IrcChannelsController < Controller
-  attr_reader :network, :channel, :channels
+  attr_reader :network, :channel, :channels, :users
   
   # TODO: Goes in IrcNetwork
   def parse_network_url url
@@ -27,13 +27,14 @@ class IrcChannelsController < Controller
   def show captures, params, env
     lookup_channel captures
     
-    @users = FBI::Model.fbi_packet {:mode => 'users', :channel_id => @channel.id}, '#irc'
-    p @users
+    @users = FBI::Model.fbi_packet({:mode => 'users', :channel_id => @channel.id}, '#irc')['users']
     
     #~ @joined = @project.member? env[:user] if env[:user]
     #~ @mine = @joined.owner? if @joined
     #~ @unjoined = !@joined
   end
+  
+  def user_count; @users.size; end
   
   def new captures, params, env
     @network = IrcNetwork.find parse_network_url(captures[0])

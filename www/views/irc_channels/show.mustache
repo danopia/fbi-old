@@ -2,21 +2,16 @@
 <h2>{{{ full_link }}}</h2>
 <hr />
 
-<!--
 <div style="float: right; border-left: 1px solid #999; padding-left: 1em;">
-  <h3>code repositories</h3>
+  <h3>{{ user_count }} users</h3>
   <ul style="list-style: none; padding: 0 0 0 1em; margin: 0;" class="fixedwidth">
-  {{# repos }}
-    <li>{{{ show_link }}}</li>
-  {{/ repos }}
-  {{# mine }}
-    <li><a href="{{ show_path }}/repos/new" style="color: gray;">add repo</a></li>
-  {{/ mine }}
+  {{# users }}
+    <li>{{ to_s }}</li>
+  {{/ users }}
   </ul>
 </div>
 
-<hr />
-
+<!--
 <p>Hostname: {{ hostname }}</p>
 <p>Port: {{ port }}</p>
 
@@ -29,6 +24,6 @@
 </ul>
 -->
 
-<!--br clear="all" /-->
+<br clear="all" />
 
 {{/ channel }}
