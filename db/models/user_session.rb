@@ -42,7 +42,7 @@ class UserSession < FBI::Model
     
     session.new_token
     session.ip_address = env['REMOTE_ADDR']
-    $headers['Set-Cookie'] = session.create_cookie.to_s # TODO: Nicer cookie codez
+    env[:headers]['Set-Cookie'] = session.create_cookie.to_s # TODO: Nicer cookie codez
     session.save
     
     session

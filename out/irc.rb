@@ -279,11 +279,11 @@ fbi.on :publish do |origin, target, private, data|
 				channel = IrcChannel.find data['channel_id']
 				next if !channel
 				
-				if manager.networks.has_key? channel.record.network_id
-					network = manager.networks[channel.record.network_id]
+				if manager.networks.has_key? channel.network_id
+					network = manager.networks[channel.network_id]
 					network.join channel
 				else
-					manager.spawn_network channel.record.network
+					manager.spawn_network channel.network
 				end
 				
 			when 'message'
@@ -292,7 +292,15 @@ fbi.on :publish do |origin, target, private, data|
 				
 			when 'users'
 				channel = manager.channels[data['channel_id']]
-				next unless channel
+				
+				unless channel
+					fbi.send origin,
+						:mode => 'users',
+						:response => true,
+						:channel_id => data['channel_id'],
+						:users => [],
+						:error => true
+				end
 				
 				fbi.send origin,
 					:mode => 'users',

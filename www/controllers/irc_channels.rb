@@ -16,6 +16,10 @@ class IrcChannelsController < Controller
     raise HTTP::NotFound unless @channel
   end
   
+  # Helpers
+  
+  def user_count; @users.size; end
+  
   
   #~ def list captures, params, env
     #~ @network = IrcNetwork.find parse_network_url(captures[0])
@@ -34,8 +38,6 @@ class IrcChannelsController < Controller
     #~ @unjoined = !@joined
   end
   
-  def user_count; @users.size; end
-  
   def new captures, params, env
     @network = IrcNetwork.find parse_network_url(captures[0])
     raise HTTP::NotFound unless @network
@@ -45,6 +47,11 @@ class IrcChannelsController < Controller
     
     @channel.name = form_fields['name']
     @channel.save
+    
+    env[:fbi].send '#irc', :mode => 'join', :channel_id => @channel.id
+    
+    user = env[:user] ? env[:user].display_name : env['REMOTE_ADDR']
+    env[:fbi].send '#irc', :mode => 'message', :channel_id => @channel.id, :message => "I was sent here by #{user}"
 
     #render :text => 'The network has been added.'
     raise HTTP::Found, @channel.show_path

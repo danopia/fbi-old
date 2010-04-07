@@ -28,6 +28,8 @@ class IrcNetworksController < Controller
     @network.hostname = form_fields['hostname']
     @network.port = form_fields['port'].to_i
     @network.save
+    
+    env[:fbi].send '#irc', :mode => 'connect', :network_id => @network.id
 
     #render :text => 'The network has been added.'
     raise HTTP::Found, @network.show_path

@@ -30,7 +30,7 @@ class AccountController < Controller
     @user.save
     
     @env[:user] = @user
-    @env[:session] = @user.create_session env['REMOTE_ADDR']
+    @env[:session] = @user.create_session env
     
     #render :text => 'Your account has been registered.'
     raise HTTP::Found, @user.profile_path
@@ -42,7 +42,7 @@ class AccountController < Controller
     @user = User.find :username => form_fields['username']
     
     if @user.password_hash == User.hash(@user.username.downcase, @user.salt, form_fields['password'])
-      env[:session] = @user.create_session env['REMOTE_ADDR']
+      env[:session] = @user.create_session env
       env[:user] = @user
       
       #render :text => 'You have logged in.'
