@@ -26,7 +26,11 @@
 {{# channels }}
   <li>{{{ show_link }}}</li>
 {{/ channels }}
-  <li><a href="{{ show_path }}/channels/new" style="color: gray;">add channel...</a></li>
+  <li>
+    <form action="{{ show_path }}/channels/new" method="post" name="new_channel">
+      <input type="text" name="name" /> <input type="submit" value="add channel" />
+    </form>
+  </li>
 </ul>
 
 <!--br clear="all" /-->
