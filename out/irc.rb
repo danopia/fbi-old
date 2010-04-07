@@ -206,43 +206,6 @@ manager.on :command do |e|
 			#~ channel.default_project = (args.shift.downcase rescue nil)
 			#~ channel.save
 			#~ e.respond "The default GitHub project for #{channel.name} is now #{channel.default_project}."
-			#~ 
-		#~ when 'add'
-			#~ subcommand = args.shift.downcase
-			#~ if subcommand == 'project'
-				#~ server = Server.find e.network.id
-				#~ channel = server.channels.find_by_name e.target
-				#~ 
-				#~ projects = []
-				#~ already_added = 0
-				#~ args.each do |arg|
-					#~ project = Project.find_by_name arg
-					#~ project = Project.create :name => arg unless project
-					#~ if channel.project_subs.find_by_project_id project.id
-						#~ already_added += 1
-						#~ next
-					#~ end
-					#~ 
-					#~ channel.project_subs.create :project => project
-					#~ projects << project.name
-				#~ end
-				#~ 
-				#~ e.respond "Added #{projects.join ', '} to this channel." + (already_added > 0 ? " (#{already_added} projects were already added.)" : '')
-				#~ 
-			#~ elsif subcommand == 'channel'
-				#~ channel = Channel.create :server_id => e.network.id, :name => args.shift
-				#~ e.network.join channel.name
-				#~ e.respond "Joined #{channel.name}."
-				#~ 
-			#~ elsif subcommand == 'server'
-				#~ server = Server.create :hostname => args.shift
-				#~ channel = server.channels.create :name => args.shift
-				#~ if manager.spawn_from_record server
-					#~ e.respond "Connecting to #{server.hostname}, and I'll join #{channel.name} once I'm there."
-				#~ else
-					#~ e.respond "There was an error connecting to #{server.hostname}."
-				#~ end
-			#~ end
 		
 		else
 			puts "Unknown command #{command}; broadcasting a packet"
@@ -260,18 +223,6 @@ end
 
 
 
-#~ if Server.all.size == 0
-	#~ channel = Channel.new :name => '#bots'
-	#~ channel.server = Server.create :hostname => '76.73.53.189'
-	#~ channel.save
-	#~ 
-	#~ project = Project.create :name => 'fbi'
-	#~ 
-	#~ channel.project_subs.create :project => project
-	#~ 
-	#~ Channel.create :name => '#commits', :server => channel.server, :catchall => true
-#~ end
-
 EM.next_tick {
 	IrcNetwork.all.each do |network|
 		manager.spawn_network network
@@ -282,7 +233,9 @@ EM.next_tick {
 def route project, message
 	# channels = Channel.find_all_by_catchall true
 	
-	project = Project.find project
+	project = Project.find :slug => project
+	message = "\002#{project.title}\017: #{message}"
+	
 	channels = project.irc_channels if project
 	
 	channels.each do |channel|
@@ -294,22 +247,21 @@ end
 fbi.on :publish do |origin, target, private, data|
 	if target == '#commits'
 		commits = data
-		commits = commits[-3..-1] if commits.size > 3
+		
+		if commits.size > 3
+			commits = commits[-3..-1]
+			commits.first['message'] = "(#{data.size - commits.size - 3} commit(s) ignored --FBI)\n#{commits.first['message']}"
+		end
+		
 		commits.each do |commit|
-			if commit['fork']
-				commit['owner'] << '/'
-			else
-				commit['owner'] = ''
-			end
-
-			message = "#{commit['owner']}\002#{commit['project']}:\017 \00303#{commit['author']['name']} \00307#{commit['branch']}\017 \002#{commit['commit'][0,8]}\017: #{commit['message'].gsub("\n", ' ')} \00302<\002\002#{commit['shorturl']}>"
+			message = "\00303#{commit['author']['name']} \00307#{commit['branch']}\017 \002#{commit['commit'][0,8]}\017: #{commit['message'].gsub("\n", ' ')} \00302<\002\002#{commit['shorturl']}>"
 
 			route commit['project'], message
 		end
 		
 	elsif target == '#mailinglist'
 		data.each do |post|
-			message = "\002#{post['project']} mailing list:\017 \00303#{post['author']['name']}\017 : #{post['subject'].gsub("\n", ' ')} \00302<\002\002#{post['shorturl']}>"
+			message = "mailing list: \00303#{post['author']['name']}\017 : #{post['subject'].gsub("\n", ' ')} \00302<\002\002#{post['shorturl']}>"
 
 			route post['project'], message
 		end
@@ -338,12 +290,31 @@ fbi.on :publish do |origin, target, private, data|
 				channel = manager.channels[data['channel_id']]
 				channel && channel.message(data['message'])
 				
+			when 'users'
+				channel = manager.channels[data['channel_id']]
+				next unless channel
+				
+				fbi.send origin,
+					:mode => 'users',
+					:response => true,
+					:channel_id => channel.id,
+					:users => channel.users
+				
 			when 'route'
 				route data['project'], data['message']
 				
 			when 'part'
 				channel = manager.channels[data['channel_id']]
 				channel && channel.part(data['message'])
+				
+			when 'cycle'
+				channel = manager.channels[data['channel_id']]
+				next unless channel
+				
+				channel.part data['message']
+				
+				network = manager.networks[channel.record.network_id]
+				network.join channel
 			
 		end
 		

@@ -15,7 +15,7 @@ class IrcChannel < FBI::Model
   def sub_for project
     sub = IrcProjectSub.find :channel_id => @id, :project_id => project.id
     sub.project = project
-    sub.network = self
+    sub.channel = self
     sub
   end
   def new_sub project
