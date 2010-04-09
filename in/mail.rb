@@ -297,7 +297,7 @@ EventMachine::next_tick do
         else; nil
       end
       
-      return unless project
+      next unless project
       fbi.send '#mailinglist', [{
         :list => list,
         :author => author,
