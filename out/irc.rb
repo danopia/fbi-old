@@ -1,7 +1,6 @@
 require File.join(File.dirname(__FILE__), '..', 'common', 'client')
 require File.join(File.dirname(__FILE__), '..', 'common', 'models')
 
-#~ require File.join(File.dirname(__FILE__), 'irc_models')
 require File.join(File.dirname(__FILE__), 'irc_lib')
 
 $fbi = fbi = FBI::Client.new('irc (dev)', 'hil0l')
@@ -17,12 +16,9 @@ $manager = manager = FBI_IRC::Manager.new('FBI-%i[dev]', 'fbi', 'FBI Version Con
 #	new_irc.join server.channels.map{|chan| chan.name}.join(',')
 #end
 
-#~ manager.on :connected do |e|
-	#~ e.conn.send :protoctl, 'NAMESX'
-#~ end
-
 manager.on :ctcp do |e|
 	case e[0]
+	
     when 'VERSION'
       e.respond 'FBI to_irc module v0.0.1'
      
@@ -80,6 +76,7 @@ manager.on 005 do |e|
 end
 
 
+###################
 # User tracking
 
 manager.on :join do |e|
@@ -114,6 +111,7 @@ manager.on 366 do |e|
 end
 
 # End user tracking
+###################
 
 
 manager.on :command do |e|
