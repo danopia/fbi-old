@@ -36,6 +36,16 @@ class Manager
 			#~ command, param = message.split ' ', 2
 			#~ handle e.conn, :command, e.origin, e.target, command, param
 		end
+		
+		
+		on 470 do |e| # redirect: from, to
+			channel = e.conn.channels[e[0].downcase]
+			e.conn.channels.delete e[0].downcase
+			e.conn.channels[e[1].downcase] = channel
+			
+			channel.redirect = e[1]
+		end
+
 	end
 	
 	def admin? who
