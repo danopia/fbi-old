@@ -30,8 +30,8 @@ module FBI
       @@fbi_sock
     end
     
-    def self.fbi_packet args={}
-      fbi_sock.puts({:action => 'publish', :target => '#db', :data => args}.to_json)
+    def self.fbi_packet args={}, target='#db'
+      fbi_sock.puts({:action => 'publish', :target => target, :data => args}.to_json)
       data = JSON.parse fbi_sock.gets
       data['data']
     end

@@ -73,9 +73,9 @@ class WikiController < Controller
     @pages = []
     
     @project = Project.find :slug => project
-    @repo = File.join(File.dirname(__FILE__), '..', 'wikis', @project.slug)
+    raise HTTP::NotFound unless @project
     
-    return unless @project.slug
+    @repo = File.join(File.dirname(__FILE__), '..', 'wikis', @project.slug)
     
     if File.directory? @repo
       #pull
@@ -100,6 +100,7 @@ class WikiController < Controller
     end
   end
   
+  
   def edit captures, params, env
     setup captures.first
     
@@ -110,16 +111,15 @@ class WikiController < Controller
   end
   
   def new captures, params, env
-    setup captures.first
+    return unless post?
     
-    return if env['REQUEST_METHOD'] != 'POST'
+    setup captures.first
     
     pull
     
-    data = CGI.parse(env['rack.input'].read)
-    contents = data['contents'].first
-    message = data['message'].first
-    @title = data['title'].first
+    contents = form_fields['contents']
+    message = form_fields['message']
+    @title = form_fields['title']
     
     path = "#{@title}.md"
     
@@ -153,23 +153,22 @@ class WikiController < Controller
     end
     
     @title = path.sub('.md', '')
-    @contents = BlueCloth.new(contents).to_html
-    @pages << {:title => @title}
+    #@contents = BlueCloth.new(contents).to_html
+    #@pages << {:title => @title}
     
-    render :path => 'wiki/show'
+    raise HTTP::Found, "#{@project.wiki_path}/show/#{@title}"
   end
   
   def save captures, params, env
-    return edit(captures, params, env) unless env['REQUEST_METHOD'] == 'POST'
+    return edit(captures, params, env) unless post?
     
     setup captures.first
     pull
     
     @title = captures[1]
     
-    data = CGI.parse(env['rack.input'].read)
-    contents = data['contents'].first
-    message = data['message'].first
+    contents = form_fields['contents']
+    message = form_fields['message']
     
     path = "#{captures[1]}.md"
     
@@ -205,14 +204,14 @@ class WikiController < Controller
     end
     
     @title = path.sub('.md', '')
-    @contents = BlueCloth.new(contents).to_html
+    #@contents = BlueCloth.new(contents).to_html
     
-    render :path => 'wiki/show'
+    raise HTTP::Found, "#{@project.wiki_path}/show/#{@title}"
   end
   
   def index captures, params, env
-    captures[1] = 'index'
-    show captures, params, env
+    setup captures.first
+    raise HTTP::Found, "#{@project.wiki_path}/show/index"
   end
   
   def show captures, params, env

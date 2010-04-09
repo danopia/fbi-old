@@ -1,4 +1,6 @@
 require File.join(File.dirname(__FILE__), '..', 'common', 'client')
+require File.join(File.dirname(__FILE__), '..', 'common', 'models')
+
 require 'cgi'
 require 'time'
 
@@ -6,131 +8,128 @@ require 'rubygems'
 require 'json'
 require 'mustache'
 
+require 'lib/routing'
+require 'lib/renderer'
+require 'lib/controller'
+require 'lib/errors'
+
 Mustache.template_path = File.dirname(__FILE__) + '/views'
 
 $www_fbi = FBI::Client.new 'www-' + rand.to_s, 'hil0l'
 $www_fbi.connect
 
-# Hacky hacky hacky...
-$fbi_sock = TCPSocket.new 'danopia.net', 5348
-$fbi_sock.puts({:action => 'auth', :user => 'www_worker-' + rand.to_s, :secret => 'hil0l'}.to_json)
-2.times { $fbi_sock.gets }
-
 Rackup = Rack::Builder.new do
-  fbi = $www_fbi
-  
   use Rack::Reloader, 0
   use Rack::ContentLength
-  app = proc do |env|
   
-    class Layout < Mustache
-      self.template_path = File.dirname(__FILE__) + '/views'
-      
-      def initialize target
-        @target = target
-      end
-      
-      def yield
-        @target
-      end
-    end
+  app = proc do |env|
+    begin
+      env[:fbi] = $www_fbi
+      env[:headers] = {'Content-Type' => 'text/html'}
     
-    require 'lib/routing'
-    require 'lib/renderer'
-    require 'lib/controller'
-    require 'lib/model'
-
-    require 'models/project'
-    require 'models/repo'
-    require 'models/commit'
-    require 'models/user'
-    require 'models/user_session'
-    require 'models/project_member'
-    require 'models/service'
-    
-    parts = env['PATH_INFO'][1..-1].split('/')
-    
-    routing = Routing.new
-    
-    routing.setup do
-      connect '/?$', 'home', 'index'
-      
-      connect '/projects/?$', 'projects', 'main'
-      connect '/projects/new$', 'projects', 'new'
-      connect '/projects/([^/]+)/?$', 'projects', 'show'
-      connect '/projects/([^/]+)/edit$', 'projects', 'edit'
-      
-      connect '/projects/([^/]+)/members/add$', 'projects', 'add_member'
-      connect '/projects/([^/]+)/members/join$', 'projects', 'join'
-      
-      sub_route '/projects/([^/]+)/repos' do
-        connect '/?$', 'repos', 'list'
-        connect '/new$', 'repos', 'new'
-        connect '/([^/]+)/?$', 'repos', 'show'
-        connect '/([^/]+)/edit$', 'repos', 'edit'
-        connect '/([^/]+)/tree/(.*)$', 'repos', 'tree'
-        connect '/([^/]+)/blob/(.+)$', 'repos', 'blob'
+      routing = Routing.new do
+        connect '/?$', 'home', 'index'
+        
+        connect '/github$', 'hooks', 'github'
+        connect '/bitbucket$', 'hooks', 'bitbucket'
+        
+        connect '/projects/?$', 'projects', 'main'
+        connect '/projects/new$', 'projects', 'new'
+        
+        sub_route '/projects/([^/]+)' do
+          connect '/?$', 'projects', 'show'
+          connect '/edit$', 'projects', 'edit'
+          
+          connect '/members/add$', 'projects', 'add_member'
+          connect '/members/join$', 'projects', 'join'
+          
+          sub_route '/repos' do
+            connect '/?$', 'repos', 'list'
+            connect '/new$', 'repos', 'new'
+            connect '/([^/]+)/?$', 'repos', 'show'
+            connect '/([^/]+)/edit$', 'repos', 'edit'
+            connect '/([^/]+)/tree/(.*)$', 'repos', 'tree'
+            connect '/([^/]+)/blob/(.+)$', 'repos', 'blob'
+          end
+          
+          sub_route '/commits' do
+            connect '/?$', 'commits', 'list', :mode => 'project'
+            connect '/authors/([^/]+)/?$', 'commits', 'list', :mode => 'author'
+            connect '/repos/([^/]+)/?$', 'commits', 'list', :mode => 'repo'
+          end
+          
+          sub_route '/wiki' do
+            connect '/?$', 'wiki', 'index'
+            connect '/show/([^/]+)$', 'wiki', 'show'
+            connect '/new/?', 'wiki', 'new'
+            connect '/edit/([^/]+)$', 'wiki', 'edit'
+            connect '/save/([^/]+)$', 'wiki', 'save'
+            connect '/history/([^/]+)$', 'wiki', 'history'
+            connect '/commits/([^/]+)$', 'wiki', 'commits'
+          end
+        end
+        
+        sub_route '/users' do
+          connect '/?$', 'users', 'list'
+          connect '/([^/]+)/?$', 'users', 'show'
+        end
+        
+        sub_route '/account' do
+          connect '/?$', 'users', 'show', :self => true
+          connect '/new$', 'account', 'new'
+          connect '/edit$', 'account', 'edit'
+          connect '/save$', 'account', 'save'
+        end
+        
+        sub_route '/services' do
+          connect '/?$', 'services', 'list'
+          connect '/new$', 'services', 'new'
+          connect '/([^/]+)/?$', 'services', 'show'
+          connect '/([^/]+)/edit$', 'services', 'edit'
+        end
+        
+        sub_route '/irc' do
+          sub_route '/networks' do
+            connect '/?$', 'irc_networks', 'list'
+            connect '/new$', 'irc_networks', 'new'
+            connect '/([^/]+)/?$', 'irc_networks', 'show'
+            connect '/([^/]+)/edit$', 'irc_networks', 'edit'
+          
+            sub_route '/([^/]+)/channels' do
+              connect '/?$', 'irc_channels', 'list'
+              connect '/new$', 'irc_channels', 'new', :with => :network
+              connect '/([^/]+)/?$', 'irc_channels', 'show'
+              connect '/([^/]+)/edit$', 'irc_channels', 'edit'
+            end
+          end
+          
+          connect '/channels/new$', 'irc_channels', 'new'
+        end
+        
+        connect '/login$', 'account', 'login'
+        connect '/logout$', 'account', 'logout'
       end
       
-      sub_route '/projects/([^/]+)/commits' do
-        connect '/?$', 'commits', 'list', :mode => 'project'
-        connect '/authors/([^/]+)/?$', 'commits', 'list', :mode => 'author'
-        connect '/repos/([^/]+)/?$', 'commits', 'list', :mode => 'repo'
-      end
-      
-      sub_route '/projects/([^/]+)/wiki' do
-        connect '/?$', 'wiki', 'index'
-        connect '/show/([^/]+)$', 'wiki', 'show'
-        connect '/new/?', 'wiki', 'new'
-        connect '/edit/([^/]+)$', 'wiki', 'edit'
-        connect '/save/([^/]+)$', 'wiki', 'save'
-        connect '/history/([^/]+)$', 'wiki', 'history'
-        connect '/commits/([^/]+)$', 'wiki', 'commits'
-      end
-      
-      sub_route '/users' do
-        connect '/?$', 'users', 'list'
-        connect '/([^/]+)/?$', 'users', 'show'
-      end
-      
-      sub_route '/account' do
-        connect '/?$', 'users', 'show', :self => true
-        connect '/new$', 'account', 'new'
-        connect '/edit$', 'account', 'edit'
-        connect '/save$', 'account', 'save'
-      end
-      
-      sub_route '/services' do
-        connect '/?$', 'services', 'list'
-        connect '/new$', 'services', 'new'
-        connect '/([^/]+)/?$', 'services', 'show'
-        connect '/([^/]+)/edit$', 'services', 'edit'
-      end
-      
-      connect '/login$', 'account', 'login'
-      connect '/logout$', 'account', 'logout'
-    end
-    
-    route = routing.find env['PATH_INFO']
-    if route
-      $headers = {'Content-Type' => 'text/html'}
+      route = routing.find env['PATH_INFO']
+      raise HTTP::NotFound unless route
       
       env[:session] = UserSession.load env
-      #puts env[:session].inspect[0, 100]
       env[:user] = env[:session] && env[:session].user
       
-      [200, $headers, route.handle(env['PATH_INFO'], env)]
-    #~ else
-      #~ [404, {'Content-Type' => 'text/plain'}, "404: Page not found."]
-    #~ end
+      return [200, env[:headers], route.handle(env['PATH_INFO'], env)]
       
-    elsif File.exists? File.join(File.dirname(__FILE__), 'webhooks', parts[0] + '.rb')
-      require File.join(File.dirname(__FILE__), 'webhooks', parts[0] + '.rb')
-      Class.const_get(parts[0].capitalize + 'Hook').new.run env, fbi
-      [200, {'Content-Type' => 'text/plain'}, "Hook processed."]
+    rescue HTTP::Redirect => ex
+      path = "#{env['rack.url_scheme']}://#{env['HTTP_HOST']}#{ex.path}"
+      env[:headers]['Location'] = path
+      return [ex.code, env[:headers], ex.message]
       
-    else
-      [404, {'Content-Type' => 'text/plain'}, "404: Page not found."]
+    rescue HTTP::Error => ex
+      return [ex.code, env[:headers], ex.message]
+      
+    rescue => ex
+      puts ex, ex.message, ex.backtrace
+      env[:headers]['Content-Type'] = 'text/plain'
+      return [500, env[:headers], ex.inspect + "\n" + ex.message + "\n" + ex.backtrace.join("\n")]
     end
   end
   run app

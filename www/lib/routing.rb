@@ -1,34 +1,14 @@
 class Routing
-  attr_reader :routes
+  attr_reader :routes, :base, :regexp
   
-  def initialize
-    @routes = []
-  end
-  
-  def add_route *args
-    @routes << Route.new(*args)
-  end
-  
-  def find path
-    @routes.map {|route| route.find path}.compact.first
-  end
-  
-  def setup &blck
-    dsl = RoutingDSL.new self
-    dsl.instance_eval &blck
-    self
-  end
-end
-
-class SubRouting
-  attr_reader :base, :regexp, :routes
-  
-  def initialize base
+  def initialize base='', &blck
     base = base.source if base.is_a? Regexp
-    
     @base = base
     @regexp = Regexp.new "^#{@base}"
+    
     @routes = []
+    
+    setup &blck if blck
   end
   
   def add_route *args
@@ -40,8 +20,13 @@ class SubRouting
   end
   
   def find path
-    return nil unless @regexp =~ path
-    @routes.map {|route| route.find path}.compact.first
+    @routes.map {|route| route.find path}.compact.first if @regexp =~ path
+  end
+  
+  def setup &blck
+    dsl = RoutingDSL.new self
+    dsl.instance_eval &blck
+    self
   end
 end
 
@@ -58,10 +43,6 @@ class Route
     @params = params
   end
   
-  def =~ path
-    @pattern =~ path
-  end
-  
   def find path
     @pattern =~ path && self
   end
@@ -74,8 +55,6 @@ class Route
     controller.env = env
     controller.__send__ @method, match.captures, @params, env
     controller.render
-  rescue => ex
-    puts ex, ex.message, ex.backtrace
   end
   
   def alloc_controller
@@ -88,7 +67,7 @@ class Route
   end
   
   def controller_name
-    @klass.capitalize + 'Controller'
+    @klass.capitalize.gsub(/_./){|c| c[1,1].upcase } + 'Controller'
   end
   
   def controller_class
@@ -108,13 +87,11 @@ class RoutingDSL
   end
   
   def sub_route path, &blck
-    path = "^#{path}" unless path.is_a? String
+    path = @routing.base + path if path.is_a? String
     path = path.source if path.is_a? Regexp
     
-    route = SubRouting.new path
+    route = Routing.new path, &blck
     @routing.routes << route
-    dsl = RoutingDSL.new route
-    dsl.instance_eval &blck
     route
   end
 end

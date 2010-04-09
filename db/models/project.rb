@@ -30,6 +30,12 @@ class Project < FBI::Model
     Repo.create fields
   end
   
+  def irc_channels
+    subs = IrcProjectSub.where :project_id => @id
+    subs.map! {|sub| sub.channel_id }
+    IrcChannel.where :id => subs
+  end
+  
   def created_at_short
     created_at.utc.strftime('%B %d, %Y')
   end

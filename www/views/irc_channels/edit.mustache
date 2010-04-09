@@ -1,0 +1,28 @@
+{{# channel }}
+<h2>Editing {{{ full_link }}}</h2>
+<hr />
+
+<style>
+table { margin: 0 auto; }
+th { text-align: right; }
+td, th { width: 50%; }
+</style>
+
+<p>{{ message }}</p>
+
+<form action="{{ network_path }}/channels/new" method="post" name="new_channel">
+  <table>
+    <tr>
+      <th>Network:</th>
+      <td>{{{ network_link }}}</td>
+    </tr>
+    <tr>
+      <th>Name:</th>
+      <td><input type="text" name="name" value="{{ name }}" /></td>
+    </tr>
+    <tr>
+      <td colspan="2" align="center"><input type="submit" value="Add" /></td>
+    </tr>
+  </table>
+</form>
+{{/ channel }}

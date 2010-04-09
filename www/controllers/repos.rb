@@ -3,59 +3,70 @@ class ReposController < Controller
   
   def new captures, params, env
     @project = Project.find :slug => captures.first
-    return unless @project.owner? env[:user]
+    raise HTTP::NotFound unless @project
+    raise HTTP::Forbidden unless @project.owner? env[:user]
+    
     @repo = @project.new_repo
     
-    if env['REQUEST_METHOD'] == 'POST'
-      data = CGI.parse env['rack.input'].read
-      
-      @repo.title = data['title'].first
-      @repo.slug = data['slug'].first
-      @repo.service_id = data['service_id'].first.to_i
-      @repo.name = data['name'].first
-      
-      @repo.save
-      
-      #render :text => 'The repository has been added.'
-      render :path => 'repos/show'
-    else
+    unless post?
       @services = Service.all
+      return
     end
+    
+    @repo.title = form_fields['title']
+    @repo.slug = form_fields['slug']
+    @repo.service_id = form_fields['service_id'].to_i
+    @repo.name = form_fields['name']
+    @repo.save
+    
+    #render :text => 'The repository has been added.'
+    raise HTTP::Found, @repo.show_path
   end
   
   def edit captures, params, env
-    @project = Project.find :slug => captures[0]
-    return unless @project.owner? env[:user]
-    @repo = @project.repo_by :slug => captures[1]
+    @project = Project.find :slug => captures.first
+    raise HTTP::NotFound unless @project
+    raise HTTP::Forbidden unless @project.owner? env[:user]
     
-    if env['REQUEST_METHOD'] == 'POST'
-      data = CGI.parse env['rack.input'].read
-      
-      @repo.title = data['title'].first
-      @repo.slug = data['slug'].first
-      @repo.service_id = data['service_id'].first.to_i
-      @repo.name = data['name'].first
-      
-      @repo.save
-      
-      #render :text => 'The repository has been updated.'
-      render :path => 'repos/show'
-    end
+    @repo = @project.repo_by :slug => captures[1]
+    raise HTTP::NotFound unless @repo
+    
+    return unless post?
+    
+    @repo.title = form_fields['title']
+    @repo.slug = form_fields['slug']
+    @repo.service_id = form_fields['service_id'].to_i
+    @repo.name = form_fields['name']
+    @repo.save
+    
+    #render :text => 'The repository has been updated.'
+    raise HTTP::Found, @repo.show_path
   end
   
   def show captures, params, env
-    @project = Project.find :slug => captures[0]
+    @project = Project.find :slug => captures.first
+    raise HTTP::NotFound unless @project
+    
     @repo = @project.repo_by :slug => captures[1]
+    raise HTTP::NotFound unless @repo
   end
   
   def list captures, params, env
     @project = Project.find :slug => captures.first
+    raise HTTP::NotFound unless @project
+    raise HTTP::Forbidden unless @project.owner? env[:user]
+    
     @repos = @project.repos
   end
   
   def tree captures, params, env
     @project = Project.find :slug => captures.first
-    @repo = @project.repo_by :id => captures[1].to_i
+    raise HTTP::NotFound unless @project
+    raise HTTP::Forbidden unless @project.owner? env[:user]
+    
+    @repo = @project.repo_by :slug => captures[1]
+    raise HTTP::NotFound unless @repo
+    
 		@repo_path = File.join(File.dirname(__FILE__), '..', 'repos', @repo.id.to_s)
     
     captures += [''] if captures.size == 2
@@ -70,7 +81,12 @@ class ReposController < Controller
   
   def blob captures, params, env
     @project = Project.find :slug => captures.first
-    @repo = @project.repo_by_id captures[1].to_i
+    raise HTTP::NotFound unless @project
+    raise HTTP::Forbidden unless @project.owner? env[:user]
+    
+    @repo = @project.repo_by :slug => captures[1]
+    raise HTTP::NotFound unless @repo
+    
 		@repo_path = File.join(File.dirname(__FILE__), '..', 'repos', @repo.id.to_s)
     
     @filename = captures[2]

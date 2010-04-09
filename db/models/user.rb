@@ -42,11 +42,11 @@ class User < FBI::Model
   
   
   
-  def create_session ip=nil
+  def create_session env
     save if new_record? # so we have an ID
     
-    session = UserSession.create :ip_address => ip, :user_id => @id
-    $headers['Set-Cookie'] = session.create_cookie.to_s # TODO: Nicer cookie codez
+    session = UserSession.create :ip_address => env['REMOTE_ADDR'], :user_id => @id
+    env[:headers]['Set-Cookie'] = session.create_cookie.to_s # TODO: Nicer cookie codez
     session
   end
   

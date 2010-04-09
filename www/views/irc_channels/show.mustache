@@ -1,0 +1,24 @@
+{{# channel }}
+<h2>{{{ full_link }}}</h2>
+<hr />
+
+<div style="float: right; border-left: 1px solid #999; padding-left: 1em;">
+  <h3>{{ user_count }} users</h3>
+  <ul style="list-style: none; padding: 0 0 0 1em; margin: 0;" class="fixedwidth">
+  {{# users }}
+    <li>{{ to_s }}</li>
+  {{/ users }}
+  </ul>
+</div>
+
+<h3>projects</h3>
+<ul style="margin: 0;" class="fixedwidth">
+{{# projects }}
+  <li>{{{ show_link }}}</li>
+{{/ projects }}
+  <!--li><a href="{{ show_path }}/projects/add" style="color: gray;">add project...</a></li-->
+</ul>
+
+<br clear="all" />
+
+{{/ channel }}

@@ -1,28 +1,28 @@
+require 'cgi'
+
 class IrcChannel < FBI::Model
 
   def name; @data[:name]; end
   def catchall; @data[:catchall]; end
   
-  def hostname= new; @data[:hostname] = new; end
-  def port= new; @data[:port] = new; end
-  def title= new; @data[:title] = new; end
-  def last_connected= new; @data[:last_connected] = new; end
+  def name= new; @data[:name] = new; end
+  def catchall= new; @data[:catchall] = new; end
 
   def subs filters={}
-    fields[:channel_id] = @id
+    filters[:channel_id] = @id
     IrcProjectSub.where(filters).each {|repo| repo.channel = self }
   end
   def sub_for project
-    chan = IrcChannel.find :network_id => @id, :project_id => project.id
-    chan.project = project
-    chan.network = self
-    chan
+    sub = IrcProjectSub.find :channel_id => @id, :project_id => project.id
+    sub.project = project
+    sub.channel = self
+    sub
   end
   def new_sub project
-    chan = IrcChannel.new
-    chan.project = project
-    chan.network = self
-    chan
+    sub = IrcProjectSub.new
+    sub.project = project
+    sub.channel = self
+    sub
   end
   def create_sub project
     new_sub(project).save
@@ -35,6 +35,8 @@ class IrcChannel < FBI::Model
     Project.where :id => project_ids
   end
 
+  def network_id; @data[:network_id]; end
+  def network_id=new; @data[:network_id] = new.to_i; end
   def network; @network ||= IrcNetwork.find(:id => @data[:network_id]); end
   def network= new; @network = new; @data[:network_id] = new.id; end
   
@@ -42,12 +44,14 @@ class IrcChannel < FBI::Model
   def project; @project ||= @data[:project_id] && Project.find(:id => @data[:project_id]); end
   def project= new; @project = new; @data[:project_id] = new && new.id; end
   
+  def slug; CGI::escape name; end
+  
   def network_path; network.show_path; end
   def show_path; "#{network.channels_path}/#{slug}"; end
   def edit_path; "#{show_path}/edit"; end
   def projects_path; "#{show_path}/projects"; end
   
   def network_link; network.show_link; end
-  def show_link; "<a href=\"#{show_path}\">#{title}</a>"; end
+  def show_link; "<a href=\"#{show_path}\">#{name}</a>"; end
   def full_link; "#{network_link} / #{show_link}"; end
 end
