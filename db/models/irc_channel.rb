@@ -41,6 +41,8 @@ class IrcChannel < FBI::Model
   def network= new; @network = new; @data[:network_id] = new.id; end
   
   # Can be nil
+  def project_id; @data[:project_id]; end
+  def project_id=new; @data[:project_id] = new.to_i; end
   def project; @project ||= @data[:project_id] && Project.find(:id => @data[:project_id]); end
   def project= new; @project = new; @data[:project_id] = new && new.id; end
   

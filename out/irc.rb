@@ -134,7 +134,7 @@ manager.on :command do |e|
 			channel.message message
 
 		when 'route_for'
-			route args.shift, args.join(' ')
+			route args.shift.to_i, nil, args.join(' ')
 			
 		when 'projects'
 			projects = e.target.record.projects.map {|project| project.title }
@@ -235,24 +235,34 @@ EM.next_tick {
 	end
 }
 
-# TODO: This can just get a list of channel IDs without pulling channel objects
-def route project, message
+# TODO: This should just get a list of channel IDs without pulling channel objects
+def route project_id, repo_id, message
 	# channels = Channel.find_all_by_catchall true
 	
-	project = Project.find :slug => project
-	message = "\002#{project.title}\017: #{message}"
+	project = Project.find :id => project_id
+	return unless project
 	
-	channels = project.irc_channels if project
+	if repo_id
+		repo = project.repo_by :id => repo_id
+		
+		prefixed_message = "\002#{project.title}\017/#{repo.title}: #{message}"
+		message = "\002#{repo.title}\017/: #{message}"
+	else
+		prefixed_message = "\002#{project.title}\017/: #{message}"
+	end
 	
-	channels.each do |channel|
-		$manager.route_to channel.id, message
+	project.irc_channels.each do |channel|
+		channel = $manager.channels[channel.id]
+		next unless channel
+		
+		channel.message (channel.project_id == project.id) ? message : prefixed_message
 		#sleep 0.5
 	end
 end
 
 fbi.on :publish do |origin, target, private, data|
 	if target == '#commits'
-		commits = data
+		commits = data['commits']
 		
 		if commits.size > 3
 			commits = commits[-3..-1]
@@ -260,16 +270,16 @@ fbi.on :publish do |origin, target, private, data|
 		end
 		
 		commits.each do |commit|
-			message = "\00303#{commit['author']['name']} \00307#{commit['branch']}\017 \002#{commit['commit'][0,8]}\017: #{commit['message'].gsub("\n", ' ')} \00302<\002\002#{commit['shorturl']}>"
+			message = "\00303#{commit['author']['name']} \00307#{data['branch']}\017 \002#{commit['commit'][0,8]}\017: #{commit['message'].gsub("\n", ' ')} \00302<\002\002#{commit['shorturl'] || commit['url']}>"
 
-			route commit['project'], message
+			route data['project_id'], data['repo_id'], message
 		end
 		
 	elsif target == '#mailinglist'
 		data.each do |post|
 			message = "mailing list: \00303#{post['author']['name']}\017 : #{post['subject'].gsub("\n", ' ')} \00302<\002\002#{post['shorturl']}>"
 
-			route post['project'], message
+			#route post['project'], message
 		end
 		
 	elsif target == '#irc'
@@ -315,7 +325,7 @@ fbi.on :publish do |origin, target, private, data|
 					:users => channel.users
 				
 			when 'route'
-				route data['project'], data['message']
+				route data['project_id'], data['repo_id'], data['message']
 				
 			when 'part'
 				channel = manager.channels[data['channel_id']]
@@ -332,8 +342,6 @@ fbi.on :publish do |origin, target, private, data|
 			
 		end
 		
-	elsif private
-		manager.route_to data['server'], data['channel'], data['message']
 	end
 end
 
