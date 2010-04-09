@@ -1,7 +1,8 @@
 module FBI_IRC
 
 class Network
-	attr_reader :manager, :record, :connections, :next_id, :max_chans
+	attr_reader :manager, :record, :connections, :next_id
+	attr_accessor :max_chans
 	
 	def initialize manager, record={}
 		@manager = manager
