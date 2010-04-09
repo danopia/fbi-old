@@ -59,6 +59,12 @@ class User < FBI::Model
     ProjectMember.where :user_id => @id
   end
   
+  def identities filters={}
+    filters[:user_id] = @id
+    Identity.where(filters).each {|identity| identity.user = self }
+  end
+  
+  
   def profile_path; "/users/#{username}"; end
   
   def profile_link; "<a href=\"#{profile_path}\" title=\"#{display_name}'s Profile\">#{display_name}</a>"; end
