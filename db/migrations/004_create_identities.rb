@@ -1,4 +1,4 @@
-class CreateIdentities
+class CreateIdentitiesMigration
   def self.run db
     db.sequel.create_table :identities do
       primary_key :id
