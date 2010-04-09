@@ -167,6 +167,7 @@ class Connection < FBI::LineConnection
 		
 		def handle_ctcp type, origin, target, message
 			command, message = message[1..-2].split ' ', 2
+			return unless command
 			type = (type == :message) ? :ctcp : :ctcp_response
 			handle type, origin, target, command.upcase, message
 		end
