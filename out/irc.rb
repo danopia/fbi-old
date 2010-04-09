@@ -61,7 +61,7 @@ manager.on :message do |e|
 		:sender => e.origin,
 		:message => e[0],
 		:admin => e.admin?,
-	}
+	} rescue nil
 end
 
 manager.on 005 do |e|
@@ -81,12 +81,12 @@ manager.on :join do |e|
 end
 
 manager.on :part do |e|
-	e.target.users.delete e.origin[:nick]
+	e.target.is_a?(FBI_IRC::Channel) && e.target.users.delete(e.origin[:nick])
 end
 
 manager.on :kick do |e|
 	p e.params
-	e.target.users.delete e[2]
+	e.target.is_a?(FBI_IRC::Channel) && e.target.users.delete(e[2])
 end
 
 manager.on :quit do |e|
@@ -217,7 +217,7 @@ manager.on :command do |e|
 				:command => command,
 				:args => e[1],
 				:admin => e.admin?,
-			}
+			} rescue nil
 	end
 end
 
