@@ -34,6 +34,7 @@ class HooksController < Controller
       {:author => commit['author'],
        :branch => data['ref'].split('/').last,
        :commit => commit['id'],
+       :message => commit['message'],
        :url => commit['url']}
     end
     
