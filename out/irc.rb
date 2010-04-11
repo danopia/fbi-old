@@ -132,7 +132,7 @@ end
 
 manager.on :command do |e|
 	command = e[0]
-	args = e[1].split
+	args = (e[1] || '').split
 	
 	case command.downcase
 		#~ when 'help'
