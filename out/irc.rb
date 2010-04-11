@@ -33,7 +33,9 @@ manager.on :ctcp do |e|
 			e.action "arrests #{e.origin[:nick]}" if message.index("mimics #{e.conn.nick}") == 0
 			e.action "tastes crunchy" if message.index("eats #{e.conn.nick}") == 0
 			e.action "dies" if message.index("kills #{e.conn.nick}") == 0
+			e.action "smacks #{e.origin[:nick]} even harder" if message.index("smacks #{e.conn.nick}") == 0
 			e.action "hugs #{e.origin[:nick]}" if message.index("hugs #{e.conn.nick}") == 0
+			e.message "That's a pathetic excuse for a slap, #{e.origin[:nick]}." if message.index("slaps #{e.conn.nick}") == 0
 			e.message "ow" if message.index("kicks #{e.conn.nick}") == 0
 			
 			if message.index("rubs #{e.conn.nick}'s tummy") == 0
@@ -319,7 +321,7 @@ def route project_id, repo_id, message
 		channel = $manager.channels[channel.id]
 		next unless channel
 		
-		channel.message (channel.project_id == project.id) ? message : prefixed_message
+		channel.message (channel.record.project_id == project.id) ? message : prefixed_message
 		#sleep 0.5
 	end
 end
