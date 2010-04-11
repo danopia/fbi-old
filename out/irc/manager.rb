@@ -16,13 +16,17 @@ class Manager
 		# Only two come stock:
 		# :ping (to pong)
 		on :ping do |e|
-			e.conn.force_send :pong, e.params.first
+			e.conn.force_send :pong, e[0]
 		end
 		
 		# and :message (to emit :command)
 		on :message do |e|
-			params = e.param.split ' ', 3
-			params.unshift e.conn.nick if e.pm?
+			if e.pm?
+				params = e[0].split ' ', 2
+				params.unshift e.conn.nick
+			else
+				params = e[0].split ' ', 3
+			end
 			
 			next if params.size < 2 || params.first.downcase.index(e.conn.nick.downcase) != 0
 			next if params.first.size > e.conn.nick.size + 1

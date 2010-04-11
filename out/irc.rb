@@ -132,7 +132,7 @@ end
 
 manager.on :command do |e|
 	command = e[0]
-	args = e[1..-1]
+	args = e[1].split
 	
 	case command.downcase
 		#~ when 'help'
@@ -160,9 +160,7 @@ manager.on :command do |e|
 			
 		when 'project'
 			projects = e.target.record.projects
-			subcommand = (args.shift || '').downcase
-			p subcommand
-			case subcommand
+			case (args.shift || '').downcase
 			
 				when 'add'
 					args.map! do |arg|
