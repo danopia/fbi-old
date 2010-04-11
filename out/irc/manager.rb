@@ -45,6 +45,10 @@ class Manager
 			
 			channel.redirect = e[1]
 		end
+		
+		on :nick do |e|
+			p e
+		end
 
 	end
 	

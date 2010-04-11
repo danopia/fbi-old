@@ -160,7 +160,9 @@ manager.on :command do |e|
 			
 		when 'project'
 			projects = e.target.record.projects
-			case (args.shift||'').downcase
+			subcommand = (args.shift || '').downcase
+			p subcommand
+			case subcommand
 			
 				when 'add'
 					args.map! do |arg|
