@@ -168,7 +168,7 @@ manager.on :command do |e|
 						project ||= Project.find :title => arg
 						
 						if !project
-							"#{project.title} doesn't exist"
+							"#{arg} doesn't exist"
 						elsif projects.include? project
 							"#{project.title} was already added"
 						else
