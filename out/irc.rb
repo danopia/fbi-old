@@ -323,7 +323,7 @@ def route project_id, repo_id, message
 		channel = $manager.channels[channel.id]
 		next unless channel
 		
-		channel.message (channel.record.project_id == project.id) ? message : prefixed_message
+		channel.message((channel.record.project_id == project.id) ? message : prefixed_message)
 		#sleep 0.5
 	end
 end
