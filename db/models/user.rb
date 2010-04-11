@@ -63,6 +63,16 @@ class User < FBI::Model
     filters[:user_id] = @id
     Identity.where(filters).each {|identity| identity.user = self }
   end
+  def new_identity fields={}
+    save if new_record? # so we have an ID
+    fields[:user_id] = @id
+    Identity.new fields
+  end
+  def create_identity fields={}
+    save if new_record? # so we have an ID
+    fields[:user_id] = @id
+    Identity.create fields
+  end
   
   
   def profile_path; "/users/#{username}"; end

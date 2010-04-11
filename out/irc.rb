@@ -114,9 +114,23 @@ end
 ###################
 
 
+def fetch_identities network, origin
+	ids = Identity.where :service_id => 2
+	ids = ids.select do |ident|
+		next false if ident.json['network_id'] != network.record.id
+		
+		pattern = ident.key
+		actual = "#{origin[:nick]}!#{origin[:ident]}@#{origin[:host]}"
+		#p pattern, actual, '^' + Regexp.escape(pattern).gsub("\\*", '.*') + '$'
+		Regexp.new('^' + Regexp.escape(pattern).gsub("\\*", '.*') + '$').match actual
+	end
+	
+	ids.first
+end
+
 manager.on :command do |e|
 	command = e[0]
-	args = (e[1] || '').split
+	args = e[1..-1]
 	
 	case command.downcase
 		#~ when 'help'
@@ -181,6 +195,57 @@ manager.on :command do |e|
 
 			end
 			
+		when 'whoami'
+			ids = Identity.where :service_id => 2
+			ids = ids.select do |ident|
+				next false if ident.json['network_id'] != e.network.record.id
+				
+				pattern = ident.key
+				actual = "#{e.origin[:nick]}!#{e.origin[:ident]}@#{e.origin[:host]}"
+				#p pattern, actual, '^' + Regexp.escape(pattern).gsub("\\*", '.*') + '$'
+				Regexp.new('^' + Regexp.escape(pattern).gsub("\\*", '.*') + '$').match actual
+			end
+			
+			if ids.empty?
+				e.respond 'Nobody.'
+			elsif ids.size == 1
+				id = ids.first
+				e.respond "You are authed as #{id.user.display_name}."
+			else
+				e.respond "You match #{ids.size} identities, so I'll consider you no one."
+			end
+			
+		when 'authorize'
+			user = User.find :username => args.shift
+			
+			if user.nil?
+				e.respond 'The username or password was incorrect.'
+			elsif user.password_hash != User.hash(user.username.downcase, user.salt, args.shift)
+				e.respond 'The username or password was incorrect.'
+			else
+			
+				ident = user.new_identity
+				ident.key = "#{e.origin[:nick]}!#{e.origin[:ident]}@#{e.origin[:host]}"
+				ident.json = {:network_id => e.network.record.id}
+				ident.service_id = 2
+				ident.save
+				
+				e.respond "An identity for #{ident.key} on #{e.network.record.title} has been added to #{user.display_name}. I will now recognize you on IRC automatically."
+			end
+			
+		when 'register'
+			user = User.new
+			user.username, user.email, user.password = args
+		  user.save
+		  
+			ident = user.new_identity
+			ident.key = "#{e.origin[:nick]}!#{e.origin[:ident]}@#{e.origin[:host]}"
+			ident.json = {:network_id => e.network.record.id}
+			ident.service_id = 2
+			ident.save
+				
+			e.respond "Your account, #{user.display_name}, has been created. You may now log in to the website. An identity matching #{ident.key} on #{e.network.record.title} has already been added to your account so that I can recognize you on IRC automatically."
+			
 		when 'join'
 			channel = e.network.record.channel_by :name => args[0]
 			channel ||= e.network.record.create_channel :name => args[0]
@@ -228,7 +293,8 @@ end
 
 
 EM.next_tick {
-	IrcNetwork.all.each do |network|
+	networks = $DEBUG ? [IrcNetwork.first] : IrcNetwork.all
+	networks.each do |network|
 		manager.spawn_network network
 	end
 }

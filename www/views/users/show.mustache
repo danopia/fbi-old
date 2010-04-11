@@ -64,4 +64,15 @@ table.profile th { text-align: left; color: #666; font-weight: normal; }
   </tr>
 </table>
 
+{{# is_self }}
+<hr />
+<h3>identities</h3>
+<ul style="list-style: none; padding: 0 0 0 1em; margin: 0;">
+{{# identities }}
+  <li>{{{ show_link }}}</li>
+{{/ identities }}
+  <!--li><a href="/projects/new" style="color: gray;">create project</a></li-->
+</ul>
+{{/ is_self }}
+
 {{/ user }}
