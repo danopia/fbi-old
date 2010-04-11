@@ -295,7 +295,7 @@ end
 
 
 EM.next_tick {
-	networks = $DEBUG ? [IrcNetwork.first] : IrcNetwork.all
+	networks = $DEBUG ? [IrcNetwork.find(:id => 3)] : IrcNetwork.all
 	networks.each do |network|
 		manager.spawn_network network
 	end
@@ -356,6 +356,14 @@ fbi.on :publish do |origin, target, private, data|
 				
 				network = IrcNetwork.find data['network_id']
 				manager.spawn_network network if network
+		
+			when 'disconnect'
+				next unless manager.networks.has_key? data['network_id']
+				
+				network = manager.networks[data['network_id']]
+				network.quit data['message']
+				
+				manager.networks.delete data['network_id']
 				
 			when 'join'
 				channel = IrcChannel.find data['channel_id']
