@@ -311,10 +311,10 @@ def route project_id, repo_id, message
 	if repo_id
 		repo = project.repo_by :id => repo_id
 		
-		prefixed_message = "\002#{project.title}\017/#{repo.title}: #{message}"
-		message = "\002#{repo.title}\017/: #{message}"
+		prefixed_message = "\002#{project.slug}\017/#{repo.slug}: #{message}"
+		message = "\002#{repo.slug}\017/: #{message}"
 	else
-		prefixed_message = "\002#{project.title}\017/: #{message}"
+		prefixed_message = "\002#{project.slug}\017/: #{message}"
 	end
 	
 	project.irc_channels.each do |channel|
