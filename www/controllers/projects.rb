@@ -52,7 +52,7 @@ class ProjectsController < Controller
     
     unless post?
       @users = User.all
-      existing = @project.members.map &:user_id
+      existing = @project.members.map {|ms| ms.user_id }
       @users.reject! {|user| existing.include? user.id }
       
       return
