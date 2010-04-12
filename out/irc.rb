@@ -397,7 +397,7 @@ fbi.on :publish do |origin, target, private, data|
 				
 			when 'raw'
 				channel = manager.channels[data['channel_id']]
-				channel && channel.conn.send_line data['message']
+				channel && channel.conn.send_line(data['message'])
 				
 			when 'users'
 				channel = manager.channels[data['channel_id']]
