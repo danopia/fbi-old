@@ -116,7 +116,7 @@ end
 ###################
 
 
-def fetch_identities network, origin
+def fetch_identity network, origin
 	ids = Identity.where :service_id => 2
 	ids = ids.select do |ident|
 		next false if ident.json['network_id'] != network.record.id
@@ -127,7 +127,7 @@ def fetch_identities network, origin
 		Regexp.new('^' + Regexp.escape(pattern).gsub("\\*", '.*') + '$').match actual
 	end
 	
-	ids.first
+	ids.size == 1 && ids.first
 end
 
 manager.on :command do |e|
@@ -144,7 +144,7 @@ manager.on :command do |e|
 		when 'route'
 			channel = manager.channels[args.shift.to_i]
 			message = args.join(' ')
-			message.sub! /^\/me (.+)$/i, "\001ACTION \1\001"
+			message.sub!(/^\/me (.+)$/i, "\001ACTION \1\001")
 			channel.message message
 
 		when 'route_for'
@@ -197,24 +197,31 @@ manager.on :command do |e|
 
 			end
 			
-		when 'whoami'
-			ids = Identity.where :service_id => 2
-			ids = ids.select do |ident|
-				next false if ident.json['network_id'] != e.network.record.id
-				
-				pattern = ident.key
-				actual = "#{e.origin[:nick]}!#{e.origin[:ident]}@#{e.origin[:host]}"
-				#p pattern, actual, '^' + Regexp.escape(pattern).gsub("\\*", '.*') + '$'
-				Regexp.new('^' + Regexp.escape(pattern).gsub("\\*", '.*') + '$').match actual
+		when 'my'
+			id = fetch_identity e.network, e.origin
+			
+			if id.nil?
+				e.respond 'You are not authed.'
+				next
 			end
 			
-			if ids.empty?
-				e.respond 'Nobody.'
-			elsif ids.size == 1
-				id = ids.first
+			case (args.shift || '').downcase
+			
+				when 'identities'
+					e.respond "#{id.user.display_name}'s identities: #{id.user.identities.map(&:key).join(', ')}"
+			
+				when 'projects'
+					e.respond "#{id.user.display_name}'s projects: #{id.user.projects.map(&:slug).join(', ')}"
+			
+			end
+			
+		when 'whoami'
+			id = fetch_identity e.network, e.origin
+			
+			if id
 				e.respond "You are authed as #{id.user.display_name}."
 			else
-				e.respond "You match #{ids.size} identities, so I'll consider you no one."
+				e.respond "Nobody."
 			end
 			
 		when 'authorize'
@@ -265,18 +272,26 @@ manager.on :command do |e|
 			#~ else
 				#~ e.respond "#{channel.name} is no longer a catchall."
 			#~ end
-			#~ 
-		#~ when 'default'
-			#~ server = Server.find e.network.id
-			#~ channel = server.channels.find_by_name e.target
-			#~ e.respond "The default GitHub project for #{channel.name} is #{channel.default_project}."
-			#~ 
-		#~ when 'set-default'
-			#~ server = Server.find e.network.id
-			#~ channel = server.channels.find_by_name e.target
-			#~ channel.default_project = (args.shift.downcase rescue nil)
-			#~ channel.save
-			#~ e.respond "The default GitHub project for #{channel.name} is now #{channel.default_project}."
+			
+		when 'default'
+			chan = e.target.record
+			
+			if args.any?
+				project = Project.find :slug => args.first
+				
+				if project
+					chan.project = project
+					chan.save
+					e.respond "The default GitHub project for #{chan} is now #{project}."
+				else
+					e.respond "I could not find the '#{args.first}' project. Did you create it?"
+				end
+				
+			elsif chan.project_id.nil?
+				e.respond "#{chan.name} does not have a default project defined. Use the 'default set [project]' command to set one."
+			else
+				e.respond "The default FBI project for #{chan} is #{chan.project}."
+			end
 		
 		else
 			puts "Unknown command #{command}; broadcasting a packet"
@@ -314,7 +329,7 @@ def route project_id, repo_id, message
 		prefixed_message = "\002#{project.slug}\017/#{repo.slug}: #{message}"
 		message = "\002#{repo.slug}\017/: #{message}"
 	else
-		prefixed_message = "\002#{project.slug}\017/: #{message}"
+		prefixed_message = "\002#{project.slug}\017: #{message}"
 	end
 	
 	project.irc_channels.each do |channel|
