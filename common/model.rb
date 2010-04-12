@@ -38,6 +38,11 @@ module FBI
     def fbi_packet args={}; self.class.fbi_packet args; end
     
     
+    def self.from_json json
+      self.new JSON.parse(json)
+    end
+    
+    
     def self.table= name
       @table = name
     end
@@ -84,8 +89,7 @@ module FBI
     
     def initialize data={}
       @data = data
-      @id = @data[:id]
-      @data.delete :id
+      @id = @data.delete(:id)
     end
     
     def created_at; @data[:created_at]; end
@@ -126,5 +130,14 @@ module FBI
       
       output + '>'
     end
+    
+    
+    def to_i; @id; end
+    def to_s; @data[:slug]; end
+    
+    def to_hash
+      @data.merge({:id => @id})
+    end
+    def to_json; to_hash.to_json; end
   end
 end
