@@ -211,7 +211,7 @@ manager.on :command do |e|
 					e.respond "#{id.user.display_name}'s identities: #{id.user.identities.map(&:key).join(', ')}"
 			
 				when 'projects'
-					e.respond "#{id.user.display_name}'s projects: #{id.user.projects.map(&:slug).join(', ')}"
+					e.respond "#{id.user.display_name}'s projects: #{id.user.projects.join(', ')}"
 			
 			end
 			
@@ -394,6 +394,10 @@ fbi.on :publish do |origin, target, private, data|
 			when 'message'
 				channel = manager.channels[data['channel_id']]
 				channel && channel.message(data['message'])
+				
+			when 'raw'
+				channel = manager.channels[data['channel_id']]
+				channel && channel.conn.send_line data['message']
 				
 			when 'users'
 				channel = manager.channels[data['channel_id']]

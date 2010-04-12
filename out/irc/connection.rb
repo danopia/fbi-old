@@ -138,6 +138,9 @@ class Connection < FBI::LineConnection
 			when 'quit'
 				handle :quit, origin, nil, *args
 				
+			when 'nick'
+				handle :nick, origin, *args
+				
 			when '001' # should be moved?
 				flush!
 				handle :connected, origin, *args
