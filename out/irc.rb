@@ -292,6 +292,11 @@ manager.on :command do |e|
 			else
 				e.respond "The default FBI project for #{chan} is #{chan.project}."
 			end
+			
+		when 'repos'
+			chan = e.target.record
+			
+			e.respond "Repos belonging to #{chan}'s project, #{chan.project}: #{chan.project.repos.join ', '}" rescue nil
 		
 		else
 			puts "Unknown command #{command}; broadcasting a packet"
