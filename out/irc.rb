@@ -208,7 +208,7 @@ manager.on :command do |e|
 			case (args.shift || '').downcase
 			
 				when 'identities'
-					e.respond "#{id.user.display_name}'s identities: #{id.user.identities.map(&:key).join(', ')}"
+					e.respond "#{id.user.display_name}'s identities: #{id.user.identities.map{|i|i.key}.join(', ')}"
 			
 				when 'projects'
 					e.respond "#{id.user.display_name}'s projects: #{id.user.projects.join(', ')}"
