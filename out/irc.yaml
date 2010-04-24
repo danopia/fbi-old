@@ -1,9 +1,9 @@
 component:
-  name: irc (dev)
+  name: irc
   secret: hil0l
 
 irc:
-  nick template: FBI-%i[dev]
+  nick template: FBI-%i
   ident: fbi
   realname: FBI Version Control Informant
 

@@ -62,7 +62,7 @@ manager.on :ctcp do |e|
 end
 
 manager.on :message do |e|
-	e.respond "It's 'ooc', not 'OOC'!" if e.target.to_s == '#ooc-lang' && e.params.first.include?('OOC') && !e.params.first.include?('OOC_')
+	#e.respond "It's 'ooc', not 'OOC'!" if e.target.to_s == '#ooc-lang' && e.params.first.include?('OOC') && !e.params.first.include?('OOC_')
 	
 	next unless e.target.is_a? FBI_IRC::Channel
 	next unless config['flags']['broadcast messages']
