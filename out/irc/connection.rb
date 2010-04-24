@@ -77,7 +77,7 @@ class Connection < FBI::LineConnection
 	end
 	
 	def action target, message
-		ctcp target, 'action', message
+		ctcp target, :action, message
 	end
 	
 	def join channel
@@ -176,7 +176,7 @@ class Connection < FBI::LineConnection
 		end
 		
 		def build_ctcp command, *args
-			args.unshift command.upcase
+			args.unshift command.to_s.upcase
 			"\001#{args.join ' '}\001"
 		end
 end # connection class
