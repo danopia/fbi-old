@@ -51,7 +51,9 @@ class Manager
 		end
 		
 		on :nick do |e|
-			p e
+			if e.origin[:nick] == e.conn.nick
+				e.conn.nick = e.target
+			end
 		end
 
 	end

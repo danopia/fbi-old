@@ -1,0 +1,21 @@
+component:
+  name: irc
+  secret: hil0l
+
+irc:
+  nick template: FBI-%i
+  ident: fbi
+  realname: FBI Version Control Informant
+
+flags:
+  broadcast commands: yes
+  broadcast messages: yes
+
+# when run in dev mode, only use network 3
+dev network: 3
+
+# only announce at most 3 commits out of a burst (git push)
+commit burst cap: 3
+
+# on the FBI system (TODO: take a slug and autofind it on startup)
+service id: 2

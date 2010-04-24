@@ -1,7 +1,7 @@
 module FBI_IRC
 
 class Connection < FBI::LineConnection
-	attr_reader :network, :manager, :nick, :channels, :queue, :pending
+	attr_accessor :network, :manager, :nick, :channels, :queue, :pending
 	
 	def initialize network
 		super()

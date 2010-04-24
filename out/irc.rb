@@ -1,11 +1,22 @@
 require File.join(File.dirname(__FILE__), '..', 'common', 'client')
 require File.join(File.dirname(__FILE__), '..', 'common', 'models')
+require File.join(File.dirname(__FILE__), '..', 'common', 'tinyurl')
 
 require File.join(File.dirname(__FILE__), 'irc_lib')
 
-$fbi = fbi = FBI::Client.new('irc (dev)', 'hil0l')
+# YAML config
+require 'yaml'
+config_path = File.join(File.dirname(__FILE__), 'irc.yaml')
+$config = config = YAML.load(File.read(config_path))
 
-$manager = manager = FBI_IRC::Manager.new('FBI-%i[dev]', 'fbi', 'FBI Version Control Informant')
+# Create component
+$fbi = fbi = FBI::Client.new(config['component']['name'])
+fbi.secret = config['component']['secret']
+
+# Create IRC manager
+$manager = manager = FBI_IRC::Manager.new(config['irc']['nick template'])
+manager.ident = config['irc']['ident']
+manager.realname = config['irc']['realname']
 
 #manager.on :invite do |e|
 #	e.conn.join e.target if e.channel?
@@ -20,7 +31,7 @@ manager.on :ctcp do |e|
 	case e[0]
 	
     when 'VERSION'
-      e.respond 'FBI to_irc module v0.0.1'
+      e.respond 'FBI out/irc module v0.0.1'
      
     when 'PING'
       e.respond e[1]
@@ -30,6 +41,7 @@ manager.on :ctcp do |e|
 			
 			e.action "_oø_ #{e.origin[:nick]}" if message.index("sets fire to #{e.conn.nick}") == 0
 			e.action "shoots #{e.origin[:nick]}" if message.index("evades the FBI") == 0
+			e.action "shoots #{e.origin[:nick]}" if message.index("evades #{e.conn.nick}") == 0
 			e.action "arrests #{e.origin[:nick]}" if message.index("mimics #{e.conn.nick}") == 0
 			e.action "tastes crunchy" if message.index("eats #{e.conn.nick}") == 0
 			e.action "dies" if message.index("kills #{e.conn.nick}") == 0
@@ -53,6 +65,7 @@ manager.on :message do |e|
 	e.respond "It's 'ooc', not 'OOC'!" if e.target.to_s == '#ooc-lang' && e.params.first.include?('OOC') && !e.params.first.include?('OOC_')
 	
 	next unless e.target.is_a? FBI_IRC::Channel
+	next unless config['flags']['broadcast messages']
 	
 	fbi.send '#irc', {
 		:channel => e.target.id,
@@ -117,7 +130,7 @@ end
 
 
 def fetch_identity network, origin
-	ids = Identity.where :service_id => 2
+	ids = Identity.where :service_id => $config['service id']
 	ids = ids.select do |ident|
 		next false if ident.json['network_id'] != network.record.id
 		
@@ -301,6 +314,7 @@ manager.on :command do |e|
 		else
 			puts "Unknown command #{command}; broadcasting a packet"
 			next unless e.target.is_a? FBI_IRC::Channel
+			next unless config['flags']['broadcast commands']
 			
 			fbi.send '#irc', {
 				:channel => e.target.id,
@@ -315,7 +329,7 @@ end
 
 
 EM.next_tick {
-	networks = $DEBUG ? [IrcNetwork.find(:id => 3)] : IrcNetwork.all
+	networks = $DEBUG ? [IrcNetwork.find(:id => config['dev network'])] : IrcNetwork.all
 	networks.each do |network|
 		manager.spawn_network network
 	end
@@ -332,7 +346,7 @@ def route project_id, repo_id, message
 		repo = project.repo_by :id => repo_id
 		
 		prefixed_message = "\002#{project.slug}\017/#{repo.slug}: #{message}"
-		message = "\002#{repo.slug}\017/: #{message}"
+		message = "\002#{repo.slug}\017: #{message}"
 	else
 		prefixed_message = "\002#{project.slug}\017: #{message}"
 	end
@@ -351,9 +365,11 @@ fbi.on :publish do |origin, target, private, data|
 		commits = data['commits']
 		
 		if commits.size > 3
-			commits = commits[-3..-1]
-			commits.first['message'] = "(#{data.size - commits.size - 3} commit(s) ignored --FBI)\n#{commits.first['message']}"
+			commits = commits.last(config['commit burst cap'])
+			commits.first['message'] = "(#{data.size - commits.size} commit(s) ignored --FBI)\n#{commits.first['message']}"
 		end
+		
+		FBI.shorten_urls_if_present commits
 		
 		commits.each do |commit|
 			message = "\00303#{commit['author']['name']} \00307#{data['branch']}\017 \002#{commit['commit'][0,8]}\017: #{commit['message'].gsub("\n", ' ')} \00302<\002\002#{commit['shorturl'] || commit['url']}>"
@@ -402,7 +418,7 @@ fbi.on :publish do |origin, target, private, data|
 				
 			when 'raw'
 				channel = manager.channels[data['channel_id']]
-				channel && channel.conn.send_line(data['message'])
+				channel && channel.connection.send_line(data['message'])
 				
 			when 'users'
 				channel = manager.channels[data['channel_id']]
@@ -439,7 +455,6 @@ fbi.on :publish do |origin, target, private, data|
 				network.join channel
 			
 		end
-		
 	end
 end
 
