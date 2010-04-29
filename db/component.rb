@@ -30,8 +30,8 @@ end
 client.on :publish do |origin, target, private, data|
   #puts "got packet"
   case data['method']
-    when 'introspect'
-      client.send origin, :tables => db.sequel.tables, :method => 'introspect', :response => true
+    #~ when 'introspect'
+      #~ client.send origin, :tables => db.sequel.tables, :method => 'introspect', :response => true
     
     when 'tables'
       client.send origin, :tables => db.sequel.tables, :method => 'tables', :response => true
@@ -40,14 +40,29 @@ client.on :publish do |origin, target, private, data|
       criteria = data['criteria'] || {}
       criteria.symbolify!
       results = db[data['table'].to_sym]
+      if data.has_key? 'join'
+        results = results.join_table :inner, data['join']['table'].to_sym,  data['join']['using'].map(&:to_sym)
+      end
       results = results.filter(criteria) if criteria.any?
+      (data['order'] || []).each do |order|
+        expr = Sequel::SQL::OrderedExpression.new(order['key'].to_sym, !order['asc'])
+        results = results.order(expr)
+      end
+      results = results.limit(data['count'], data['offset'])
       client.send origin, :records => results.all, :method => 'select', :response => true
     
     when 'first'
       criteria = data['criteria'] || {}
       criteria.symbolify!
       results = db[data['table'].to_sym]
+      if data.has_key? 'join'
+        results = results.join_table :inner, data['join']['table'].to_sym,  data['join']['using'].map(&:to_sym)
+      end
       results = results.filter(criteria) if criteria.any?
+      (data['order'] || []).each do |order|
+        expr = Sequel::SQL::OrderedExpression.new(order['key'].to_sym, !order['asc'])
+        results = results.order(expr)
+      end
       client.send origin, :record => results.first, :method => 'first', :response => true
     
     when 'insert'
