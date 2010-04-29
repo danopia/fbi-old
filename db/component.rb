@@ -49,6 +49,7 @@ client.on :publish do |origin, target, private, data|
         results = results.order(expr)
       end
       results = results.limit(data['count'], data['offset'])
+      results = results.select(data['fields'].map{|x|x.to_sym}) if data.has_key? 'fields'
       client.send origin, :records => results.all, :method => 'select', :response => true
     
     when 'first'
@@ -63,6 +64,7 @@ client.on :publish do |origin, target, private, data|
         expr = Sequel::SQL::OrderedExpression.new(order['key'].to_sym, !order['asc'])
         results = results.order(expr)
       end
+      results = results.select(data['fields'].map{|x|x.to_sym}) if data.has_key? 'fields'
       client.send origin, :record => results.first, :method => 'first', :response => true
     
     when 'insert'
