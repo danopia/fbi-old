@@ -41,7 +41,9 @@ class Project < FBI::Model
   end
   
   def members
-    ProjectMember.where :project_id => @id
+    members = ProjectMember.where :project_id => @id
+    users = User.where(:id => members.map{|mem| mem.user_id}).map {|user| [user.id, user] }
+    members.each {|mem| mem.user = users.assoc(mem.user_id)[1] }
   end
   def owners
     ProjectMember.where :project_id => @id, :owner => true
