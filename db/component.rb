@@ -41,7 +41,7 @@ client.on :publish do |origin, target, private, data|
       criteria.symbolify!
       results = db[data['table'].to_sym]
       if data.has_key? 'join'
-        results = results.join_table :inner, data['join']['table'].to_sym, data['join']['using'].map{|x|x.to_sym}
+        results = results.join_table :inner, data['join']['table'].to_sym, [data['join']['by'].map{|x|x.to_sym}]
       end
       results = results.filter(criteria) if criteria.any?
       (data['order'] || []).each do |order|
@@ -56,7 +56,7 @@ client.on :publish do |origin, target, private, data|
       criteria.symbolify!
       results = db[data['table'].to_sym]
       if data.has_key? 'join'
-        results = results.join_table :inner, data['join']['table'].to_sym, data['join']['using'].map{|x|x.to_sym}
+        results = results.join_table :inner, data['join']['table'].to_sym, [data['join']['by'].map{|x|x.to_sym}]
       end
       results = results.filter(criteria) if criteria.any?
       (data['order'] || []).each do |order|
