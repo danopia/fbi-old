@@ -121,6 +121,8 @@ class MailServer < FBI::LineConnection
   def initialize relay=false
     super()
     
+    relay = true if @ip == '127.0.0.1'
+    
     send_line "220 #{@@hostname} ESMTP FBIMail 0.0.1; Mail #{relay ? 'Relay' : 'Receiver'} Ready"
     @message = nil
     @relay = relay
