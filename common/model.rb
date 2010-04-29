@@ -64,8 +64,10 @@ module FBI
       rec && rec.symbolify! && self.new(rec)
     end
     
-    def self.first filters={}
-      find filters
+    def self.first amount=1, filters={}
+      filters = {:id => filters} if filters.is_a? Fixnum
+      recs = fbi_packet({:method => 'select', :table => table, :criteria => filters, :count => amount})['records']
+      recs.map {|rec| rec.symbolify!; self.new rec }
     end
     
     def self.where filters

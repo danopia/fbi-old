@@ -5,8 +5,8 @@ class HomeController < Controller
     @user = env[:user]
     @loggedout = !@user
     
-    @users = User.all
-    @projects = Project.all
-    @repos = Repo.all
+    @users = User.first(5)
+    @projects = Project.first(5)
+    @repos = Repo.first(5)
   end
 end
