@@ -56,7 +56,9 @@ class User < FBI::Model
   end
   
   def memberships
-    ProjectMember.where :user_id => @id
+    members = ProjectMember.where :user_id => @id
+    projects = Project.where(:id => members.map{|mem| mem.project_id}).map {|project| [project.id, project] }
+    members.each {|mem| mem.project = projects.assoc(mem.project_id)[1] }
   end
   
   def identities filters={}
