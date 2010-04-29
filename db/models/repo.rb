@@ -24,6 +24,13 @@ class Repo < FBI::Model
     [service.slug, name].join ':'
   end
   
+  def member? user
+    project.member? user
+  end
+  def owner? user
+    project.owner? user
+  end
+  
   #~ def commits
     #~ DB[:commits].filter(:repo_id => @id).reverse_order(:committed_at).all.map {|c| Commit.new c}
   #~ end

@@ -1,5 +1,5 @@
 class ReposController < Controller
-  attr_reader :project, :repo, :repos, :commits, :pages, :debug, :files, :filename, :parent, :services
+  attr_reader :project, :repo, :repos, :commits, :pages, :debug, :files, :filename, :parent, :services, :mine
   
   def new captures, params, env
     @project = Project.find :slug => captures.first
@@ -31,7 +31,11 @@ class ReposController < Controller
     @repo = @project.repo_by :slug => captures[1]
     raise HTTP::NotFound unless @repo
     
-    return unless post?
+    unless post?
+      @services = Service.all
+      @services.delete_if {|service| @repo.service_id == service.id }
+      return
+    end
     
     @repo.title = form_fields['title']
     @repo.slug = form_fields['slug']
@@ -49,6 +53,10 @@ class ReposController < Controller
     
     @repo = @project.repo_by :slug => captures[1]
     raise HTTP::NotFound unless @repo
+    
+    @joined = @project.member? env[:user] if env[:user]
+    @mine = @joined.owner? if @joined
+    @unjoined = !@joined
   end
   
   def list captures, params, env

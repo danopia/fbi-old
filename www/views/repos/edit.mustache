@@ -22,7 +22,14 @@ td, th { width: 50%; }
     </tr>
     <tr>
       <th>Service:</th>
-      <td><input type="text" name="service" value="{{ service }}" /> (github, launchpad, etc.)</td>
+      <td><select name="service_id">
+{{# service }}
+        <option value="{{ id }}" selected="selected">{{ title }}</option>
+{{/ service }}
+{{# services }}
+        <option value="{{ id }}">{{ title }}</option>
+{{/ services }}
+      </select></td>
     </tr>
     <tr>
       <th>Name:</th>
