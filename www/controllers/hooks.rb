@@ -7,7 +7,7 @@ class HooksController < Controller
     Repo.find :service_id => service_id, :name => name
   end
   
-  def publish_commit repo, commits, extras={}
+  def publish_commits repo, commits, extras={}
     packet = extras # just for the param name
     packet[:commits] = commits
     packet[:repo_id] = repo.id
@@ -16,6 +16,15 @@ class HooksController < Controller
     env[:fbi].send '#commits', packet
   end
   
+  def save_commits repo, commits, extras={}
+    json = extras # just for the param name
+    json[:commits] = commits
+    json[:repo_id] = repo.id
+    json[:project_id] = repo.project_id
+    
+    Repo
+    #env[:fbi].send '#commits', packet
+  end
   
 
   def github captures, params, env
@@ -38,7 +47,7 @@ class HooksController < Controller
        :url => commit['url']}
     end
     
-    publish_commit repo, data['commits'], :branch => data['ref'].split('/').last
+    publish_commits repo, data['commits'], :branch => data['ref'].split('/').last
     
     raise HTTP::OK, 'Hook processed.'
   end

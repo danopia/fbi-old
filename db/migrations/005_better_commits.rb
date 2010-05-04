@@ -12,8 +12,8 @@ class BetterCommitsMigration
       String :hash, :null => false
       String :json, :null => false
       
-      Time :created_at, :null => false
       Time :commited_at, :null => false
+      Time :created_at, :null => false
       Time :modified_at
     end
   end
