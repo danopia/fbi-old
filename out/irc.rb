@@ -381,7 +381,7 @@ fbi.on :publish do |origin, target, private, data|
 		data.each do |post|
 			message = "mailing list: \00303#{post['author']['name']}\017 : #{post['subject'].gsub("\n", ' ')} \00302<\002\002#{post['shorturl']}>"
 
-			#route post['project'], message
+			route post['project_id'], nil, message
 		end
 		
 	elsif target == '#irc'

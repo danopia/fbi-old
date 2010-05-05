@@ -256,34 +256,34 @@ EventMachine::next_tick do
   MailServer.on_message do |remote_host, message|
     #File.open('mail.txt', 'w') {|f| f.puts @message }
     if message.body.include?('Log Message:') && message.from.include?('sourceforge.net')
-      
-      message.body =~ /^Revision: ([0-9]+)$/
-      rev = $1.to_i
-      
-      message.body =~ /(http:\/\/.+\.sourceforge\.net\/(.+)\/\?rev=[0-9]+&view=rev)/
-      url, project = $1, $2
-      
-      message.body =~ /^Author: +(.+)$/
-      author = $1
-      
-      message.body =~ /^Subject: SF.net .+: .+:\[[0-9]+\] +(.+)$/
-      path = $1
-      
-      index = message.body.index("Log Message:") + 20
-      index = message.body.index("\n", index) + 1
-      end_index = message.body.index("\n\nModified Paths:") - 1
-      log = message.body[index..end_index]
-      
-      fbi.send '#commits', [{
-        :project => project,
-        :owner => nil,
-        :fork => false,
-        :author => {:email => "#{author}@users.sourceforge.net", :name => author},
-        :branch => path,
-        :commit => "r#{rev}",
-        :message => log,
-        :url => url,
-      }]
+      #~ 
+      #~ message.body =~ /^Revision: ([0-9]+)$/
+      #~ rev = $1.to_i
+      #~ 
+      #~ message.body =~ /(http:\/\/.+\.sourceforge\.net\/(.+)\/\?rev=[0-9]+&view=rev)/
+      #~ url, project = $1, $2
+      #~ 
+      #~ message.body =~ /^Author: +(.+)$/
+      #~ author = $1
+      #~ 
+      #~ message.body =~ /^Subject: SF.net .+: .+:\[[0-9]+\] +(.+)$/
+      #~ path = $1
+      #~ 
+      #~ index = message.body.index("Log Message:") + 20
+      #~ index = message.body.index("\n", index) + 1
+      #~ end_index = message.body.index("\n\nModified Paths:") - 1
+      #~ log = message.body[index..end_index]
+      #~ 
+      #~ fbi.send '#commits', [{
+        #~ :project => project,
+        #~ :owner => nil,
+        #~ :fork => false,
+        #~ :author => {:email => "#{author}@users.sourceforge.net", :name => author},
+        #~ :branch => path,
+        #~ :commit => "r#{rev}",
+        #~ :message => log,
+        #~ :url => url,
+      #~ }]
     elsif message.from.include?('@lists.launchpad.net')
       
       message.body =~ /^From: (.+) <([^>]+)>$/
@@ -304,13 +304,15 @@ EventMachine::next_tick do
         else; nil
       end
       
+      project = Project.find :slug => project
+      
       next unless project
       fbi.send '#mailinglist', [{
         :list => list,
         :author => author,
         :subject => subject,
         :url => archive,
-        :project => project,
+        :project_id => project.id,
       }]
       
     end
