@@ -1,4 +1,5 @@
 require File.join(File.dirname(__FILE__), '..', 'common', 'client')
+require File.join(File.dirname(__FILE__), '..', 'common', 'models')
 
 require 'rubygems'
 require 'net/dns/resolver'
