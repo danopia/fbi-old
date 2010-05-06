@@ -16,13 +16,13 @@ class HooksController < Controller
     env[:fbi].send '#commits', packet
   end
   
-  def save_commits repo, commits, extras={}
-    commits.each do |commit|
-      record = Commit.new
-      record.json = extras + commit
-      record.
-    end
-  end
+  #~ def save_commits repo, commits, extras={}
+    #~ commits.each do |commit|
+      #~ record = Commit.new
+      #~ record.json = extras + commit
+      #~ record.
+    #~ end
+  #~ end
   
 
   def github captures, params, env
