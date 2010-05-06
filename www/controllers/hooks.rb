@@ -17,13 +17,11 @@ class HooksController < Controller
   end
   
   def save_commits repo, commits, extras={}
-    json = extras # just for the param name
-    json[:commits] = commits
-    json[:repo_id] = repo.id
-    json[:project_id] = repo.project_id
-    
-    Repo
-    #env[:fbi].send '#commits', packet
+    commits.each do |commit|
+      record = Commit.new
+      record.json = extras + commit
+      record.
+    end
   end
   
 

@@ -31,13 +31,22 @@ class Repo < FBI::Model
     project.owner? user
   end
   
-  #~ def commits
-    #~ DB[:commits].filter(:repo_id => @id).reverse_order(:committed_at).all.map {|c| Commit.new c}
-  #~ end
-  #~ 
-  #~ def commits_5
-    #~ DB[:commits].filter(:repo_id => @id).reverse_order(:committed_at).first(5).map {|c| Commit.new c}
-  #~ end
+  def commits filters={}
+    filters[:repo_id] = @id
+    Commit.where(filters).each {|commit| commit.repo = self }
+  end
+  def commit_by filters
+    filters[:repo_id] = @id
+    Commit.find filters
+  end
+  def new_commit fields={}
+    fields[:repo_id] = @id
+    Commit.new fields
+  end
+  def create_commit fields={}
+    fields[:repo_id] = @id
+    Commit.create fields
+  end
   
   def project_path; "/projects/#{project.slug}"; end
   def show_path;    "#{project_path}/repos/#{slug}"; end

@@ -5,20 +5,25 @@ class Commit < FBI::Model
     super
     @json = JSON.parse @data[:json] if @data.has_key? :json
   end
-
-  def message; @data[:title]; end
-  def hash; @data[:slug]; end
-  def created_at; @data[:created_at]; end
-  def service_id; @data[:service_id]; end
-  def service_id; @data[:service_id]; end
-  def project_id; @data[:project_id]; end
   
-  def title= new; @data[:title] = new; end
-  def slug= new; @data[:slug] = new; end
-  def service_id= new; @data[:service_id] = new; end
-  def name= new; @data[:name] = new; end
-  def url= new; @data[:url] = new; end
-  def project_id= new; @data[:project_id] = new; end
+  def save *args
+    @data[:json] = @json.to_json
+    super
+  end
+
+  def message; @data[:message]; end
+  def hash; @data[:hash]; end
+  def committed_at; @data[:committed_at]; end
+  def repo_id; @data[:repo_id]; end
+  def author_id; @data[:author_id]; end
+  def identity_id; @data[:identity_id]; end
+  
+  def message= new; @data[:message] = new; end
+  def hash= new; @data[:hash] = new; end
+  def committed_at= new; @data[:committed_at] = new; end
+  def repo_id= new; @data[:repo_id] = new; end
+  def author_id= new; @data[:author_id] = new; end
+  def identity_id= new; @data[:identity_id] = new; end
 
   def repo; @repo ||= Repo.find(:id => @data[:repo_id]); end
   def repo= new; @repo = new; @data[:repo_id] = new.id; end
@@ -34,12 +39,12 @@ class Commit < FBI::Model
   end
   
   def short_message
-    return @json['message'] if @json['message'].size <= 50
-    @json['message'][0,47] + '...'
+    return @message if @message.size <= 50
+    @message[0,47] + '...'
   end
   
   def short_hash
-    @json['id'][0,8]
+    @hash[0,8]
   end
   
   def author
