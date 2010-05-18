@@ -3,12 +3,13 @@ require File.join(File.dirname(__FILE__), 'common', 'tinyurl')
 
 module FBI
 class Server
-  attr_accessor :clients, :channels, :components, :config
+  attr_accessor :clients, :channels, :components, :config, :next_uid
 
   def initialize config={}
     @config = config
     @clients = []
     @components = {}
+    @next_uid = 1
     
     @channels = Hash.new do |hash, key|
       hash[key] = Channel.new key
@@ -17,7 +18,7 @@ class Server
   
   def serve
     @config['binds'].each do |bind|
-      EventMachine::start_server bind['host'], bind['port'].to_i, ServerConnection, self
+      EventMachine::start_server bind['host'], bind['port'].to_i, ComponentConnection, self
     end
   end
   
@@ -25,106 +26,129 @@ class Server
     EventMachine::run { serve }
   end
 
-  def auth client, user, pass
-    if @components.has_key? user.downcase
+  def auth client, account, secret
+    if @components.has_key? account.downcase
       false
     else
-      @components[user.downcase] = client
+      @components[account.downcase] = client
       true
     end
   end
   
-  def name
+  def next_uid!
+    (@next_uid += 1) - 1
+  end
+  
+  def endpoint
     '$' + @config['hostname']
   end
 end
 
 class Channel
-  attr_accessor :name, :clients
+  attr_accessor :name, :components
 
-  def initialize name, clients=[]
+  def initialize name, components=[]
     @name = name
-    @clients = clients
+    @components = components
   end
   
   def << client
-    send_to_all 'subscribe', 'origin' => client.username, 'channels' => [@name] if client.authed?
+    send_to_all 'subscribe', client.name, @name.join(','), 'channels' => [@name] # if client.authed?
     @clients << client
   end
   
   def delete client
     @clients.delete client
-    send_to_all 'unsubscribe', 'origin' => client.username, 'channels' => [@name] if client.authed?
+    send_to_all 'unsubscribe', 'origin' => client.username, 'channels' => [@name] # if client.authed?
   end
 
   def for_each &blck
     @clients.each {|conn| blck.call conn }
   end
   
-  def send_to_all action, data
-    @clients.each {|client| client.send_object action, data }
+  def send_to_all *args
+    @clients.each {|client| client.send_object *args }
   end
   
-  def to_s
-    @name
-  end
+  def size; @components.size; end
+  
+  def to_s; @name; end
+  def endpoint; @name; end
 end
 
-class ServerConnection < Connection
-  attr_accessor :channels, :server
+class ComponentConnection < Connection
+  attr_accessor :channels, :server, :uid
 
   def initialize server
     super()
     
+    @uid = server.next_uid!
     @channels = []
     @server = server
     @server.clients << self
     
-    send_object 'welcome', :origin => @server.name, :name => @server.config['label']
+    send_object 'welcome', @server.endpoint, endpoint,
+      :title => @server.config['label']
+      :version => '0.1',
+      :software => {:name => 'Official Ruby Router Implementation',
+                    :version => '0.0.1',
+                    :website => 'http://github.com/danopia/fbi/blob/master/server.rb'},
+      :public => true,
+      :runningSince => Time.now, # TODO: Make that the real time
+    }
   end
 
-  def receive_object action, data
+  def receive_object action, *args
     if respond_to? "on_#{action}"
-      __send__ "on_#{action}", data
+      __send__ "on_#{action}", *args
     else
       puts "Recieved unknown packet #{action}"
     end
   end
   
+  def endpoint
+    if @name
+      @name
+    else
+      "~#{@uid}"
+    end
+  end
+  
   def authed?
-    @username && @secret
+    @account && @secret
   end
 
-  def on_auth data
+  def on_auth origin, target, payload
     if authed?
-    elsif @server.auth self, data['user'], data['secret']
-      @username = data['user']
-      @secret = data['secret']
+    elsif @server.auth self, payload['account'], payload['secret']
+      @name = payload['user']
+      @username = payload['account']
+      @secret = payload['secret']
       puts "#{@ip}:#{@port} authed as #{@username}:#{@secret}"
-      data.delete 'secret'
-      data[:origin] = @username
-      send_object 'auth', data
+      #data.delete 'secret'
+      send_object 'auth', endpoint, endpoint, payload
     else
-      puts "Invalid credentials from #{@ip}:#{@port}"
+      puts "Invalid credentials from #{@ip}:#{@port} for #{payload['account']}"
     end
   end
 
-  def on_subscriptions data
-    send_object 'subscriptions', :channels => @channels.map {|chan| chan.name }
-  end
+  #~ def on_subscriptions origin, target, payload
+    #~ send_object 'subscriptions', :channels => @channels.map {|chan| chan.name }
+  #~ end
 
-  def on_components data
-    send_object 'components', :components => @server.components.keys
+  def on_components origin, target, payload
+    send_object 'components', @server.endpoint, endpoint, :components => @server.components.keys
   end
   
-  def on_channels data
-    send_object 'channels', :channels => @server.channels.keys
+  def on_channels origin, target, payload
+    hash = @server.channels.map{|chan| [chan.name, chan.size] }.flatten
+    send_object 'channels', @server.endpoint, endpoint, :channels => Hash[*hash]
   end
 
-  def on_subscribe data
+  def on_subscribe origin, target, payload
     new = []
     
-    data['channels'].uniq.each do |name|
+    payload['channels'].uniq.each do |name|
       channel = @server.channels[name.downcase]
       channel.name = name if channel.clients.size == 0
       
@@ -137,15 +161,13 @@ class ServerConnection < Connection
     @channels |= new
     puts "#{@username} subscribed to #{new.join ', '}"
     
-    data['channels'] = new
-    data[:origin] = @username
-    send_object 'subscribe', data
+    send_object 'subscribe', endpoint, new.join(','), :channels => new
   end
 
-  def on_unsubscribe data
+  def on_unsubscribe origin, target, payload
     left = []
     
-    data['channels'].uniq.each do |name|
+    payload['channels'].uniq.each do |name|
       channel = @server.channels[name.downcase]
       if @channels.include? channel
         left << channel
@@ -156,28 +178,28 @@ class ServerConnection < Connection
     @channels -= left
     puts "#{@username} unsubscribed from #{left.join ', '}"
     
-    data['channels'] = left
-    data[:origin] = @username
-    send_object 'unsubscribe', data
+    send_object 'unsubscribe', endpoint, left.join(','), :channels => left
   end
 
-  def on_publish data
-    FBI.shorten_urls_if_present data['data']
+  def on_publish origin, target, payload
+    # FBI.shorten_urls_if_present payload['data']
 
-    puts "#{@username} to #{data['target']}: #{data['data'].to_json}"
-    data['origin'] = @username
+    puts "#{@username} to #{target}: #{payload.to_json}"
 
-    if data['target'][0,1] == '#'
-      @server.channels[data['target'].downcase].send_to_all 'publish', data
+    if target[0,1] == '#'
+      @server.channels[target.downcase].send_to_all 'publish', endpoint, target, payload
     else
-      target = @server.components[data['target'].downcase]
-      target && target.send_object('publish', data)
+      target = @server.components[target.downcase]
+      target && target.send_object('publish', endpoint, target, payload)
     end
   end
   
-  def on_disconnect data
-    send_object 'disconnect', :origin => @username
-    close_connection
+  # TODO: MORE PACKETS NEEDED:
+  # subscribers, setinfo, info, ping, pong, introspect
+  
+  def on_disconnect origin, target, payload
+    send_object 'disconnect', endpoint, endpoint # TODO: Route to channels
+    close_connection_after_waiting
   end
   
   def unbind

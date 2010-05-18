@@ -6,46 +6,47 @@ require 'json'
 
 module FBI
 class Connection < LineConnection
-  attr_accessor :username, :secret, :args
-  INSTANCES = []
+  attr_accessor :name, :account, :secret, :args
   
-  def initialize username=nil, secret=nil, *args
+  def initialize name=nil, account=nil, secret=nil, *args
     super() # init @buffer
     
-    @username  = username
-    @secret    = secret
-    @args      = args
-    
-    @@instance = self
-    INSTANCES << self
+    @name     = name
+    @account  = account
+    @secret   = secret
+    @args     = args
   end
 	
   def post_init
-    login if @username && respond_to?(:login)
+    login if @account && respond_to?(:login)
     startup *@args if respond_to? :startup
     
     super # grab IP
   end
 		
-  def send_object action, hash
+  def send_object action, origin, target, payload={}
     hash['action'] = action
-    send_line hash.to_json
+    send_line({
+      :action => action,
+      :origin => origin,
+      :target => target,
+      :payload => payload,
+    }.to_json)
   end
 
   def receive_line line
     hash = JSON.parse line
-    receive_object hash['action'], hash
+    receive_object hash['action'], hash['origin'], hash['target'], hash['payload']
  
   rescue JSON::ParserError => ex
     puts "Error parsing JSON: #{ex.message}"
   end
   
-  def receive_object action, data
+  def receive_object action, origin, target, payload
   end
   
   def unbind
     super # log to console
-    INSTANCES.delete self
   end
 end # class
 end # module
