@@ -84,7 +84,7 @@ BufferedSocketReader: class extends Reader {
   
   
   
-  readUntil: func (end: Char) -> String {
+  readUntil: func~Char (end: Char) -> String {
     while (!buffer contains(end)) readMore!()
     
     string := buffer substring(0, buffer indexOf(end))
@@ -92,7 +92,7 @@ BufferedSocketReader: class extends Reader {
     return string
   }
   
-  readUntil: func (end: String) -> String {
+  readUntil: func~String (end: String) -> String {
     while (!buffer contains(end)) readMore!()
     
     string := buffer substring(0, buffer indexOf(end))
